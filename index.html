@@ -115,7 +115,7 @@
         // Независимый API для Библии
         class MyBibleAPI {
             constructor(jsonUrl) {
-                this.jsonUrl = jsonUrl || 'https://raw.githubusercontent.com/christian-word/test/refs/heads/main/bible_ua.json';
+                this.jsonUrl = jsonUrl || 'https://raw.githubusercontent.com/christian-word/test/refs/heads/main/bible_ua.json'; // Замени на 'bible_ua.json' для локального файла
                 this._loaded = false;
                 this._books = [];
                 this._ready = this._load();
@@ -135,6 +135,7 @@
                     console.info('MyBibleAPI: JSON загружен и нормализован.');
                 } catch (err) {
                     console.error('Ошибка загрузки MyBibleAPI:', err);
+                    document.getElementById('versesList').innerHTML = '<p style="color: red;">Помилка: Не вдалося завантажити Біблію. Перевірте URL або додайте локальний файл bible_ua.json.</p>';
                     throw err;
                 }
             }
@@ -206,12 +207,12 @@
 
             async search(query) {
                 if (!this._loaded) await this._ready;
-                const q = String(query).toLowerCase();
+                const q = String(query || '').toLowerCase();
                 const results = [];
                 this._books.forEach(book => {
                     book.chapters.forEach(ch => {
                         ch.verses.forEach(v => {
-                            if (v.textLower.includes(q)) {
+                            if (v.textLower && v.textLower.includes(q)) {
                                 results.push({ book: book.name, chapter: ch.number, verse: v.number, text: v.text });
                             }
                         });
@@ -233,8 +234,7 @@
                 this._books.forEach(book => {
                     book.chapters.forEach(ch => {
                         ch.verses.forEach(v => {
-                            regex.lastIndex = 0;
-                            if (regex.test(v.text)) {
+                            if (v.textLower && regex.test(v.text)) {
                                 results.push({ book: book.name, chapter: ch.number, verse: v.number, text: v.text });
                             }
                         });
@@ -322,7 +322,7 @@
                 loadDailyVerse();
             } catch (e) {
                 console.error('Ошибка инициализации:', e);
-                document.getElementById('versesList').innerHTML = '<p style="color: red;">Помилка: Не вдалося завантажити Біблію. Перевірте консоль.</p>';
+                document.getElementById('versesList').innerHTML = '<p style="color: red;">Помилка: Не вдалося завантажити Біблію. Перевірте URL або додайте локальний файл bible_ua.json.</p>';
             }
         }
 
@@ -409,7 +409,7 @@
                         messages: [
                             {
                                 role: 'system',
-                                content: 'Ти помічник, який аналізує запит на українській мові та визначає емоційну або ситуаційну тему (наприклад, страх, самотність, надія, любов). Повертай JSON з полями: `theme` (основна тема, наприклад, "страх"), `keywords` (массив слів для пошуку, наприклад, ["сила", "мир", "захист"] для запиту про страх), `explanation` (коротке пояснення на українській мові, чому підходить стих), `advice` (порада для користувача), `prayer` (молитва для ситуації). Слова для пошуку мають бути пов’язані з позитивним, утішним контекстом. Не використовуй Markdown (наприклад, ```json).'
+                                content: 'Ти помічник, який аналізує запит на українській мові та визначає емоційну або ситуаційну тему (наприклад, страх, самотність, надія, любов). Повертай JSON з полями: `theme` (основна тема, наприклад, "страх"), `keywords` (массив слів для пошуку, наприклад, ["сила", "мир", "захист"] для запиту про страх), `explanation` (коротке пояснення на українській мові, чому підходить стих), `advice` (порада для користувача), `prayer` (молитва для ситуації). Слова для пошуку мають бути пов’язані з позитивним, утішним контекстом (наприклад, для страху — сила, захист, мир, а не страх). Не використовуй Markdown (наприклад, ```json).'
                             },
                             {
                                 role: 'user',
@@ -426,18 +426,21 @@
                 let content = data.choices[0].message.content;
                 content = content.replace(/```json\n|\n```/g, '').trim();
                 const result = JSON.parse(content);
+                console.log('API response:', result);
 
                 const { theme, keywords, explanation, advice, prayer } = result;
 
                 // Поиск стихов в bible_ua.json
                 let verse = null;
                 for (const keyword of keywords) {
+                    console.log('Searching for keyword:', keyword);
                     const searchResults = await bible.search(keyword);
                     // Фильтруем стихи, исключая негативный контекст
-                    const filteredResults = searchResults.filter(v => !negativeWords.some(nw => v.textLower.includes(nw)));
+                    const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
                     if (filteredResults.length > 0) {
                         const randomIndex = Math.floor(Math.random() * filteredResults.length);
                         verse = filteredResults[randomIndex];
+                        console.log('Selected verse:', verse);
                         break;
                     }
                 }
@@ -491,7 +494,7 @@
 
                 const searchResults = await bible.search(keyword);
                 // Фильтруем негативные стихи
-                const filteredResults = searchResults.filter(v => !negativeWords.some(nw => v.textLower.includes(nw)));
+                const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
                 let verse;
                 if (filteredResults.length > 0) {
                     const randomIndex = Math.floor(Math.random() * filteredResults.length);

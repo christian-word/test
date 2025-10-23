@@ -393,6 +393,9 @@
             const query = document.getElementById('aiQuery').value.toLowerCase();
             if (!query) return;
 
+            // Слова, указывающие на негативный контекст стиха
+            const negativeWords = ['смерть', 'пішов від них', 'страх обгорнув', 'прокляття', 'гнів'];
+
             try {
                 // Запрос к Grok API
                 const response = await fetch(API_URL, {
@@ -406,11 +409,11 @@
                         messages: [
                             {
                                 role: 'system',
-                                content: 'Ты помощник, который анализирует запрос на украинском языке, определяет эмоциональную или ситуационную тему (например, страх, одиночество, надежда, любовь) и предлагает ключевые слова для поиска подходящих библейских стихов. Верни JSON с полями: `theme` (основная тема), `keywords` (массив слов для поиска), `explanation` (короткое объяснение на украинском), `advice` (совет), `prayer` (молитва). Не используй Markdown (например, ```json).'
+                                content: 'Ти помічник, який аналізує запит на українській мові та визначає емоційну або ситуаційну тему (наприклад, страх, самотність, надія, любов). Повертай JSON з полями: `theme` (основна тема, наприклад, "страх"), `keywords` (массив слів для пошуку, наприклад, ["сила", "мир", "захист"] для запиту про страх), `explanation` (коротке пояснення на українській мові, чому підходить стих), `advice` (порада для користувача), `prayer` (молитва для ситуації). Слова для пошуку мають бути пов’язані з позитивним, утішним контекстом. Не використовуй Markdown (наприклад, ```json).'
                             },
                             {
                                 role: 'user',
-                                content: `Анализируй запрос: "${query}"`
+                                content: `Аналізуй запит: "${query}"`
                             }
                         ]
                     })
@@ -430,14 +433,16 @@
                 let verse = null;
                 for (const keyword of keywords) {
                     const searchResults = await bible.search(keyword);
-                    if (searchResults.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * searchResults.length);
-                        verse = searchResults[randomIndex];
+                    // Фильтруем стихи, исключая негативный контекст
+                    const filteredResults = searchResults.filter(v => !negativeWords.some(nw => v.textLower.includes(nw)));
+                    if (filteredResults.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * filteredResults.length);
+                        verse = filteredResults[randomIndex];
                         break;
                     }
                 }
 
-                // Fallback на локальную логику
+                // Fallback на категорию или аптечку
                 if (!verse) {
                     let category = 'faith';
                     let firstAidKey = null;
@@ -485,10 +490,12 @@
                 }
 
                 const searchResults = await bible.search(keyword);
+                // Фильтруем негативные стихи
+                const filteredResults = searchResults.filter(v => !negativeWords.some(nw => v.textLower.includes(nw)));
                 let verse;
-                if (searchResults.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * searchResults.length);
-                    verse = searchResults[randomIndex];
+                if (filteredResults.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * filteredResults.length);
+                    verse = filteredResults[randomIndex];
                 } else {
                     verse = firstAidKey ? firstAid[firstAidKey].verse : (categories[category][0] || await bible.getRandomVerse());
                 }

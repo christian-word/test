@@ -253,6 +253,9 @@
         }
 
         const bible = new MyBibleAPI();
+        const API_KEY = atob("Z3NrX1NUelQyS1FFQko3MGNDb1hDSllaV0dkeWIzRlk5OHJHN2xvWXUxSmc1SnV0VFZOSzIyVHY=");
+        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+        const MODEL_NAME = "meta-llama/llama-4-maverick-17b-128e-instruct";
 
         // Категории
         const categories = {
@@ -276,23 +279,6 @@
             ]
         };
 
-        // Словарь синонимов для ИИ
-        const synonyms = {
-            страх: ['тривога', 'боязнь', 'нерви', 'іспит'],
-            втіха: ['сум', 'самотність', 'печаль', 'горе'],
-            любов: ['прощення', 'доброта', 'милосердя'],
-            віра: ['довіра', 'надія', 'молитва'],
-            надія: ['сподівання', 'майбутнє'],
-            мудрість: ['розум', 'знання', 'порада']
-        };
-
-        // Связанные стихи
-        const relatedVerses = {
-            'Івана 3:16': ['Ефесян 2:8-9', 'Римлян 10:9'],
-            'Ефесян 2:8-9': ['Римлян 5:1'],
-            'Филип’ян 4:13': ['Ісаї 41:10']
-        };
-
         // Библейская аптечка
         const firstAid = {
             страх: {
@@ -309,6 +295,11 @@
                 verse: { book: "Псалми", chapter: "30", verse: "3", text: "Господи, Боже мій, я взивав до Тебе, і Ти мене зцілив." },
                 prayer: 'Господи, даруй мені зцілення і силу.',
                 advice: 'Молись цим віршем щодня за здоров’я.'
+            },
+            фінанси: {
+                verse: { book: "Филип’ян", chapter: "4", verse: "19", text: "Бог мій виповнить вашу всяку потребу за Своїм багатством у Славі, у Христі Ісусі." },
+                prayer: 'Господи, забезпеч мене в моїх потребах.',
+                advice: 'Молись і дякуй за те, що маєш.'
             }
         };
 
@@ -389,40 +380,62 @@
         }
 
         async function aiSuggest() {
-            const query = document.getElementById('aiQuery').value.toLowerCase();
+            const query = document.getElementById('aiQuery').value;
             if (!query) return;
 
-            let category = 'faith';
-            let firstAidKey = null;
-            for (const [cat, words] of Object.entries(synonyms)) {
-                if (words.some(word => query.includes(word))) {
-                    category = cat;
-                    break;
-                }
-            }
-            for (const [key, item] of Object.entries(firstAid)) {
-                if (query.includes(key) || synonyms[category]?.some(word => query.includes(word))) {
-                    firstAidKey = key;
-                    break;
-                }
-            }
+            try {
+                // Запрос к Grok API для анализа текста
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: MODEL_NAME,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'Ты помощник, который анализирует запрос на украинском языке, определяет эмоциональную или ситуационную тему (например, страх, одиночество, надежда, любовь) и предлагает ключевые слова для поиска подходящих библейских стихов. Верни JSON с полями: `theme` (основная тема), `keywords` (массив слов для поиска), `explanation` (короткое объяснение на украинском), `advice` (совет), `prayer` (молитва).'
+                            },
+                            {
+                                role: 'user',
+                                content: `Анализируй запрос: "${query}"`
+                            }
+                        ]
+                    })
+                });
 
-            const verses = categories[category] || [];
-            const verse = firstAidKey ? firstAid[firstAidKey].verse : (verses[0] || await bible.getRandomVerse());
-            const ref = `${verse.book} ${verse.chapter}:${verse.verse}`;
-            const explanations = {
-                strength: 'Цей вірш надихає на стійкість і довіру до Божої сили.',
-                comfort: 'Цей вірш приносить мир і втіху в скрутні часи.',
-                love: 'Цей вірш нагадує про Божу любов і милосердя.',
-                faith: 'Цей вірш зміцнює віру в Бога.',
-                hope: 'Цей вірш дає надію на краще майбутнє.',
-                wisdom: 'Цей вірш вчить покладатися на Божу мудрість.'
-            };
-            const explanation = firstAidKey
-                ? `Для "${query}" підходить: "${verse.text}". ${firstAid[firstAidKey].advice} Молитва: ${firstAid[firstAidKey].prayer}`
-                : `Для "${query}" підходить: "${verse.text}". ${explanations[category] || 'Підходить для вашої ситуації.'}`;
-            const related = relatedVerses[ref] ? `Пов’язані вірші: ${relatedVerses[ref].join(', ')}.` : '';
-            document.getElementById('ai-result').innerHTML = `<strong>${ref}</strong><p>${verse.text}</p><p>${explanation} ${related}</p>`;
+                if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
+
+                const data = await response.json();
+                const result = JSON.parse(data.choices[0].message.content);
+
+                const { theme, keywords, explanation, advice, prayer } = result;
+
+                // Поиск стихов в bible_ua.json по ключевым словам
+                let verse = null;
+                for (const keyword of keywords) {
+                    const searchResults = await bible.search(keyword);
+                    if (searchResults.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * searchResults.length);
+                        verse = searchResults[randomIndex];
+                        break;
+                    }
+                }
+
+                // Fallback на категорию или случайный стих
+                if (!verse) {
+                    verse = categories[theme]?.[0] || await bible.getRandomVerse();
+                }
+
+                const ref = `${verse.book} ${verse.chapter}:${verse.verse}`;
+                const output = `<strong>${ref}</strong><p>${verse.text}</p><p>Для "${query}": ${explanation}</p><p>Порада: ${advice}</p><p>Молитва: ${prayer}</p>`;
+                document.getElementById('ai-result').innerHTML = output;
+            } catch (e) {
+                console.error('Ошибка ИИ:', e);
+                document.getElementById('ai-result').innerHTML = '<p style="color: red;">Помилка: Не вдалося отримати відповідь від ІІ. Спробуйте ще раз.</p>';
+            }
         }
 
         function displayVerses(verses) {

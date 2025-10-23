@@ -1,5 +1,4 @@
 ﻿// my-bible-api.js — Независимый API для Библии (на основе твоей структуры)
-
 class MyBibleAPI {
   constructor(jsonUrl) {
     this.jsonUrl = jsonUrl || 'https://raw.githubusercontent.com/christian-word/test/refs/heads/main/bible_ua.json';
@@ -143,4 +142,5 @@ class MyBibleAPI {
 }
 
 // Глобальный экземпляр для страницы
+
 const myBible = new MyBibleAPI();

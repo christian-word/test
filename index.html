@@ -279,7 +279,17 @@
             ]
         };
 
-        // Библейская аптечка
+        // Расширенный словарь синонимов для локального fallback
+        const synonyms = {
+            strength: ['сила', 'мужество', 'стійкість', 'міць', 'укріплення', 'подолання', 'випробування', 'екзамен', 'робота', 'труднощі'],
+            comfort: ['втіха', 'покой', 'утешение', 'мир', 'грусть', 'сум', 'самотність', 'одиночество', 'горе', 'болю', 'хвороба', 'болезнь'],
+            love: ['любов', 'прощення', 'милосердя', 'доброта', 'сімя', 'відносини', 'дружба', 'серце'],
+            faith: ['віра', 'довіра', 'молитва', 'надія', 'сподівання', 'Бог', 'Христос', 'дух'],
+            hope: ['надія', 'обіцянки', 'майбутнє', 'сподівання', 'радість', 'благословення'],
+            wisdom: ['мудрість', 'розум', 'порада', 'керівництво', 'знання', 'навчання', 'робота', 'учеба']
+        };
+
+        // Библейская аптечка для fallback
         const firstAid = {
             страх: {
                 verse: categories.strength[0],
@@ -380,11 +390,11 @@
         }
 
         async function aiSuggest() {
-            const query = document.getElementById('aiQuery').value;
+            const query = document.getElementById('aiQuery').value.toLowerCase();
             if (!query) return;
 
             try {
-                // Запрос к Grok API для анализа текста
+                // Запрос к Grok API
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
@@ -396,7 +406,7 @@
                         messages: [
                             {
                                 role: 'system',
-                                content: 'Ты помощник, который анализирует запрос на украинском языке, определяет эмоциональную или ситуационную тему (например, страх, одиночество, надежда, любовь) и предлагает ключевые слова для поиска подходящих библейских стихов. Верни JSON с полями: `theme` (основная тема), `keywords` (массив слов для поиска), `explanation` (короткое объяснение на украинском), `advice` (совет), `prayer` (молитва).'
+                                content: 'Ты помощник, который анализирует запрос на украинском языке, определяет эмоциональную или ситуационную тему (например, страх, одиночество, надежда, любовь) и предлагает ключевые слова для поиска подходящих библейских стихов. Верни JSON с полями: `theme` (основная тема), `keywords` (массив слов для поиска), `explanation` (короткое объяснение на украинском), `advice` (совет), `prayer` (молитва). Не используй Markdown (например, ```json).'
                             },
                             {
                                 role: 'user',
@@ -409,11 +419,14 @@
                 if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
 
                 const data = await response.json();
-                const result = JSON.parse(data.choices[0].message.content);
+                // Очистка ответа от Markdown
+                let content = data.choices[0].message.content;
+                content = content.replace(/```json\n|\n```/g, '').trim();
+                const result = JSON.parse(content);
 
                 const { theme, keywords, explanation, advice, prayer } = result;
 
-                // Поиск стихов в bible_ua.json по ключевым словам
+                // Поиск стихов в bible_ua.json
                 let verse = null;
                 for (const keyword of keywords) {
                     const searchResults = await bible.search(keyword);
@@ -424,9 +437,27 @@
                     }
                 }
 
-                // Fallback на категорию или случайный стих
+                // Fallback на локальную логику
                 if (!verse) {
-                    verse = categories[theme]?.[0] || await bible.getRandomVerse();
+                    let category = 'faith';
+                    let firstAidKey = null;
+                    for (const [cat, words] of Object.entries(synonyms)) {
+                        if (words.some(word => query.includes(word))) {
+                            category = cat;
+                            break;
+                        }
+                    }
+                    for (const [key, item] of Object.entries(firstAid)) {
+                        if (query.includes(key) || synonyms[category]?.some(word => query.includes(word))) {
+                            firstAidKey = key;
+                            break;
+                        }
+                    }
+                    verse = firstAidKey ? firstAid[firstAidKey].verse : (categories[category][0] || await bible.getRandomVerse());
+                    if (firstAidKey) {
+                        explanation = firstAid[firstAidKey].advice;
+                        prayer = firstAid[firstAidKey].prayer;
+                    }
                 }
 
                 const ref = `${verse.book} ${verse.chapter}:${verse.verse}`;
@@ -434,7 +465,47 @@
                 document.getElementById('ai-result').innerHTML = output;
             } catch (e) {
                 console.error('Ошибка ИИ:', e);
-                document.getElementById('ai-result').innerHTML = '<p style="color: red;">Помилка: Не вдалося отримати відповідь від ІІ. Спробуйте ще раз.</p>';
+                // Fallback на локальную логику
+                let category = 'faith';
+                let keyword = 'віра';
+                let firstAidKey = null;
+                for (const [cat, words] of Object.entries(synonyms)) {
+                    const matchedWord = words.find(word => query.includes(word));
+                    if (matchedWord) {
+                        category = cat;
+                        keyword = matchedWord;
+                        break;
+                    }
+                }
+                for (const [key, item] of Object.entries(firstAid)) {
+                    if (query.includes(key) || keyword === key) {
+                        firstAidKey = key;
+                        break;
+                    }
+                }
+
+                const searchResults = await bible.search(keyword);
+                let verse;
+                if (searchResults.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * searchResults.length);
+                    verse = searchResults[randomIndex];
+                } else {
+                    verse = firstAidKey ? firstAid[firstAidKey].verse : (categories[category][0] || await bible.getRandomVerse());
+                }
+
+                const ref = `${verse.book} ${verse.chapter}:${verse.verse}`;
+                const explanations = {
+                    strength: 'Цей вірш надихає на стійкість і довіру до Божої сили.',
+                    comfort: 'Цей вірш приносить мир і втіху в скрутні часи.',
+                    love: 'Цей вірш нагадує про Божу любов і милосердя.',
+                    faith: 'Цей вірш зміцнює віру в Бога.',
+                    hope: 'Цей вірш дає надію на краще майбутнє.',
+                    wisdom: 'Цей вірш вчить покладатися на Божу мудрість.'
+                };
+                const explanation = firstAidKey
+                    ? `Для "${query}" підходить: "${verse.text}". ${firstAid[firstAidKey].advice} Молитва: ${firstAid[firstAidKey].prayer}`
+                    : `Для "${query}" підходить: "${verse.text}". ${explanations[category] || 'Підходить для вашої ситуації.'}`;
+                document.getElementById('ai-result').innerHTML = `<strong>${ref}</strong><p>${verse.text}</p><p>${explanation}</p>`;
             }
         }
 

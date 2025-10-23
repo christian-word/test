@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -115,7 +76,7 @@
         // Независимый API для Библии
         class MyBibleAPI {
             constructor(jsonUrl) {
-                this.jsonUrl = jsonUrl || 'https://raw.githubusercontent.com/christian-word/test/refs/heads/main/bible_ua.json'; // Замени на 'bible_ua.json' для локального файла
+                this.jsonUrl = jsonUrl || 'bible_ua.json';
                 this._loaded = false;
                 this._books = [];
                 this._ready = this._load();
@@ -130,11 +91,15 @@
                     const res = await fetch(this.jsonUrl);
                     if (!res.ok) throw new Error(`Ошибка загрузки JSON: ${res.status} ${res.statusText}`);
                     const raw = await res.json();
+                    if (!raw || (Array.isArray(raw) && raw.length === 0)) {
+                        throw new Error('JSON пустой или некорректный');
+                    }
                     this._normalize(raw);
                     this._loaded = true;
-                    console.info('MyBibleAPI: JSON загружен и нормализован.');
+                    console.info('MyBibleAPI: JSON успешно загружен и нормализован.');
                 } catch (err) {
                     console.error('Ошибка загрузки MyBibleAPI:', err);
+                    this._loaded = false;
                     document.getElementById('versesList').innerHTML = '<p style="color: red;">Помилка: Не вдалося завантажити Біблію. Перевірте URL або додайте локальний файл bible_ua.json.</p>';
                     throw err;
                 }
@@ -206,7 +171,10 @@
             }
 
             async search(query) {
-                if (!this._loaded) await this._ready;
+                if (!this._loaded) {
+                    console.warn('MyBibleAPI: Поиск невозможен, JSON не загружен.');
+                    return [];
+                }
                 const q = String(query || '').toLowerCase();
                 const results = [];
                 this._books.forEach(book => {
@@ -218,11 +186,15 @@
                         });
                     });
                 });
+                console.log('Search results for', q, ':', results.length, 'стихов');
                 return results;
             }
 
             async searchRegex(pattern) {
-                if (!this._loaded) await this._ready;
+                if (!this._loaded) {
+                    console.warn('MyBibleAPI: Поиск невозможен, JSON не загружен.');
+                    return [];
+                }
                 let regex;
                 try {
                     regex = new RegExp(pattern, 'giu');
@@ -244,7 +216,10 @@
             }
 
             async getRandomVerse() {
-                if (!this._loaded) await this._ready;
+                if (!this._loaded) {
+                    console.warn('MyBibleAPI: Случайный стих невозможен, JSON не загружен.');
+                    return null;
+                }
                 const book = this._books[Math.floor(Math.random() * this._books.length)];
                 const ch = book.chapters[Math.floor(Math.random() * book.chapters.length)];
                 const v = ch.verses[Math.floor(Math.random() * ch.verses.length)];
@@ -386,6 +361,8 @@
                         <span class="verse-text">${verse.text}</span>
                     </div>
                 `;
+            } else {
+                document.getElementById('dailyVerse').innerHTML = '<p style="color: red;">Не вдалося завантажити вірш дня.</p>';
             }
         }
 
@@ -432,17 +409,21 @@
 
                 // Поиск стихов в bible_ua.json
                 let verse = null;
-                for (const keyword of keywords) {
-                    console.log('Searching for keyword:', keyword);
-                    const searchResults = await bible.search(keyword);
-                    // Фильтруем стихи, исключая негативный контекст
-                    const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
-                    if (filteredResults.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * filteredResults.length);
-                        verse = filteredResults[randomIndex];
-                        console.log('Selected verse:', verse);
-                        break;
+                if (bible._loaded) {
+                    for (const keyword of keywords) {
+                        console.log('Searching for keyword:', keyword);
+                        const searchResults = await bible.search(keyword);
+                        // Фильтруем стихи, исключая негативный контекст
+                        const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
+                        if (filteredResults.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * filteredResults.length);
+                            verse = filteredResults[randomIndex];
+                            console.log('Selected verse:', verse);
+                            break;
+                        }
                     }
+                } else {
+                    console.warn('JSON не загружен, используем fallback.');
                 }
 
                 // Fallback на категорию или аптечку
@@ -461,7 +442,7 @@
                             break;
                         }
                     }
-                    verse = firstAidKey ? firstAid[firstAidKey].verse : (categories[category][0] || await bible.getRandomVerse());
+                    verse = firstAidKey ? firstAid[firstAidKey].verse : (categories[category][0] || { book: "Римлян", chapter: "15", verse: "13", text: "Бог же надії нехай сповнить вас усякою радістю й миром у вірі..." });
                     if (firstAidKey) {
                         explanation = firstAid[firstAidKey].advice;
                         prayer = firstAid[firstAidKey].prayer;
@@ -492,15 +473,18 @@
                     }
                 }
 
-                const searchResults = await bible.search(keyword);
-                // Фильтруем негативные стихи
-                const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
                 let verse;
-                if (filteredResults.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * filteredResults.length);
-                    verse = filteredResults[randomIndex];
-                } else {
-                    verse = firstAidKey ? firstAid[firstAidKey].verse : (categories[category][0] || await bible.getRandomVerse());
+                if (bible._loaded) {
+                    const searchResults = await bible.search(keyword);
+                    // Фильтруем негативные стихи
+                    const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
+                    if (filteredResults.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * filteredResults.length);
+                        verse = filteredResults[randomIndex];
+                    }
+                }
+                if (!verse) {
+                    verse = firstAidKey ? firstAid[firstAidKey].verse : categories[category][0];
                 }
 
                 const ref = `${verse.book} ${verse.chapter}:${verse.verse}`;

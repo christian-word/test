@@ -1,567 +1,195 @@
 ﻿<!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Слово на кожен день — Біблійний компас</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); text-align: center; }
-        .header h1 { font-size: 2em; color: #1e3c72; }
-        .header p { color: #666; }
-        .controls { background: rgba(255,255,255,0.9); border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .search-group, .ai-input { margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border: 2px solid #e0e6ed; border-radius: 10px; font-size: 16px; }
-        input:focus { outline: none; border-color: #2a5298; box-shadow: 0 0 0 3px rgba(42,82,152,0.1); }
-        .categories { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
-        .category-btn { padding: 8px 12px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .category-btn:hover { background: #45a049; }
-        .btn { padding: 12px 24px; background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .verse { background: rgba(255,255,255,0.95); margin-bottom: 15px; padding: 15px; border-left: 4px solid #2a5298; border-radius: 8px; }
-        .verse-number { font-weight: bold; color: #1e3c72; margin-right: 10px; }
-        .verse-text { line-height: 1.6; font-size: 1.1em; }
-        .actions { display: flex; gap: 5px; margin-top: 10px; }
-        .action-btn { background: none; border: none; font-size: 18px; cursor: pointer; }
-        .action-btn.active { color: gold; }
-        .favorites, .bookmarks-panel { margin-top: 20px; background: rgba(255,255,255,0.9); border-radius: 10px; padding: 10px; }
-        .bookmark-item { padding: 5px 10px; cursor: pointer; border-radius: 5px; }
-        .bookmark-item:hover { background: rgba(30,60,114,0.1); }
-        #ai-result { background: #e3f2fd; padding: 15px; border-radius: 5px; margin-top: 10px; }
-        canvas { max-width: 100%; margin-top: 10px; }
-        @media (max-width: 768px) { .categories { flex-direction: column; } }
-    </style>
+<meta charset="UTF-8">
+<title>Тест ІІ Путеводителя по Біблії (v2.0)</title>
+<style>
+  body { 
+    font-family: Arial, sans-serif; 
+    background: #1a1a2e; 
+    color: #eaeaea; 
+    margin: 0; 
+    padding: 0; 
+  }
+  header { 
+    padding: 1rem; 
+    text-align: center; 
+    background: #162447; 
+  }
+  main { 
+    padding: 1rem; 
+    max-width: 800px; 
+    margin: auto; 
+  }
+  input, select, button { 
+    padding: 0.75rem; /* Збільшено для кращого вигляду */
+    margin: 0.5rem 0; 
+    width: 100%; 
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+    box-sizing: border-box; /* Важливо для width: 100% */
+  }
+  button {
+    background: #ffd369;
+    color: #1a1a2e;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: #ffc433;
+  }
+  .results { 
+    margin-top: 1.5rem; /* Збільшено відступ */
+    background: #0f3460; 
+    padding: 1.5rem; 
+    border-radius: 8px; 
+    min-height: 100px; /* Мінімальна висота для кращого вигляду */
+    white-space: pre-wrap; /* Зберігає переноси рядків */
+  }
+  .error {
+    color: #ff6b6b;
+    font-weight: bold;
+  }
+  .success {
+    color: #6bff95;
+    font-weight: bold;
+  }
+  .local {
+    color: #ffd369;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📖 Слово на кожен день</h1>
-            <p>Біблійний компас для життя</p>
-        </div>
-        <div class="controls">
-            <div class="search-group">
-                <input type="text" id="searchInput" placeholder="🔍 Пошук за ключовими словами...">
-                <button class="btn" onclick="searchVerses()">Знайти</button>
-                <button class="btn" onclick="clearSearch()">Очистити</button>
-            </div>
-            <div class="ai-input">
-                <input type="text" id="aiQuery" placeholder="🤖 Опишіть ситуацію (наприклад, 'Мені страшно перед іспитом')">
-                <button class="btn" onclick="aiSuggest()">Підібрати вірш</button>
-                <div id="ai-result"></div>
-            </div>
-        </div>
-        <div class="categories">
-            <h3>📚 Категорії</h3>
-            <button class="category-btn" onclick="loadCategory('strength')">💪 Сила</button>
-            <button class="category-btn" onclick="loadCategory('comfort')">😌 Втіха</button>
-            <button class="category-btn" onclick="loadCategory('love')">❤️ Любов</button>
-            <button class="category-btn" onclick="loadCategory('faith')">🙏 Віра</button>
-            <button class="category-btn" onclick="loadCategory('hope')">🌟 Надія</button>
-            <button class="category-btn" onclick="loadCategory('wisdom')">💡 Мудрість</button>
-        </div>
-        <div class="bookmarks-panel">
-            <strong>⭐ Закладки:</strong>
-            <div id="bookmarksList"></div>
-        </div>
-        <div id="verseOfDay">
-            <h3>🌟 Вірш дня</h3>
-            <div id="dailyVerse"></div>
-        </div>
-        <div id="versesList"></div>
-    </div>
+<header>
+  <h1>📖 Тест ІІ Путеводителя по Біблії</h1>
+</header>
+<main>
+  <h2>Налаштування API</h2>
+  <p>🚨 **УВАГА:** Для роботи потрібен дійсний Hugging Face Access Token. Запустіть цей код на веб-сервері (наприклад, Live Server), щоб уникнути помилок **CORS**.</p>
+  
+  <input type="text" id="apiToken" placeholder="Введіть ваш HF Access Token тут..." value="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">
 
-    <script>
-        // Независимый API для Библии
-        class MyBibleAPI {
-            constructor(jsonUrl) {
-                this.jsonUrl = jsonUrl || 'bible_ua.json';
-                this._loaded = false;
-                this._books = [];
-                this._ready = this._load();
-            }
+  <h2>Запит</h2>
+  <input type="text" id="query" placeholder="Введіть слово або тему (наприклад, 'Молитва')..." value="Молитва">
+  <select id="mode">
+    <option value="dictionary">📚 Словник</option>
+    <option value="context">📖 Контекст</option>
+    <option value="parallel">📖 Паралел</option>
+  </select>
+  <button onclick="search()">🔍 Пошук</button>
 
-            async ready() {
-                return this._ready;
-            }
+  <h2>Результати</h2>
+  <div class="results" id="results">
+    Очікування запиту...
+  </div>
+</main>
 
-            async _load() {
-                try {
-                    const res = await fetch(this.jsonUrl);
-                    if (!res.ok) throw new Error(`Ошибка загрузки JSON: ${res.status} ${res.statusText}`);
-                    const raw = await res.json();
-                    if (!raw || (Array.isArray(raw) && raw.length === 0)) {
-                        throw new Error('JSON пустой или некорректный');
-                    }
-                    this._normalize(raw);
-                    this._loaded = true;
-                    console.info('MyBibleAPI: JSON успешно загружен и нормализован.');
-                } catch (err) {
-                    console.error('Ошибка загрузки MyBibleAPI:', err);
-                    this._loaded = false;
-                    document.getElementById('versesList').innerHTML = '<p style="color: red;">Помилка: Не вдалося завантажити Біблію. Перевірте URL або додайте локальний файл bible_ua.json.</p>';
-                    throw err;
-                }
-            }
+<script>
+// Локальний словник і паралелі
+const localData = {
+  dictionary: {
+    "віра": "<span class='local'>Віра</span> – це довіра і впевненість у Бозі (Євр. 11:1).",
+    "милосердя": "<span class='local'>Милосердя</span> – це прояв любові до ближнього (Мф. 5:7)."
+  },
+  context: {
+    "мойсей": "<span class='local'>Мойсей</span> – провідник Ізраїля, прийняв Закон на горі Синай (Исх. 3-20)."
+  },
+  parallel: {
+    "любов": `<span class='local'>Паралелі до любові:</span> <a href='#1Кор13'>1 Кор. 13</a>, <a href='#Ів15'>Ів. 15:12-13</a>, <a href='#Рим5'>Рим. 5:8</a>`
+  }
+};
 
-            _normalize(raw) {
-                let booksRaw = Array.isArray(raw) ? raw : (raw.books || raw.body || []);
-                this._books = booksRaw.map((b, bi) => {
-                    const number = String(b.number || bi + 1);
-                    const shortName = b.shortName || b.abbr || '';
-                    const name = b.name || `Книга ${number}`;
-                    const chapters = (Array.isArray(b.chapters) ? b.chapters : []).map((ch, ci) => {
-                        const chNumber = String(ch.number || ci + 1);
-                        const verses = (Array.isArray(ch.verses) ? ch.verses : []).map((v, vi) => {
-                            const vNumber = String(v.number || vi + 1);
-                            const text = String(v.text || '');
-                            return { number: vNumber, text, textLower: text.toLowerCase() };
-                        });
-                        return { number: chNumber, verses };
-                    });
-                    return { number, shortName, name, chapters };
-                });
-            }
+/**
+ * Основна функція пошуку, що перевіряє локальні дані
+ * та викликає Hugging Face API
+ */
+async function search() {
+  const query = document.getElementById('query').value.trim().toLowerCase();
+  const mode = document.getElementById('mode').value;
+  const apiToken = document.getElementById('apiToken').value.trim();
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '⏳ **Завантаження...** Перевіряємо локальні дані та викликаємо API...';
 
-            _findBook(identifier) {
-                if (!identifier) return null;
-                const s = String(identifier).toLowerCase();
-                return this._books.find(b => b.number === s || b.name.toLowerCase() === s || b.shortName.toLowerCase() === s) ||
-                       this._books.find(b => b.name.toLowerCase().includes(s) || b.shortName.toLowerCase().includes(s)) || null;
-            }
+  if (!query) {
+    resultsDiv.innerHTML = '<span class="error">❌ Введіть запит для пошуку!</span>';
+    return;
+  }
+  
+  if (!apiToken || apiToken === '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') {
+      resultsDiv.innerHTML = '<span class="error">❌ **Помилка токена:** Будь ласка, введіть дійсний Hugging Face Access Token.</span>';
+      return;
+  }
 
-            async getBooks() {
-                if (!this._loaded) await this._ready;
-                return this._books.map(b => ({ number: b.number, shortName: b.shortName, name: b.name }));
-            }
+  // 1. Локальний пошук (якщо є)
+  const localResult = localData[mode][query];
+  if (localResult) {
+    resultsDiv.innerHTML = `**✅ Локальний результат (${mode}):**<hr>${localResult}<hr>Продовжуємо пошук через ІІ для порівняння...<br>`;
+    // Можна додати return, щоб зупинитись, але для тестування викликаємо API
+  } else {
+    resultsDiv.innerHTML = '⏳ **Локальних даних не знайдено.** Викликаємо Hugging Face API...';
+  }
 
-            async getChapters(bookId) {
-                if (!this._loaded) await this._ready;
-                const book = this._findBook(bookId);
-                return book ? book.chapters.map(ch => ch.number) : [];
-            }
+  // 2. Hugging Face API запит
+  const API_URL = 'https://api-inference.huggingface.co/models/bigscience/bloom-560m';
+  
+  // Динамічний промпт
+  const prompt = `Твоя задача: зробити біблійний ${mode === 'dictionary' ? 'словник' : mode === 'context' ? 'контекст' : 'паралель'} по запиту: "${query}". Дай коротку, зрозумілу відповідь українською.`;
+  
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiToken}`, // Використовуємо токен з поля
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        inputs: prompt, 
+        parameters: { 
+            max_new_tokens: 150, // Обмеження для швидкості
+            temperature: 0.7,    // Додавання креативності
+        } 
+      })
+    });
 
-            async getVerses(bookId, chapterId) {
-                if (!this._loaded) await this._ready;
-                const book = this._findBook(bookId);
-                if (!book) return [];
-                const chapter = book.chapters.find(ch => ch.number === String(chapterId)) || null;
-                return chapter ? chapter.verses.map(v => ({ number: v.number, text: v.text })) : [];
-            }
+    // Перевірка HTTP помилок (401, 404, 500 тощо)
+    if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || response.statusText;
+        resultsDiv.innerHTML = (localResult ? resultsDiv.innerHTML + '<br><br>' : '') + 
+                               `<span class="error">❌ **Помилка API (HTTP ${response.status}):** ${errorMessage}</span><br>
+                               <small><i>Це може бути недійсний токен, помилка моделі або проблема CORS.</i></small>`;
+        return;
+    }
+    
+    // Успішна відповідь
+    const data = await response.json();
 
-            async getVerse(bookId, chapterId, verseId) {
-                const verses = await this.getVerses(bookId, chapterId);
-                return verses.find(v => v.number === String(verseId)) || null;
-            }
-
-            async getVersesRange(bookId, chapterId, rangeStr) {
-                const verses = await this.getVerses(bookId, chapterId);
-                const parts = String(rangeStr).split(',').map(p => p.trim());
-                const nums = new Set();
-                parts.forEach(p => {
-                    if (p.includes('-')) {
-                        const [start, end] = p.split('-').map(Number);
-                        for (let i = start; i <= end; i++) nums.add(i);
-                    } else {
-                        nums.add(Number(p));
-                    }
-                });
-                return Array.from(nums).sort((a, b) => a - b).map(n => verses.find(v => Number(v.number) === n)).filter(Boolean);
-            }
-
-            async search(query) {
-                if (!this._loaded) {
-                    console.warn('MyBibleAPI: Поиск невозможен, JSON не загружен.');
-                    return [];
-                }
-                const q = String(query || '').toLowerCase();
-                const results = [];
-                this._books.forEach(book => {
-                    book.chapters.forEach(ch => {
-                        ch.verses.forEach(v => {
-                            if (v.textLower && v.textLower.includes(q)) {
-                                results.push({ book: book.name, chapter: ch.number, verse: v.number, text: v.text });
-                            }
-                        });
-                    });
-                });
-                console.log('Search results for', q, ':', results.length, 'стихов');
-                return results;
-            }
-
-            async searchRegex(pattern) {
-                if (!this._loaded) {
-                    console.warn('MyBibleAPI: Поиск невозможен, JSON не загружен.');
-                    return [];
-                }
-                let regex;
-                try {
-                    regex = new RegExp(pattern, 'giu');
-                } catch (e) {
-                    console.error('Неверный regex:', e);
-                    return [];
-                }
-                const results = [];
-                this._books.forEach(book => {
-                    book.chapters.forEach(ch => {
-                        ch.verses.forEach(v => {
-                            if (v.textLower && regex.test(v.text)) {
-                                results.push({ book: book.name, chapter: ch.number, verse: v.number, text: v.text });
-                            }
-                        });
-                    });
-                });
-                return results;
-            }
-
-            async getRandomVerse() {
-                if (!this._loaded) {
-                    console.warn('MyBibleAPI: Случайный стих невозможен, JSON не загружен.');
-                    return null;
-                }
-                const book = this._books[Math.floor(Math.random() * this._books.length)];
-                const ch = book.chapters[Math.floor(Math.random() * book.chapters.length)];
-                const v = ch.verses[Math.floor(Math.random() * ch.verses.length)];
-                return { book: book.name, chapter: ch.number, verse: v.number, text: v.text };
-            }
+    if (data && data[0] && data[0].generated_text) {
+        let aiText = data[0].generated_text;
+        
+        // Видалення вхідного промпта, який часто повторюється у відповіді
+        if (aiText.startsWith(prompt)) {
+            aiText = aiText.substring(prompt.length).trim();
         }
 
-        const bible = new MyBibleAPI();
-        const API_KEY = atob("Z3NrX1NUelQyS1FFQko3MGNDb1hDSllaV0dkeWIzRlk5OHJHN2xvWXUxSmc1SnV0VFZOSzIyVHY=");
-        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
-        const MODEL_NAME = "meta-llama/llama-4-maverick-17b-128e-instruct";
+        const finalResult = (localResult ? resultsDiv.innerHTML + '<br>' : '') +
+                            `<span class="success">✅ **Результат Hugging Face AI:**</span><hr>${aiText}`;
 
-        // Категории
-        const categories = {
-            strength: [
-                { book: "Филип’ян", chapter: "4", verse: "13", text: "Я все можу в Тім, Хто мене зміцнює, — в Христі." }
-            ],
-            comfort: [
-                { book: "Псалми", chapter: "23", verse: "4", text: "Коли я піду навіть долиною смертної тіні, то не буду боятися зла, бо Ти зі мною." }
-            ],
-            love: [
-                { book: "Івана", chapter: "3", verse: "16", text: "Так бо Бог полюбив світ, що дав Сина Свого Однородженого..." }
-            ],
-            faith: [
-                { book: "Євреїв", chapter: "11", verse: "1", text: "А віра — то підстава сподіваного, доказ небаченого." }
-            ],
-            hope: [
-                { book: "Римлян", chapter: "15", verse: "13", text: "Бог же надії нехай сповнить вас усякою радістю й миром у вірі..." }
-            ],
-            wisdom: [
-                { book: "Приповісті", chapter: "3", verse: "5", text: "Надійся на Господа всім своїм серцем, а на розум свій не покладайся." }
-            ]
-        };
+        resultsDiv.innerHTML = finalResult;
 
-        // Расширенный словарь синонимов для локального fallback
-        const synonyms = {
-            strength: ['сила', 'мужество', 'стійкість', 'міць', 'укріплення', 'подолання', 'випробування', 'екзамен', 'робота', 'труднощі'],
-            comfort: ['втіха', 'покой', 'утешение', 'мир', 'грусть', 'сум', 'самотність', 'одиночество', 'горе', 'болю', 'хвороба', 'болезнь'],
-            love: ['любов', 'прощення', 'милосердя', 'доброта', 'сімя', 'відносини', 'дружба', 'серце'],
-            faith: ['віра', 'довіра', 'молитва', 'надія', 'сподівання', 'Бог', 'Христос', 'дух'],
-            hope: ['надія', 'обіцянки', 'майбутнє', 'сподівання', 'радість', 'благословення'],
-            wisdom: ['мудрість', 'розум', 'порада', 'керівництво', 'знання', 'навчання', 'робота', 'учеба']
-        };
+    } else {
+        resultsDiv.innerHTML = (localResult ? resultsDiv.innerHTML + '<br><br>' : '') + 
+                               `<span class="error">❌ **Помилка: Неочікуваний формат відповіді від API.**</span>`;
+    }
 
-        // Библейская аптечка для fallback
-        const firstAid = {
-            страх: {
-                verse: categories.strength[0],
-                prayer: 'Господи, дай мені силу і мир перед випробуваннями.',
-                advice: 'Прочитай цей вірш перед сном і помолись за спокій.'
-            },
-            самотність: {
-                verse: categories.comfort[0],
-                prayer: 'Господи, будь зі мною в моїй самотності.',
-                advice: 'Прочитай цей вірш і подумай про Божу присутність.'
-            },
-            хвороба: {
-                verse: { book: "Псалми", chapter: "30", verse: "3", text: "Господи, Боже мій, я взивав до Тебе, і Ти мене зцілив." },
-                prayer: 'Господи, даруй мені зцілення і силу.',
-                advice: 'Молись цим віршем щодня за здоров’я.'
-            },
-            фінанси: {
-                verse: { book: "Филип’ян", chapter: "4", verse: "19", text: "Бог мій виповнить вашу всяку потребу за Своїм багатством у Славі, у Христі Ісусі." },
-                prayer: 'Господи, забезпеч мене в моїх потребах.',
-                advice: 'Молись і дякуй за те, що маєш.'
-            }
-        };
-
-        let bookmarks = JSON.parse(localStorage.getItem('bibleBookmarks') || '[]');
-
-        async function init() {
-            try {
-                await bible.ready();
-                renderBookmarks();
-                loadDailyVerse();
-            } catch (e) {
-                console.error('Ошибка инициализации:', e);
-                document.getElementById('versesList').innerHTML = '<p style="color: red;">Помилка: Не вдалося завантажити Біблію. Перевірте URL або додайте локальний файл bible_ua.json.</p>';
-            }
-        }
-
-        function renderBookmarks() {
-            const list = document.getElementById('bookmarksList');
-            if (bookmarks.length === 0) {
-                list.innerHTML = '<em>Немає закладок</em>';
-                return;
-            }
-            list.innerHTML = bookmarks.map(b => `
-                <div class="bookmark-item">
-                    <span onclick="displayVerse('${b.book}', '${b.chapter}', '${b.verse}')">${b.book} ${b.chapter}:${b.verse} — ${b.text.slice(0, 40)}...</span>
-                    <button class="action-btn" onclick="removeBookmark('${b.id}')">❌</button>
-                </div>
-            `).join('');
-        }
-
-        async function toggleBookmark(book, chapter, verse, text) {
-            const id = `${book}-${chapter}-${verse}`;
-            const idx = bookmarks.findIndex(b => b.id === id);
-            if (idx >= 0) {
-                bookmarks.splice(idx, 1);
-            } else {
-                bookmarks.push({ id, book, chapter, verse, text });
-            }
-            localStorage.setItem('bibleBookmarks', JSON.stringify(bookmarks));
-            renderBookmarks();
-            const verses = await bible.getVerses(book, chapter);
-            displayVerses(verses.map(v => ({ book, chapter, verse: v.number, text: v.text })));
-        }
-
-        function removeBookmark(id) {
-            bookmarks = bookmarks.filter(b => b.id !== id);
-            localStorage.setItem('bibleBookmarks', JSON.stringify(bookmarks));
-            renderBookmarks();
-        }
-
-        async function searchVerses() {
-            const query = document.getElementById('searchInput').value;
-            if (!query) return;
-            const results = await bible.search(query);
-            displayVerses(results);
-        }
-
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('versesList').innerHTML = '';
-        }
-
-        async function loadCategory(category) {
-            const verses = categories[category] || [];
-            displayVerses(verses);
-        }
-
-        async function loadDailyVerse() {
-            const verse = await bible.getRandomVerse();
-            if (verse) {
-                document.getElementById('dailyVerse').innerHTML = `
-                    <div class="verse">
-                        <span class="verse-number">${verse.book} ${verse.chapter}:${verse.verse}</span>
-                        <span class="verse-text">${verse.text}</span>
-                    </div>
-                `;
-            } else {
-                document.getElementById('dailyVerse').innerHTML = '<p style="color: red;">Не вдалося завантажити вірш дня.</p>';
-            }
-        }
-
-        async function aiSuggest() {
-            const query = document.getElementById('aiQuery').value.toLowerCase();
-            if (!query) return;
-
-            // Слова, указывающие на негативный контекст стиха
-            const negativeWords = ['смерть', 'пішов від них', 'страх обгорнув', 'прокляття', 'гнів'];
-
-            try {
-                // Запрос к Grok API
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: MODEL_NAME,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: 'Ти помічник, який аналізує запит на українській мові та визначає емоційну або ситуаційну тему (наприклад, страх, самотність, надія, любов). Повертай JSON з полями: `theme` (основна тема, наприклад, "страх"), `keywords` (массив слів для пошуку, наприклад, ["сила", "мир", "захист"] для запиту про страх), `explanation` (коротке пояснення на українській мові, чому підходить стих), `advice` (порада для користувача), `prayer` (молитва для ситуації). Слова для пошуку мають бути пов’язані з позитивним, утішним контекстом (наприклад, для страху — сила, захист, мир, а не страх). Не використовуй Markdown (наприклад, ```json).'
-                            },
-                            {
-                                role: 'user',
-                                content: `Аналізуй запит: "${query}"`
-                            }
-                        ]
-                    })
-                });
-
-                if (!response.ok) throw new Error(`Ошибка API: ${response.status}`);
-
-                const data = await response.json();
-                // Очистка ответа от Markdown
-                let content = data.choices[0].message.content;
-                content = content.replace(/```json\n|\n```/g, '').trim();
-                const result = JSON.parse(content);
-                console.log('API response:', result);
-
-                const { theme, keywords, explanation, advice, prayer } = result;
-
-                // Поиск стихов в bible_ua.json
-                let verse = null;
-                if (bible._loaded) {
-                    for (const keyword of keywords) {
-                        console.log('Searching for keyword:', keyword);
-                        const searchResults = await bible.search(keyword);
-                        // Фильтруем стихи, исключая негативный контекст
-                        const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
-                        if (filteredResults.length > 0) {
-                            const randomIndex = Math.floor(Math.random() * filteredResults.length);
-                            verse = filteredResults[randomIndex];
-                            console.log('Selected verse:', verse);
-                            break;
-                        }
-                    }
-                } else {
-                    console.warn('JSON не загружен, используем fallback.');
-                }
-
-                // Fallback на категорию или аптечку
-                if (!verse) {
-                    let category = 'faith';
-                    let firstAidKey = null;
-                    for (const [cat, words] of Object.entries(synonyms)) {
-                        if (words.some(word => query.includes(word))) {
-                            category = cat;
-                            break;
-                        }
-                    }
-                    for (const [key, item] of Object.entries(firstAid)) {
-                        if (query.includes(key) || synonyms[category]?.some(word => query.includes(word))) {
-                            firstAidKey = key;
-                            break;
-                        }
-                    }
-                    verse = firstAidKey ? firstAid[firstAidKey].verse : (categories[category][0] || { book: "Римлян", chapter: "15", verse: "13", text: "Бог же надії нехай сповнить вас усякою радістю й миром у вірі..." });
-                    if (firstAidKey) {
-                        explanation = firstAid[firstAidKey].advice;
-                        prayer = firstAid[firstAidKey].prayer;
-                    }
-                }
-
-                const ref = `${verse.book} ${verse.chapter}:${verse.verse}`;
-                const output = `<strong>${ref}</strong><p>${verse.text}</p><p>Для "${query}": ${explanation}</p><p>Порада: ${advice}</p><p>Молитва: ${prayer}</p>`;
-                document.getElementById('ai-result').innerHTML = output;
-            } catch (e) {
-                console.error('Ошибка ИИ:', e);
-                // Fallback на локальную логику
-                let category = 'faith';
-                let keyword = 'віра';
-                let firstAidKey = null;
-                for (const [cat, words] of Object.entries(synonyms)) {
-                    const matchedWord = words.find(word => query.includes(word));
-                    if (matchedWord) {
-                        category = cat;
-                        keyword = matchedWord;
-                        break;
-                    }
-                }
-                for (const [key, item] of Object.entries(firstAid)) {
-                    if (query.includes(key) || keyword === key) {
-                        firstAidKey = key;
-                        break;
-                    }
-                }
-
-                let verse;
-                if (bible._loaded) {
-                    const searchResults = await bible.search(keyword);
-                    // Фильтруем негативные стихи
-                    const filteredResults = searchResults.filter(v => v && v.textLower && !negativeWords.some(nw => v.textLower.includes(nw)));
-                    if (filteredResults.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * filteredResults.length);
-                        verse = filteredResults[randomIndex];
-                    }
-                }
-                if (!verse) {
-                    verse = firstAidKey ? firstAid[firstAidKey].verse : categories[category][0];
-                }
-
-                const ref = `${verse.book} ${verse.chapter}:${verse.verse}`;
-                const explanations = {
-                    strength: 'Цей вірш надихає на стійкість і довіру до Божої сили.',
-                    comfort: 'Цей вірш приносить мир і втіху в скрутні часи.',
-                    love: 'Цей вірш нагадує про Божу любов і милосердя.',
-                    faith: 'Цей вірш зміцнює віру в Бога.',
-                    hope: 'Цей вірш дає надію на краще майбутнє.',
-                    wisdom: 'Цей вірш вчить покладатися на Божу мудрість.'
-                };
-                const explanation = firstAidKey
-                    ? `Для "${query}" підходить: "${verse.text}". ${firstAid[firstAidKey].advice} Молитва: ${firstAid[firstAidKey].prayer}`
-                    : `Для "${query}" підходить: "${verse.text}". ${explanations[category] || 'Підходить для вашої ситуації.'}`;
-                document.getElementById('ai-result').innerHTML = `<strong>${ref}</strong><p>${verse.text}</p><p>${explanation}</p>`;
-            }
-        }
-
-        function displayVerses(verses) {
-            const list = document.getElementById('versesList');
-            list.innerHTML = verses.map(v => {
-                const id = `${v.book}-${v.chapter}-${v.verse}`;
-                const active = bookmarks.some(b => b.id === id);
-                return `
-                    <div class="verse">
-                        <span class="verse-number">${v.book} ${v.chapter}:${v.verse}</span>
-                        <span class="verse-text">${v.text}</span>
-                        <div class="actions">
-                            <button class="action-btn ${active ? 'active' : ''}" onclick="toggleBookmark('${v.book}', '${v.chapter}', '${v.verse}', \`${v.text.replace(/`/g, '\\`')}\`)">${active ? '★' : '☆'}</button>
-                            <button class="action-btn" onclick="addNote('${id}')">✏️</button>
-                            <button class="action-btn" onclick="createImage('${v.text}', '${v.book} ${v.chapter}:${v.verse}')">🎨</button>
-                            <button class="action-btn" onclick="exportVerse('${v.book} ${v.chapter}:${v.verse}', '${v.text}')">📤</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function displayVerse(book, chapter, verse) {
-            const v = await bible.getVerse(book, chapter, verse);
-            if (v) {
-                displayVerses([{ book, chapter, verse: v.number, text: v.text }]);
-            }
-        }
-
-        function addNote(id) {
-            const note = prompt('Додайте нотатку:');
-            if (note) {
-                let notes = JSON.parse(localStorage.getItem('notes') || '{}');
-                notes[id] = note;
-                localStorage.setItem('notes', JSON.stringify(notes));
-                alert('Нотатку збережено!');
-            }
-        }
-
-        function createImage(text, ref) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 400; canvas.height = 200;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#4CAF50'; ctx.fillRect(0, 0, 400, 200);
-            ctx.fillStyle = 'white'; ctx.font = '20px Arial';
-            ctx.fillText(ref, 20, 30);
-            ctx.font = '16px Arial';
-            ctx.fillText(text.slice(0, 100), 20, 60, 360);
-            const link = document.createElement('a');
-            link.download = `${ref.replace(/ /g, '_')}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-
-        function exportVerse(ref, text) {
-            const blob = new Blob([`${ref}: ${text}`], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `${ref.replace(/ /g, '_')}.txt`; a.click();
-        }
-
-        init();
-    </script>
+  } catch (err) {
+    // Помилки мережі або Fetch (наприклад, CORS)
+    resultsDiv.innerHTML = (localResult ? resultsDiv.innerHTML + '<br><br>' : '') +
+                           `<span class="error">❌ **Помилка мережі (CORS?):** ${err.message}</span><br>
+                           <small><i>Спробуйте запустити код на веб-сервері.</i></small>`;
+  }
+}
+</script>
 </body>
 </html>

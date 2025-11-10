@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
@@ -25,75 +25,108 @@
             opacity: 0; transition: opacity .3s; font-size: 12px; font-weight: 500;
         }
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .speaker-row {
+            transition: all 0.3s ease;
+        }
+        .speaker-row:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen py-10">
-    <div class="w-full max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+<body class="flex items-center justify-center min-h-screen py-10 px-4">
+    <div class="w-full max-w-4xl mx-auto glass-card rounded-2xl shadow-2xl p-6 md:p-8">
         <header class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Продвинутая Студия Озвучки</h1>
-            <p class="text-gray-500 mt-2">Настройте голоса и стиль, чтобы получить идеальную озвучку.</p>
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                🎙️ Студия Озвучки
+            </h1>
+            <p class="text-gray-600 mt-2">Настройте голоса и стиль для идеальной озвучки</p>
         </header>
 
         <main>
             <!-- СЦЕНАРИЙ -->
-            <div class="mb-4">
-                <label for="script" class="block text-sm font-medium text-gray-700 mb-2">Сценарий для озвучки:</label>
+            <div class="mb-6">
+                <label for="script" class="block text-sm font-semibold text-gray-700 mb-2">
+                    📝 Сценарий для озвучки:
+                </label>
                 <textarea id="script" rows="10"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    placeholder="Пример: Анна: Привет! Максим: Привет, Анна! Как дела?">
-Игорь: В начале было Слово.
+                    class="w-full p-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition resize-none"
+                    placeholder="Пример: Анна: Привет! Максим: Привет, Анна! Как дела?">Игорь: В начале было Слово.
 Марина: Что же было до начала?
-Игорь: Божя Любовь.
-                </textarea>
+Игорь: Божья Любовь.</textarea>
+                <div class="text-xs text-gray-500 mt-1 flex items-center justify-between">
+                    <span>💡 Формат: Имя: Текст</span>
+                    <span id="char-count" class="font-mono">0 символов</span>
+                </div>
             </div>
 
             <!-- РАСШИРЕННЫЕ НАСТРОЙКИ -->
-            <div class="mt-6 border-t pt-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Расширенные настройки</h2>
+            <div class="mt-6 border-t-2 border-gray-200 pt-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2">⚙️</span> Расширенные настройки
+                </h2>
 
-                <!-- ИНСТРУКЦИИ ПО СТИЛЮ (на всю ширину) -->
+                <!-- ИНСТРУКЦИИ ПО СТИЛЮ -->
                 <div class="mb-6">
-                    <label for="style-instructions" class="block text-sm font-medium text-gray-700 mb-2">
-                        Инструкции по стилю
+                    <label for="style-instructions" class="block text-sm font-semibold text-gray-700 mb-2">
+                        🎭 Инструкции по стилю
                     </label>
                     <input type="text" id="style-instructions"
-                        class="w-full p-2 border border-gray-300 rounded-lg"
+                        class="w-full p-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                         placeholder="Пример: говори спокойно, с лёгкой грустью, делай паузы после запятых">
+                    <p class="text-xs text-gray-500 mt-1">Опционально: укажите эмоции, темп, паузы</p>
                 </div>
 
                 <!-- ГОЛОСА -->
-                <div>
-                    <h3 class="text-lg font-medium text-gray-700 mb-3">Настройка голосов</h3>
+                <div class="bg-gradient-to-br from-purple-50 to-blue-50 p-5 rounded-xl">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4 flex items-center">
+                        <span class="mr-2">🎤</span> Настройка голосов
+                    </h3>
                     <div id="speaker-list" class="space-y-3"></div>
                     <button id="add-speaker-btn"
-                        class="mt-4 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition text-sm">
-                        + Добавить спикера
+                        class="mt-4 w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl hover:from-purple-600 hover:to-blue-600 transition shadow-md flex items-center justify-center">
+                        <span class="text-xl mr-2">+</span> Добавить спикера
                     </button>
                 </div>
             </div>
 
             <!-- КНОПКА ОЗВУЧИТЬ -->
             <button id="generate-btn"
-                class="mt-8 w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                class="mt-8 w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-4 px-4 rounded-xl hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition shadow-lg flex items-center justify-center text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                 </svg>
-                Озвучить
+                🎬 Озвучить сценарий
             </button>
 
             <!-- ИНДИКАТОР ЗАГРУЗКИ / ОШИБКА / ПЛЕЕР -->
-            <div id="loading" class="hidden text-center my-4 flex flex-col items-center">
+            <div id="loading" class="hidden text-center my-6 flex flex-col items-center bg-blue-50 p-6 rounded-xl">
                 <div class="loader"></div>
-                <p class="text-gray-600 mt-3">Генерация аудио... Это может занять несколько секунд.</p>
+                <p class="text-gray-700 mt-3 font-medium">🔊 Генерация аудио...</p>
+                <p class="text-gray-500 text-sm mt-1">Это может занять несколько секунд</p>
             </div>
-            <div id="error" class="hidden text-center my-4 p-3 bg-red-100 text-red-700 rounded-lg"></div>
-            <div id="audio-player-container" class="hidden mt-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2 text-center">Ваша аудиозапись готова!</h3>
-                <audio id="audio-player" controls class="w-full"></audio>
+            <div id="error" class="hidden text-center my-4 p-4 bg-red-50 border-2 border-red-200 text-red-700 rounded-xl font-medium"></div>
+            <div id="audio-player-container" class="hidden mt-6 bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200">
+                <h3 class="text-xl font-bold text-gray-800 mb-3 text-center flex items-center justify-center">
+                    <span class="mr-2">✅</span> Ваша аудиозапись готова!
+                </h3>
+                <audio id="audio-player" controls class="w-full rounded-lg shadow"></audio>
+                <button id="download-btn" class="mt-3 w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition">
+                    ⬇️ Скачать аудио
+                </button>
             </div>
         </main>
+
+        <footer class="mt-8 text-center text-xs text-gray-500 border-t pt-4">
+            Powered by Google Gemini 2.5 Flash TTS
+        </footer>
     </div>
 
     <script>
@@ -106,51 +139,82 @@
         const audioPlayer      = document.getElementById('audio-player');
         const speakerListDiv   = document.getElementById('speaker-list');
         const addSpeakerBtn    = document.getElementById('add-speaker-btn');
+        const charCount        = document.getElementById('char-count');
+        const downloadBtn      = document.getElementById('download-btn');
 
-        /* ---------- API-КЛЮЧ (вставьте свой) ---------- */
-        const apiKey = "AIzaSyC7ftRUnNdXxHUZxaCrhlhH9h3AGMP2_To"; // <-- ваш ключ
+        /* ---------- API-КЛЮЧ ---------- */
+        const apiKey = "AIzaSyC7ftRUnNdXxHUZxaCrhlhH9h3AGMP2_To";
 
         /* ---------- СПИСОК ГОЛОСОВ ---------- */
         const VOICES = [
-            {id:'Zephyr',name:'Zephyr (Яркий)'},{id:'Puck',name:'Puck (Оптимистичный)'},{id:'Charon',name:'Charon (Информативный)'},
-            {id:'Kore',name:'Kore (Твёрдый)'},{id:'Fenrir',name:'Fenrir (Возбудимый)'},{id:'Leda',name:'Leda (Молодёжный)'},
-            {id:'Orus',name:'Orus (Твёрдый)'},{id:'Aoede',name:'Aoede (Свежий)'},{id:'Callirrhoe',name:'Callirrhoe (Спокойный)'},
-            {id:'Autonoe',name:'Autonoe (Яркий)'},{id:'Enceladus',name:'Enceladus (Придыхательный)'},{id:'Iapetus',name:'Iapetus (Чёткий)'},
-            {id:'Umbriel',name:'Umbriel (Спокойный)'},{id:'Algieba',name:'Algieba (Мягкий)'},{id:'Despina',name:'Despina (Мягкий)'},
-            {id:'Erinome',name:'Erinome (Чёткий)'},{id:'Algenib',name:'Algenib (Хриплый)'},{id:'Rasalgethi',name:'Rasalgethi (Информативный)'},
-            {id:'Laomedeia',name:'Laomedeia (Оптимистичный)'},{id:'Achernar',name:'Achernar (Мягкий)'},{id:'Alnilam',name:'Alnilam (Твёрдый)'},
-            {id:'Schedar',name:'Schedar (Ровный)'},{id:'Gacrux',name:'Gacrux (Зрелый)'},{id:'Pulcherrima',name:'Pulcherrima (Прямой)'},
-            {id:'Achird',name:'Achird (Дружелюбный)'},{id:'Zubenelgenubi',name:'Zubenelgenubi (Непринуждённый)'},{id:'Vindemiatrix',name:'Vindemiatrix (Нежный)'},
-            {id:'Sadachbia',name:'Sadachbia (Живой)'},{id:'Sadaltager',name:'Sadaltager (Осведомлённый)'},{id:'Sulafat',name:'Sulafat (Тёплый)'}
+            {id:'Zephyr',name:'Zephyr (Яркий)',gender:'m'},{id:'Puck',name:'Puck (Оптимистичный)',gender:'m'},
+            {id:'Charon',name:'Charon (Информативный)',gender:'m'},{id:'Kore',name:'Kore (Твёрдый)',gender:'f'},
+            {id:'Fenrir',name:'Fenrir (Возбудимый)',gender:'m'},{id:'Leda',name:'Leda (Молодёжный)',gender:'f'},
+            {id:'Orus',name:'Orus (Твёрдый)',gender:'m'},{id:'Aoede',name:'Aoede (Свежий)',gender:'f'},
+            {id:'Callirrhoe',name:'Callirrhoe (Спокойный)',gender:'f'},{id:'Autonoe',name:'Autonoe (Яркий)',gender:'f'},
+            {id:'Enceladus',name:'Enceladus (Придыхательный)',gender:'m'},{id:'Iapetus',name:'Iapetus (Чёткий)',gender:'m'},
+            {id:'Umbriel',name:'Umbriel (Спокойный)',gender:'m'},{id:'Algieba',name:'Algieba (Мягкий)',gender:'f'},
+            {id:'Despina',name:'Despina (Мягкий)',gender:'f'},{id:'Erinome',name:'Erinome (Чёткий)',gender:'f'},
+            {id:'Algenib',name:'Algenib (Хриплый)',gender:'m'},{id:'Rasalgethi',name:'Rasalgethi (Информативный)',gender:'m'},
+            {id:'Laomedeia',name:'Laomedeia (Оптимистичный)',gender:'f'},{id:'Achernar',name:'Achernar (Мягкий)',gender:'m'},
+            {id:'Alnilam',name:'Alnilam (Твёрдый)',gender:'m'},{id:'Schedar',name:'Schedar (Ровный)',gender:'f'},
+            {id:'Gacrux',name:'Gacrux (Зрелый)',gender:'m'},{id:'Pulcherrima',name:'Pulcherrima (Прямой)',gender:'f'},
+            {id:'Achird',name:'Achird (Дружелюбный)',gender:'m'},{id:'Zubenelgenubi',name:'Zubenelgenubi (Непринуждённый)',gender:'m'},
+            {id:'Vindemiatrix',name:'Vindemiatrix (Нежный)',gender:'f'},{id:'Sadachbia',name:'Sadachbia (Живой)',gender:'m'},
+            {id:'Sadaltager',name:'Sadaltager (Осведомлённый)',gender:'m'},{id:'Sulafat',name:'Sulafat (Тёплый)',gender:'f'}
         ];
+
+        /* ---------- СЧЁТЧИК СИМВОЛОВ ---------- */
+        scriptTextarea.addEventListener('input', ()=>{
+            const count = scriptTextarea.value.length;
+            charCount.textContent = `${count} символов`;
+        });
 
         /* ---------- ДИНАМИЧЕСКИЕ СПИКЕРЫ ---------- */
         function createSpeakerRow(name='', selectedVoice=''){
             const div = document.createElement('div');
-            div.className = 'grid grid-cols-1 md:grid-cols-6 gap-2 items-center';
+            div.className = 'speaker-row grid grid-cols-1 md:grid-cols-6 gap-2 items-center bg-white p-3 rounded-lg border-2 border-gray-200';
             const voiceOpts = VOICES.map(v=>`<option value="${v.id}" ${v.id===selectedVoice?'selected':''}>${v.name}</option>`).join('');
             div.innerHTML = `
-                <input type="text" class="md:col-span-2 w-full p-2 border border-gray-300 rounded-lg speaker-name" placeholder="Имя спикера" value="${name}">
-                <select class="md:col-span-3 w-full p-2 border border-gray-300 rounded-lg speaker-voice bg-white">${voiceOpts}</select>
-                <button class="md:col-span-1 w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 remove-speaker-btn">Удалить</button>
+                <input type="text" class="md:col-span-2 w-full p-2 border-2 border-gray-300 rounded-lg speaker-name font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="Имя спикера" value="${name}">
+                <select class="md:col-span-3 w-full p-2 border-2 border-gray-300 rounded-lg speaker-voice bg-white font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500">${voiceOpts}</select>
+                <button class="md:col-span-1 w-full bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition font-semibold remove-speaker-btn">
+                    🗑️ Удалить
+                </button>
             `;
-            div.querySelector('.remove-speaker-btn').addEventListener('click',()=>div.remove());
+            div.querySelector('.remove-speaker-btn').addEventListener('click',()=>{
+                div.style.opacity = '0';
+                div.style.transform = 'translateX(-20px)';
+                setTimeout(()=>div.remove(), 300);
+            });
             speakerListDiv.appendChild(div);
         }
+        
         addSpeakerBtn.addEventListener('click',()=>createSpeakerRow());
+        
         document.addEventListener('DOMContentLoaded',()=>{
             createSpeakerRow('Марина','Kore');
-            createSpeakerRow('Игорь','Puck');
+            createSpeakerRow('Игорь','Sadachbia');
+            charCount.textContent = `${scriptTextarea.value.length} символов`;
+        });
+
+        /* ---------- СКАЧИВАНИЕ АУДИО ---------- */
+        downloadBtn.addEventListener('click', ()=>{
+            const url = audioPlayer.src;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voiceover_${Date.now()}.wav`;
+            a.click();
         });
 
         /* ---------- ГЕНЕРАЦИЯ АУДИО ---------- */
         generateBtn.addEventListener('click', async()=>{
-            if(!apiKey){ showError('Вставьте API-ключ в переменную apiKey'); return; }
+            if(!apiKey){ showError('⚠️ Вставьте API-ключ в переменную apiKey'); return; }
             const script = scriptTextarea.value.trim();
-            if(!script){ showError('Введите текст для озвучки'); return; }
+            if(!script){ showError('⚠️ Введите текст для озвучки'); return; }
             setLoading(true);
             try{ await generateAndPlayAudio(script); }
-            catch(err){ console.error(err); showError(err.message); }
+            catch(err){ console.error(err); showError('❌ ' + err.message); }
             finally{ setLoading(false); }
         });
 

@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Распознаватель речи с микрофона</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f4f4f9;
+      color: #333;
+    }
+    h1 { color: #2c3e50; text-align: center; }
+    .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    #output { 
+      width: 100%; height: 200px; margin-top: 15px; padding: 10px; 
+      font-size: 16px; border: 1px solid #ddd; border-radius: 6px; 
+      resize: vertical; background: #f9f9f9; 
+    }
+    button {
+      background: #3498db; color: white; border: none; padding: 12px 24px;
+      font-size: 16px; border-radius: 6px; cursor: pointer; margin: 10px 5px;
+    }
+    button:hover { background: #2980b9; }
+    button:disabled { background: #95a5a6; cursor: not-allowed; }
+    .status { margin-top: 10px; color: #7f8c8d; font-style: italic; }
+    select { padding: 8px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Распознаватель речи (STT) с микрофона</h1>
+  <p>Нажми "Начать слушать", дай доступ к микрофону и говори! Текст появится в реальном времени.</p>
+
+  <label for="langSelect">Язык:</label>
+  <select id="langSelect">
+    <option value="ru-RU">Русский</option>
+    <option value="en-US">English</option>
+    <option value="uk-UA">Українська</option>
+  </select>
+
+  <br>
+
+  <button id="startBtn">Начать слушать</button>
+  <button id="stopBtn" disabled>Остановить</button>
+  <button id="clearBtn">Очистить</button>
+
+  <div class="status" id="status">Готов к работе. Выбери язык и начни!</div>
+
+  <textarea id="output" placeholder="Распознанный текст появится здесь..." readonly></textarea>
+</div>
+
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const output = document.getElementById('output');
+  const status = document.getElementById('status');
+  const langSelect = document.getElementById('langSelect');
+
+  let recognition = null;
+  let isListening = false;
+
+  // Проверка поддержки API
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    status.textContent = 'Твой браузер не поддерживает распознавание речи. Попробуй Chrome или Edge.';
+    startBtn.disabled = true;
+  }
+
+  // Инициализация распознавания
+  function initRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = langSelect.value;
+    recognition.interimResults = true; // Показывать промежуточные результаты
+    recognition.continuous = true; // Непрерывное слушание
+
+    recognition.onstart = () => {
+      isListening = true;
+      status.textContent = 'Слушаю... Говори четко!';
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    };
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      output.value = finalTranscript + interimTranscript;
+      output.scrollTop = output.scrollHeight; // Автопрокрутка
+    };
+
+    recognition.onerror = (event) => {
+      status.textContent = `Ошибка: ${event.error}. Попробуй еще раз.`;
+      stopListening();
+    };
+
+    recognition.onend = () => {
+      stopListening();
+      if (isListening) {
+        // Авторестарт, если нужно
+        // initRecognition(); // Раскомментируй для непрерывного режима
+      }
+    };
+  }
+
+  // Начать слушание
+  startBtn.addEventListener('click', () => {
+    initRecognition();
+    recognition.start();
+  });
+
+  // Остановить
+  stopBtn.addEventListener('click', () => {
+    stopListening();
+  });
+
+  function stopListening() {
+    if (recognition) {
+      recognition.stop();
+    }
+    isListening = false;
+    status.textContent = 'Остановлено. Нажми "Начать слушать" для продолжения.';
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+  }
+
+  // Очистить текст
+  clearBtn.addEventListener('click', () => {
+    output.value = '';
+  });
+
+  // Смена языка
+  langSelect.addEventListener('change', () => {
+    if (recognition) {
+      recognition.lang = langSelect.value;
+    }
+  });
+</script>
+
+</body>
+</html>

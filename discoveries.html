@@ -737,7 +737,7 @@
         </div>
     </div>
 <script>
-    // === ЭЛЕМЕНТЫ И НАСТРОЙКИ ===
+    // === ЭЛЕМЕНТЫ ===
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const mobileCanvas = document.getElementById('mobileCanvas');
@@ -751,6 +751,7 @@
     let uploadedImage = null;
     let recognition = null;
     let isListening = false;
+    let finalTranscript = ''; // Для накопления финального текста
 
     const settings = {
         apiKey: "sk_e2a53594d971d16e3af8f849040f95d9eadfa1dc96378ab0",
@@ -796,7 +797,7 @@
         modern: { background: backgrounds.gradient3, font: "'Montserrat', sans-serif", effect: 'glow', border: 'none', textColor: '#ffffff', referenceColor: '#ffffff', borderColor: '#ffffff', vignette: 0, textSize: 100 },
         vintage: { background: backgrounds.gradient10, font: "'Cormorant Garamond', serif", effect: 'emboss', border: 'vintage', textColor: '#e6d7b9', referenceColor: '#d4c09a', borderColor: '#b89b6e', vignette: 50, textSize: 105 },
         nature: { background: backgrounds.gradient4, font: "'Lora', serif", effect: 'none', border: 'ornament', textColor: '#ffffff', referenceColor: '#ffffff', borderColor: '#ffffff', vignette: 30, textSize: 100 },
-        minimalist: { background: backgrounds.gradient7, font: 'Arial, sans-serif', effect: 'none', border: 'none', textColor: '#000000', referenceColor: '#333333', borderColor: '#000000', vignette: 0, textSize: 90 },
+        minimalist: { background: backgrounds.gradient7, font: 'Arial, sans-serif", effect: 'none', border: 'none', textColor: '#000000', referenceColor: '#333333', borderColor: '#000000', vignette: 0, textSize: 90 },
         baroque: { background: backgrounds.gradient9, font: "'Crimson Text', serif", effect: '3d', border: 'ornament', textColor: '#4a2c0b', referenceColor: '#6b451a', borderColor: '#8b5a2b', vignette: 40, textSize: 115 },
         hipster: { background: backgrounds.gradient8, font: "'Raleway', sans-serif", effect: 'outline', border: 'dashed', textColor: '#ffffff', referenceColor: '#ffffff', borderColor: '#ffffff', vignette: 10, textSize: 95 },
         dark: { background: backgrounds.gradient10, font: "'Montserrat', sans-serif", effect: 'glow', border: 'double', textColor: '#ffffff', referenceColor: '#cccccc', borderColor: '#ffffff', vignette: 60, textSize: 100 },
@@ -806,7 +807,7 @@
         nordic: { background: backgrounds.gradient11, font: "'Raleway', sans-serif", effect: 'shadow', border: 'none', textColor: '#ffffff', referenceColor: '#dddddd', borderColor: '#ffffff', vignette: 15, textSize: 95 }
     };
 
-    // === МИКРОФОН: КНОПКА ===
+    // === КНОПКА МИКРОФОНА ===
     const micBtn = document.createElement('button');
     micBtn.innerHTML = 'Начать слушать';
     micBtn.className = 'btn';
@@ -814,7 +815,7 @@
     micBtn.style.width = '100%';
     customVerse.parentNode.appendChild(micBtn);
 
-    // === РАСПОЗНАВАНИЕ РЕЧИ ===
+    // === РАСПОЗНАВАНИЕ РЕЧИ (БЕЗ ПОВТОРОВ) ===
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -832,34 +833,44 @@
             isListening = true;
             micBtn.innerHTML = 'Слушаю...';
             micBtn.style.background = '#e74c3c';
+            finalTranscript = customVerse.value.trim(); // Сохраняем текущий
         };
 
         recognition.onresult = (event) => {
-            let final = '';
             let interim = '';
-
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const t = event.results[i][0].transcript;
-                event.results[i].isFinal ? final += t + ' ' : interim += t;
+                if (event.results[i].isFinal) {
+                    finalTranscript += ' ' + t;
+                } else {
+                    interim = t;
+                }
             }
-
-            const current = customVerse.value.trim();
-            customVerse.value = (current + ' ' + final).trim() + interim;
+            customVerse.value = finalTranscript.trim() + (interim ? ' ' + interim : '');
             settings.verse = customVerse.value || 'Введите текст...';
             drawImage();
         };
 
         recognition.onerror = () => {
             stopListening();
-            alert('Ошибка микрофона. Попробуйте снова.');
+            alert('Ошибка микрофона');
         };
 
-        recognition.onend = () => stopListening();
+        recognition.onend = () => {
+            if (isListening) recognition.start();
+            else {
+                micBtn.innerHTML = 'Начать слушать';
+                micBtn.style.background = '';
+            }
+        };
     }
 
     function startListening() {
         if (!recognition) initSpeechRecognition();
-        if (recognition && !isListening) recognition.start();
+        if (recognition && !isListening) {
+            finalTranscript = customVerse.value.trim(); // Сохраняем текущий текст
+            recognition.start();
+        }
     }
 
     function stopListening() {
@@ -869,57 +880,45 @@
         micBtn.style.background = '';
     }
 
-    micBtn.addEventListener('click', () => {
-        isListening ? stopListening() : startListening();
-    });
-
+    micBtn.addEventListener('click', () => isListening ? stopListening() : startListening());
     verseSelect.addEventListener('change', () => stopListening());
 
     // === КАНВАС ===
     function initCanvas() {
-        const formats = {
-            square: { width: 1080, height: 1080 },
-            story: { width: 1080, height: 1920 },
-            post: { width: 1080, height: 1350 }
-        };
-        const { width, height } = formats[settings.format];
-        canvas.width = width; canvas.height = height;
-        mobileCanvas.width = width / 2; mobileCanvas.height = height / 2;
+        const formats = { square: { w: 1080, h: 1080 }, story: { w: 1080, h: 1920 }, post: { w: 1080, h: 1350 } };
+        const { w, h } = formats[settings.format];
+        canvas.width = w; canvas.height = h;
+        mobileCanvas.width = w / 2; mobileCanvas.height = h / 2;
         drawImage();
     }
 
-    function createGradient(colors, ctx, canvas) {
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, colors[0]);
-        gradient.addColorStop(1, colors[1]);
-        return gradient;
+    function createGradient(c, ctx, canvas) {
+        const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        g.addColorStop(0, c[0]); g.addColorStop(1, c[1]);
+        return g;
     }
 
-    function wrapText(text, maxWidth, ctx) {
+    function wrapText(text, maxW, ctx) {
         const words = text.split(' ');
         const lines = [];
         let line = words[0];
         for (let i = 1; i < words.length; i++) {
             const test = `${line} ${words[i]}`;
-            if (ctx.measureText(test).width < maxWidth) {
-                line = test;
-            } else {
-                lines.push(line);
-                line = words[i];
-            }
+            if (ctx.measureText(test).width < maxW) line = test;
+            else { lines.push(line); line = words[i]; }
         }
         lines.push(line);
         return lines;
     }
 
-    function applyTextEffect(text, x, y, ctx, canvas, color) {
+    function applyTextEffect(text, x, y, ctx, color) {
         ctx.fillStyle = color;
-        const effect = settings.effect;
-        if (effect === 'shadow') { ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 5; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
-        else if (effect === 'glow') { ctx.shadowColor = color; ctx.shadowBlur = 10; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
-        else if (effect === 'outline') { ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeText(text, x, y); ctx.fillStyle = '#000'; }
-        else if (effect === '3d') { ctx.fillText(text, x + 2, y + 2); ctx.fillStyle = color; }
-        else if (effect === 'emboss') {
+        const e = settings.effect;
+        if (e === 'shadow') { ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 5; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
+        else if (e === 'glow') { ctx.shadowColor = color; ctx.shadowBlur = 10; }
+        else if (e === 'outline') { ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeText(text, x, y); ctx.fillStyle = '#000'; }
+        else if (e === '3d') { ctx.fillText(text, x + 2, y + 2); ctx.fillStyle = color; }
+        else if (e === 'emboss') {
             ctx.shadowColor = 'rgba(255,255,255,0.5)'; ctx.shadowBlur = 1; ctx.shadowOffsetX = -1; ctx.shadowOffsetY = -1;
             ctx.fillText(text, x, y);
             ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
@@ -931,30 +930,23 @@
     }
 
     function drawBorder(ctx, canvas) {
-        const border = settings.border;
-        const margin = canvas.width * 0.02;
-        const bw = canvas.width * 0.005;
-        ctx.strokeStyle = settings.borderColor;
-        ctx.lineWidth = bw;
-        if (border === 'simple') ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
-        else if (border === 'double') {
-            ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
-            ctx.strokeRect(margin + bw * 2, margin + bw * 2, canvas.width - margin * 4, canvas.height - margin * 4);
-        }
-        // ... (остальные типы рамок — без изменений)
+        const b = settings.border, m = canvas.width * 0.02, bw = canvas.width * 0.005;
+        ctx.strokeStyle = settings.borderColor; ctx.lineWidth = bw;
+        if (b === 'simple') ctx.strokeRect(m, m, canvas.width - m * 2, canvas.height - m * 2);
+        else if (b === 'double') { ctx.strokeRect(m, m, canvas.width - m * 2, canvas.height - m * 2); ctx.strokeRect(m + bw * 2, m + bw * 2, canvas.width - m * 4, canvas.height - m * 4); }
+        // Добавь остальные типы рамок по желанию
     }
 
     function drawBackground(ctx, canvas) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (settings.useUploadedImage && uploadedImage) {
             ctx.globalAlpha = settings.bgOpacity / 100;
-            const scale = Math.max(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
-            const x = (canvas.width - uploadedImage.width * scale) / 2;
-            const y = (canvas.height - uploadedImage.height * scale) / 2;
-            ctx.drawImage(uploadedImage, x, y, uploadedImage.width * scale, uploadedImage.height * scale);
+            const s = Math.max(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
+            const x = (canvas.width - uploadedImage.width * s) / 2;
+            const y = (canvas.height - uploadedImage.height * s) / 2;
+            ctx.drawImage(uploadedImage, x, y, uploadedImage.width * s, uploadedImage.height * s);
             ctx.globalAlpha = settings.overlay / 100;
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.globalAlpha = 1;
         } else {
             ctx.globalAlpha = settings.bgOpacity / 100;
@@ -963,95 +955,62 @@
             ctx.globalAlpha = 1;
         }
         if (settings.vignette > 0) {
-            const vignette = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 1.5);
-            vignette.addColorStop(0, 'rgba(0,0,0,0)');
-            vignette.addColorStop(1, `rgba(0,0,0,${settings.vignette / 100})`);
-            ctx.fillStyle = vignette;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const v = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 1.5);
+            v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(0,0,0,${settings.vignette / 100})`);
+            ctx.fillStyle = v; ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         if (settings.border !== 'none') drawBorder(ctx, canvas);
     }
 
-    function drawText(ctx, canvas, progress = 1, animationType = settings.animationType) {
+    function drawText(ctx, canvas, progress = 1, anim = settings.animationType) {
         const text = settings.addQuotes ? `"${settings.verse}"` : settings.verse;
         ctx.textAlign = settings.centerAlign ? 'center' : 'left';
         ctx.textBaseline = 'middle';
-        const fontSize = canvas.width * 0.04 * (settings.textSize / 100);
-        ctx.font = `${fontSize}px ${settings.font}`;
-        const maxWidth = canvas.width * 0.75;
-        const lines = wrapText(text, maxWidth, ctx);
-        const lineHeight = canvas.width * 0.05 * (settings.textSize / 100);
-        const totalHeight = lines.length * lineHeight;
-        let y = (canvas.height - totalHeight) / 2;
+        const fs = canvas.width * 0.04 * (settings.textSize / 100);
+        ctx.font = `${fs}px ${settings.font}`;
+        const maxW = canvas.width * 0.75;
+        const lines = wrapText(text, maxW, ctx);
+        const lh = canvas.width * 0.05 * (settings.textSize / 100);
+        const totalH = lines.length * lh;
+        let y = (canvas.height - totalH) / 2;
         const x = settings.centerAlign ? canvas.width / 2 : canvas.width * 0.1;
 
         ctx.save();
-
-        if (animationType === 'typewriter' || animationType === 'wordByWord') {
-            const totalChars = text.length;
-            const words = text.split(' ');
-            const totalWords = words.length;
-            let currentText = '';
-            if (animationType === 'typewriter') {
-                currentText = text.substring(0, Math.floor(totalChars * progress));
-            } else {
-                currentText = words.slice(0, Math.floor(totalWords * progress)).join(' ');
-            }
-            const currentLines = wrapText(currentText, maxWidth, ctx);
-            let yLine = y;
-            currentLines.forEach(line => {
-                applyTextEffect(line, x, yLine, ctx, canvas, settings.textColor);
-                yLine += lineHeight;
-            });
+        if (anim === 'typewriter' || anim === 'wordByWord') {
+            const words = text.split(' '), total = anim === 'typewriter' ? text.length : words.length;
+            const curr = anim === 'typewriter' ? text.substring(0, Math.floor(total * progress)) : words.slice(0, Math.floor(total * progress)).join(' ');
+            const currLines = wrapText(curr, maxW, ctx);
+            let ly = y;
+            currLines.forEach(l => { applyTextEffect(l, x, ly, ctx, settings.textColor); ly += lh; });
             if (progress >= 1 && settings.reference) {
-                ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
-                applyTextEffect(settings.reference, x, yLine + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
+                ctx.font = `italic ${fs * 0.8}px ${settings.font}`;
+                applyTextEffect(settings.reference, x, ly + lh * 0.8, ctx, settings.referenceColor);
             }
-            ctx.restore();
-            return;
+            ctx.restore(); return;
         }
 
-        // Обычная анимация
-        if (animationType === 'fadeIn') ctx.globalAlpha = progress;
-        else if (animationType === 'slideUp') y += (canvas.height - y) * (1 - progress);
-        else if (animationType === 'slideDown') y -= (canvas.height - y) * (1 - progress);
-        else if (animationType === 'slideLeft') ctx.translate(canvas.width * (1 - progress), 0);
-        else if (animationType === 'slideRight') ctx.translate(-canvas.width * (1 - progress), 0);
-        else if (animationType === 'zoom') {
-            const scale = 0.5 + 0.5 * progress;
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.scale(scale, scale);
-            ctx.translate(-canvas.width / 2, -canvas.height / 2);
-        } else if (animationType === 'glow') {
-            ctx.shadowBlur = 30 * progress;
-            ctx.shadowColor = settings.textColor;
-        }
+        if (anim === 'fadeIn') ctx.globalAlpha = progress;
+        else if (anim === 'slideUp') y += (canvas.height - y) * (1 - progress);
+        else if (anim === 'slideDown') y -= (canvas.height - y) * (1 - progress);
+        else if (anim === 'slideLeft') ctx.translate(canvas.width * (1 - progress), 0);
+        else if (anim === 'slideRight') ctx.translate(-canvas.width * (1 - progress), 0);
+        else if (anim === 'zoom') { const s = 0.5 + 0.5 * progress; ctx.translate(canvas.width / 2, canvas.height / 2); ctx.scale(s, s); ctx.translate(-canvas.width / 2, -canvas.height / 2); }
+        else if (anim === 'glow') { ctx.shadowBlur = 30 * progress; ctx.shadowColor = settings.textColor; }
 
-        lines.forEach(line => {
-            applyTextEffect(line, x, y, ctx, canvas, settings.textColor);
-            y += lineHeight;
-        });
-
-        if (settings.reference) {
-            ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
-            applyTextEffect(settings.reference, x, y + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
-        }
-
+        lines.forEach(l => { applyTextEffect(l, x, y, ctx, settings.textColor); y += lh; });
+        if (settings.reference) { ctx.font = `italic ${fs * 0.8}px ${settings.font}`; applyTextEffect(settings.reference, x, y + lh * 0.8, ctx, settings.referenceColor); }
         ctx.restore();
     }
 
-    function drawImage(progress = 1, animationType = settings.animationType) {
-        drawBackground(ctx, canvas);
-        drawText(ctx, canvas, progress, animationType);
-        drawBackground(mobileCtx, mobileCanvas);
-        drawText(mobileCtx, mobileCanvas, progress, animationType);
+    function drawImage(p = 1, a = settings.animationType) {
+        drawBackground(ctx, canvas); drawText(ctx, canvas, p, a);
+        drawBackground(mobileCtx, mobileCanvas); drawText(mobileCtx, mobileCanvas, p, a);
     }
 
     // === ВИДЕО ===
     async function generateAudio(text, voiceId) {
         const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-            method: 'POST',
-            headers: { 'xi-api-key': settings.apiKey, 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'xi-api-key': settings.apiKey, 'Content-Type': 'application/json' },
             body: JSON.stringify({ text, model_id: "eleven_turbo_v2_5", voice_settings: { stability: 0.75, similarity_boost: 0.85, style: 0.6, use_speaker_boost: true } })
         });
         if (!res.ok) throw new Error('Ошибка озвучки');
@@ -1059,42 +1018,25 @@
     }
 
     async function generateVideo() {
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        const videoProgress = document.getElementById('videoProgress');
-        videoProgress.style.display = 'block';
-        progressText.textContent = 'Подготовка...';
+        const pb = document.getElementById('progressBar'), pt = document.getElementById('progressText'), vp = document.getElementById('videoProgress');
+        vp.style.display = 'block'; pt.textContent = 'Подготовка...';
 
-        let audioBlob = null, audioElement = null, audioDuration = null, audioUrl = null;
-
+        let audioBlob = null, audioEl = null, audioUrl = null;
         if (settings.voice) {
-            progressText.textContent = 'Озвучка...';
+            pt.textContent = 'Озвучка...';
             try {
                 audioBlob = await generateAudio(settings.verse, settings.voice);
                 audioUrl = URL.createObjectURL(audioBlob);
-                audioElement = new Audio(audioUrl);
-                await new Promise(r => audioElement.onloadedmetadata = r);
-                audioDuration = audioElement.duration;
-                settings.duration = audioDuration;
-            } catch (e) {
-                alert('Ошибка озвучки: ' + e.message);
-                videoProgress.style.display = 'none';
-                return;
-            }
+                audioEl = new Audio(audioUrl);
+                await new Promise(r => audioEl.onloadedmetadata = r);
+                settings.duration = audioEl.duration;
+            } catch { alert('Ошибка озвучки'); vp.style.display = 'none'; return; }
         }
 
-        const fps = 30;
-        const durationMs = settings.duration * 1000;
-        let startTime = null;
-
-        const videoStream = canvas.captureStream(fps);
-        let combinedStream = videoStream;
-        if (audioElement) {
-            const audioStream = audioElement.captureStream();
-            combinedStream = new MediaStream([...videoStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
-        }
-
-        const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+        const fps = 30, dur = settings.duration * 1000;
+        const stream = canvas.captureStream(fps);
+        const combined = audioEl ? new MediaStream([...stream.getVideoTracks(), ...audioEl.captureStream().getAudioTracks()]) : stream;
+        const recorder = new MediaRecorder(combined, { mimeType: 'video/webm' });
         const chunks = [];
 
         recorder.ondataavailable = e => chunks.push(e.data);
@@ -1102,45 +1044,35 @@
             const blob = new Blob(chunks, { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `${settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_') || 'verse'}.webm`;
-            a.click();
-            URL.revokeObjectURL(url);
-            if (audioUrl) URL.revokeObjectURL(audioUrl);
-            videoProgress.style.display = 'none';
-            progressBar.style.width = '0%';
-            drawImage(1);
+            a.href = url; a.download = `${settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_') || 'verse'}.webm`; a.click();
+            URL.revokeObjectURL(url); if (audioUrl) URL.revokeObjectURL(audioUrl);
+            vp.style.display = 'none'; pb.style.width = '0%'; drawImage(1);
         };
 
-        recorder.start();
-        if (audioElement) audioElement.play();
-
-        progressText.textContent = 'Генерация...';
-        function animate(time) {
-            if (!startTime) startTime = time;
-            const elapsed = time - startTime;
-            const progress = Math.min(elapsed / durationMs, 1);
-            drawImage(progress, settings.animationType);
-            progressBar.style.width = `${progress * 100}%`;
-            progressText.textContent = `Генерация: ${Math.round(progress * 100)}%`;
-            if (elapsed < durationMs) requestAnimationFrame(animate);
-            else recorder.stop();
+        recorder.start(); if (audioEl) audioEl.play();
+        pt.textContent = 'Генерация...';
+        let start = null;
+        function anim(t) {
+            if (!start) start = t;
+            const prog = Math.min((t - start) / dur, 1);
+            drawImage(prog, settings.animationType);
+            pb.style.width = `${prog * 100}%`;
+            pt.textContent = `Генерация: ${Math.round(prog * 100)}%`;
+            if (prog < 1) requestAnimationFrame(anim); else recorder.stop();
         }
-        requestAnimationFrame(animate);
+        requestAnimationFrame(anim);
     }
 
     // === ОБРАБОТЧИКИ ===
     imageUpload.addEventListener('change', e => {
         const file = e.target.files[0];
-        if (!file || !file.type.startsWith('image/')) return;
+        if (!file?.type.startsWith('image/')) return;
         const reader = new FileReader();
         reader.onload = ev => {
             const img = new Image();
             img.onload = () => {
-                uploadedImage = img;
-                settings.useUploadedImage = true;
-                uploadedImg.src = ev.target.result;
-                uploadedImagePreview.style.display = 'block';
+                uploadedImage = img; settings.useUploadedImage = true;
+                uploadedImg.src = ev.target.result; uploadedImagePreview.style.display = 'block';
                 document.querySelectorAll('.bg-option').forEach(o => o.classList.remove('active'));
                 drawImage();
             };
@@ -1150,93 +1082,69 @@
     });
 
     function removeUploadedImage() {
-        uploadedImage = null;
-        settings.useUploadedImage = false;
-        uploadedImagePreview.style.display = 'none';
-        imageUpload.value = '';
+        uploadedImage = null; settings.useUploadedImage = false;
+        uploadedImagePreview.style.display = 'none'; imageUpload.value = '';
         document.querySelector('.bg-option').classList.add('active');
         drawImage();
     }
 
     verseSelect.addEventListener('change', e => {
         if (!e.target.value) return;
-        const [verse, ref] = e.target.value.split('|');
-        settings.verse = verse;
-        settings.reference = ref;
-        customVerse.value = verse;
-        document.getElementById('verseReference').value = ref;
+        const [v, r] = e.target.value.split('|');
+        settings.verse = v; settings.reference = r;
+        customVerse.value = v; document.getElementById('verseReference').value = r;
         drawImage();
     });
 
-    customVerse.addEventListener('input', e => {
-        settings.verse = e.target.value || 'Введите текст...';
-        drawImage();
-    });
-
-    document.getElementById('verseReference').addEventListener('input', e => {
-        settings.reference = e.target.value;
-        drawImage();
-    });
+    customVerse.addEventListener('input', e => { settings.verse = e.target.value || 'Введите текст...'; drawImage(); });
+    document.getElementById('verseReference').addEventListener('input', e => { settings.reference = e.target.value; drawImage(); });
 
     document.querySelectorAll('.bg-option').forEach(o => o.addEventListener('click', () => {
         document.querySelectorAll('.bg-option').forEach(opt => opt.classList.remove('active'));
-        o.classList.add('active');
-        settings.background = backgrounds[o.dataset.bg];
-        settings.useUploadedImage = false;
-        drawImage();
+        o.classList.add('active'); settings.background = backgrounds[o.dataset.bg]; settings.useUploadedImage = false; drawImage();
     }));
 
     document.querySelectorAll('.font-option').forEach(o => o.addEventListener('click', () => {
         document.querySelectorAll('.font-option').forEach(opt => opt.classList.remove('active'));
-        o.classList.add('active');
-        settings.font = o.dataset.font;
-        drawImage();
+        o.classList.add('active'); settings.font = o.dataset.font; drawImage();
     }));
 
     document.querySelectorAll('.effect-option').forEach(o => o.addEventListener('click', () => {
         document.querySelectorAll('.effect-option').forEach(opt => opt.classList.remove('active'));
-        o.classList.add('active');
-        settings.effect = o.dataset.effect;
-        drawImage();
+        o.classList.add('active'); settings.effect = o.dataset.effect; drawImage();
     }));
 
     document.querySelectorAll('.border-option').forEach(o => o.addEventListener('click', () => {
         document.querySelectorAll('.border-option').forEach(opt => opt.classList.remove('active'));
-        o.classList.add('active');
-        settings.border = o.dataset.border;
-        drawImage();
+        o.classList.add('active'); settings.border = o.dataset.border; drawImage();
     }));
 
-    document.getElementById('textColor').addEventListener('input', e => { settings.textColor = e.target.value; drawImage(); });
-    document.getElementById('referenceColor').addEventListener('input', e => { settings.referenceColor = e.target.value; drawImage(); });
-    document.getElementById('borderColor').addEventListener('input', e => { settings.borderColor = e.target.value; drawImage(); });
+    ['textColor', 'referenceColor', 'borderColor'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => { settings[id] = e.target.value; drawImage(); });
+    });
 
     document.querySelectorAll('.format-option').forEach(o => o.addEventListener('click', () => {
         document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('active'));
-        o.classList.add('active');
-        settings.format = o.dataset.format;
-        initCanvas();
+        o.classList.add('active'); settings.format = o.dataset.format; initCanvas();
     }));
 
-    document.getElementById('bgOpacity').addEventListener('input', e => { settings.bgOpacity = +e.target.value; document.getElementById('bgOpacityValue').textContent = e.target.value + '%'; drawImage(); });
-    document.getElementById('textSize').addEventListener('input', e => { settings.textSize = +e.target.value; document.getElementById('textSizeValue').textContent = e.target.value + '%'; drawImage(); });
-    document.getElementById('vignette').addEventListener('input', e => { settings.vignette = +e.target.value; document.getElementById('vignetteValue').textContent = e.target.value + '%'; drawImage(); });
-    document.getElementById('overlay').addEventListener('input', e => { settings.overlay = +e.target.value; document.getElementById('overlayValue').textContent = e.target.value + '%'; drawImage(); });
+    ['bgOpacity', 'textSize', 'vignette', 'overlay'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => {
+            settings[id] = +e.target.value;
+            document.getElementById(id + 'Value').textContent = e.target.value + (id === 'duration' ? ' сек' : '%');
+            drawImage();
+        });
+    });
+
     document.getElementById('centerAlign').addEventListener('change', e => { settings.centerAlign = e.target.checked; drawImage(); });
     document.getElementById('addQuotes').addEventListener('change', e => { settings.addQuotes = e.target.checked; drawImage(); });
 
     document.getElementById('presetSelect').addEventListener('change', e => {
         if (!e.target.value) return;
         const p = presets[e.target.value];
-        Object.assign(settings, p);
-        settings.useUploadedImage = false;
-        document.getElementById('textColor').value = p.textColor;
-        document.getElementById('referenceColor').value = p.referenceColor;
-        document.getElementById('borderColor').value = p.borderColor;
-        document.getElementById('textSize').value = p.textSize;
-        document.getElementById('textSizeValue').textContent = p.textSize + '%';
-        document.getElementById('vignette').value = p.vignette;
-        document.getElementById('vignetteValue').textContent = p.vignette + '%';
+        Object.assign(settings, p); settings.useUploadedImage = false;
+        ['textColor', 'referenceColor', 'borderColor'].forEach(id => document.getElementById(id).value = p[id]);
+        ['textSize', 'vignette'].forEach(id => { document.getElementById(id).value = p[id]; document.getElementById(id + 'Value').textContent = p[id] + '%'; });
         document.querySelectorAll('.font-option').forEach(o => o.classList.toggle('active', o.dataset.font === p.font));
         document.querySelectorAll('.effect-option').forEach(o => o.classList.toggle('active', o.dataset.effect === p.effect));
         document.querySelectorAll('.border-option').forEach(o => o.classList.toggle('active', o.dataset.border === p.border));
@@ -1248,10 +1156,9 @@
     document.getElementById('voiceSelect').addEventListener('change', e => { settings.voice = e.target.value; });
 
     function downloadImage() {
-        const link = document.createElement('a');
-        link.download = `${settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_') || 'verse'}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        const a = document.createElement('a');
+        a.download = `${settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_') || 'verse'}.png`;
+        a.href = canvas.toDataURL('image/png'); a.click();
     }
 
     document.getElementById('generateVideoBtn').addEventListener('click', generateVideo);
@@ -1260,6 +1167,5 @@
     // === ИНИЦИАЛИЗАЦИЯ ===
     initCanvas();
 </script>
-
 </body>
 </html>

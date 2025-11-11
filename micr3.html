@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Голосовой ассистент v2</title>
+  <title>Голосовой ассистент</title>
 
   <!-- PWA -->
   <link rel="manifest" href="data:application/manifest+json,{
-    \"name\": \"Голосовой ассистент v2\",
-    \"short_name\": \"Голос v2\",
+    \"name\": \"Голосовой ассистент\",
+    \"short_name\": \"Голос\",
     \"start_url\": \".\",
     \"display\": \"standalone\",
     \"background_color\": \"#0f172a\",
-    \"theme_color\": \"#3b82f6\",
+    \"theme_color\": \"#1e40af\",
     \"icons\": [{
       \"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='80'%3E%F0%9F%97%A3%EF%B8%8F%3C/text%3E%3C/svg%3E\",
       \"sizes\": \"192x192\",
@@ -22,14 +22,14 @@
 
   <style>
     :root {
-      --bg: #f1f5f9;
+      --bg: #f8fafc;
       --card: #ffffff;
       --text: #1e293b;
-      --accent: #3b82f6;
+      --accent: #1e40af;
       --btn: #3b82f6;
       --btn-hover: #2563eb;
-      --border: #cbd5e1;
-      --shadow: 0 10px 30px rgba(0,0,0,0.1);
+      --border: #e2e8f0;
+      --shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -41,7 +41,7 @@
         --btn: #3b82f6;
         --btn-hover: #2563eb;
         --border: #334155;
-        --shadow: 0 10px 30px rgba(0,0,0,0.4);
+        --shadow: 0 10px 25px rgba(0,0,0,0.4);
       }
     }
 
@@ -72,65 +72,52 @@
     .subtitle {
       text-align: center;
       color: #64748b;
-      font-size: 0.9em;
+      font-size: 0.95em;
       margin-bottom: 20px;
     }
 
     .controls {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 16px;
     }
 
     button {
-      padding: 14px 8px;
-      font-size: 14px;
+      padding: 12px;
+      font-size: 15px;
       font-weight: 600;
       border: none;
-      border-radius: 14px;
+      border-radius: 12px;
       cursor: pointer;
       transition: 0.2s;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 4px;
-      background: var(--btn);
-      color: white;
+      justify-content: center;
+      gap: 6px;
     }
 
-    button:hover:not(:disabled) { 
-      background: var(--btn-hover); 
-      transform: translateY(-2px);
-    }
+    button:hover:not(:disabled) { transform: translateY(-2px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    button:disabled { 
-      opacity: 0.6; 
-      cursor: not-allowed; 
-    }
-
-    .hint {
-      font-size: 11px;
-      font-weight: normal;
-      opacity: 0.9;
-    }
-
-    #startBtn { background: #10b981; }
-    #stopBtn { background: #ef4444; }
+    #startBtn { background: #10b981; color: white; }
+    #stopBtn { background: #ef4444; color: white; }
+    #flashBtn { background: #f59e0b; color: white; }
+    #cameraBtn { background: #8b5cf6; color: white; }
 
     .status {
       text-align: center;
-      padding: 12px;
+      padding: 10px;
       background: rgba(59, 130, 246, 0.1);
-      border-radius: 12px;
-      margin: 14px 0;
+      border-radius: 10px;
+      margin: 12px 0;
       font-size: 0.95em;
       min-height: 20px;
     }
 
     #output {
       width: 100%;
-      height: 140px;
+      height: 160px;
       padding: 14px;
       font-size: 16px;
       border: 1px solid var(--border);
@@ -145,82 +132,61 @@
       #output { background: #1e293b; }
     }
 
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.8em;
+      color: #94a3b8;
+    }
+
     .hidden { display: none; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Голосовой ассистент v2</h1>
-  <p class="subtitle">Говори или нажимай — всё работает!</p>
+  <h1>Голосовой ассистент</h1>
+  <p class="subtitle">Говори — телефон слушается!</p>
 
   <div class="controls">
-    <button id="startBtn">
-      Начать
-      <span class="hint">Нажми или скажи "слушай"</span>
-    </button>
-    <button id="stopBtn" disabled>
-      Стоп
-      <span class="hint">Остановить</span>
-    </button>
-
-    <button id="callBtn">
-      Позвони маме
-      <span class="hint">Скажи: "позвони маме"</span>
-    </button>
-
-    <button id="flashBtn">
-      Фонарик
-      <span class="hint">Скажи: "фонарик"</span>
-    </button>
-
-    <button id="cameraBtn">
-      Сделай фото
-      <span class="hint">Скажи: "сделай фото"</span>
-    </button>
-
-    <button id="youtubeBtn">
-      YouTube
-      <span class="hint">Скажи: "включи Лободу"</span>
-    </button>
-
-    <button id="timerBtn">
-      Таймер 3 мин
-      <span class="hint">Скажи: "таймер на 3 минуты"</span>
-    </button>
+    <button id="startBtn">Начать</button>
+    <button id="stopBtn" disabled>Стоп</button>
+    <button id="flashBtn">Фонарик</button>
+    <button id="cameraBtn">Фото</button>
   </div>
 
-  <div class="status" id="status">Нажми "Начать" и говори</div>
+  <div class="status" id="status">Нажми "Начать" и говори команду</div>
 
-  <textarea id="output" placeholder="Распознанное..." readonly></textarea>
+  <textarea id="output" placeholder="Текст появится здесь..." readonly></textarea>
 
   <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
+
+  <div class="footer">
+    <p>Позвони • SMS • Карты • Фонарик • Фото • YouTube</p>
+  </div>
 </div>
 
 <script>
   // === Элементы ===
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
-  const callBtn = document.getElementById('callBtn');
   const flashBtn = document.getElementById('flashBtn');
   const cameraBtn = document.getElementById('cameraBtn');
-  const youtubeBtn = document.getElementById('youtubeBtn');
-  const timerBtn = document.getElementById('timerBtn');
   const output = document.getElementById('output');
   const status = document.getElementById('status');
   const cameraInput = document.getElementById('cameraInput');
 
   let recognition = null;
   let isListening = false;
-  let track = null;
-  let timerId = null;
+  let track = null; // для фонарика
 
-  // === Инициализация ===
+  // === Проверка API ===
   if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
     status.textContent = 'Браузер не поддерживает речь. Используй Chrome.';
     startBtn.disabled = true;
   }
 
+  // === Инициализация речи ===
   function initRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
@@ -230,7 +196,7 @@
 
     recognition.onstart = () => {
       isListening = true;
-      status.textContent = 'Слушаю...';
+      status.textContent = 'Слушаю... Говори!';
       startBtn.disabled = true;
       stopBtn.disabled = false;
     };
@@ -241,37 +207,57 @@
         const t = e.results[i][0].transcript;
         e.results[i].isFinal ? final += t + ' ' : interim += t;
       }
-      output.value = (output.value + final).trim() + interim;
+      const full = (output.value + final).trim();
+      output.value = full + interim;
       output.scrollTop = output.scrollHeight;
 
-      if (final) processCommand(final.trim().toLowerCase());
+      if (final) processCommand(final.trim());
     };
 
-    recognition.onerror = () => stopListening();
-    recognition.onend = () => { if (isListening) recognition.start(); else stopListening(); };
+    recognition.onerror = () => {
+      status.textContent = 'Ошибка. Перезапусти.';
+      stopListening();
+    };
+
+    recognition.onend = () => {
+      if (isListening) recognition.start();
+      else stopListening();
+    };
   }
 
   // === КОМАНДЫ ===
   function processCommand(text) {
-    const cmd = text.toLowerCase();
+    text = text.toLowerCase();
 
-    if (cmd.includes('позвони маме')) { callContact('маме'); }
-    else if (cmd.includes('фонарик')) { toggleFlashlight(); }
-    else if (cmd.includes('сделай фото') || cmd.includes('сфоткай')) { takePhoto(); }
-    else if (cmd.includes('включи ')) { playYouTube(cmd.replace('включи ', '')); }
-    else if (cmd.includes('таймер на')) {
-      const mins = cmd.match(/таймер на (\d+) минут/i);
-      if (mins) startTimer(parseInt(mins[1]));
+    const commands = [
+      { regex: /позвони\s+(.+)/, action: (m) => open(`tel:${m}`, '_self') },
+      { regex: /напиши\s+sms\s*:?\s*(.+)/, action: (m) => open(`sms:?body=${encodeURIComponent(m)}`, '_self') },
+      { regex: /как доехать до\s+(.+)/, action: (m) => open(`https://maps.google.com?q=${encodeURIComponent(m)}`, '_blank') },
+      { regex: /поиск\s+(.+)/, action: (m) => open(`https://google.com/search?q=${encodeURIComponent(m)}`, '_blank') },
+      { regex: /включи\s+(.+)/, action: (m) => open(`https://youtube.com/results?search_query=${encodeURIComponent(m)}`, '_blank') },
+      { regex: /очисти/, action: () => { output.value = ''; status.textContent = 'Очищено!'; } },
+      { regex: /скопируй/, action: () => {
+        if (output.value) {
+          navigator.clipboard.writeText(output.value);
+          status.textContent = 'Скопировано!';
+          setTimeout(() => status.textContent = 'Готов.', 1500);
+        }
+      }},
+      { regex: /фонарик/, action: toggleFlashlight },
+      { regex: /сделай фото|сфоткай/, action: () => cameraInput.click() }
+    ];
+
+    for (const cmd of commands) {
+      const match = text.match(cmd.regex);
+      if (match) {
+        cmd.action(match[1] || '');
+        status.textContent = `Выполнено: "${text}"`;
+        return;
+      }
     }
-    else if (cmd.includes('слушай') || cmd.includes('старт')) { startListening(); }
   }
 
-  // === ФУНКЦИИ ===
-  function callContact(name) {
-    location.href = `tel:${name === 'маме' ? 'мама' : name}`;
-    status.textContent = `Звоню: ${name}`;
-  }
-
+  // === Фонарик ===
   async function toggleFlashlight() {
     if (track) {
       track.stop();
@@ -283,87 +269,49 @@
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: 1, height: 1 }
+        video: { facingMode: 'environment' }
       });
       track = stream.getVideoTracks()[0];
-      const caps = track.getCapabilities();
-      if ('torch' in caps) {
+      const imageCapture = new ImageCapture(track);
+      const capabilities = track.getCapabilities();
+      if (capabilities.torch) {
         await track.applyConstraints({ advanced: [{ torch: true }] });
         flashBtn.textContent = 'Фонарик ВКЛ';
         status.textContent = 'Фонарик включён';
-      } else {
-        throw new Error('no torch');
       }
     } catch (e) {
-      track = null;
-      status.textContent = 'Фонарик недоступен на этом устройстве';
+      status.textContent = 'Фонарик недоступен';
     }
   }
 
-  function takePhoto() {
-    cameraInput.click();
-  }
-
-  function playYouTube(query) {
-    open(`https://m.youtube.com/results?search_query=${encodeURIComponent(query)}`, '_blank');
-    status.textContent = `Ищу: ${query}`;
-  }
-
-  function startTimer(minutes) {
-    if (timerId) clearTimeout(timerId);
-    const seconds = minutes * 60;
-    let remaining = seconds;
-    status.textContent = `Таймер: ${minutes} мин`;
-
-    timerId = setInterval(() => {
-      remaining--;
-      const m = Math.floor(remaining / 60);
-      const s = remaining % 60;
-      status.textContent = `Таймер: ${m}:${s.toString().padStart(2, '0')}`;
-
-      if (remaining <= 0) {
-        clearInterval(timerId);
-        timerId = null;
-        status.textContent = 'Таймер завершён!';
-        if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
-      }
-    }, 1000);
-  }
-
-  function startListening() {
-    if (!recognition) initRecognition();
-    recognition.start();
-  }
-
-  function stopListening() {
-    isListening = false;
-    if (recognition) recognition.stop();
-    status.textContent = 'Остановлено';
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-  }
-
-  // === КНОПКИ ===
-  startBtn.onclick = startListening;
-  stopBtn.onclick = stopListening;
-  callBtn.onclick = () => callContact('маме');
-  flashBtn.onclick = toggleFlashlight;
-  cameraBtn.onclick = takePhoto;
-  youtubeBtn.onclick = () => playYouTube('Океан Ельзи');
-  timerBtn.onclick = () => startTimer(3);
-
-  // Фото
+  // === Фото ===
   cameraInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `photo_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.jpg`;
+      a.download = `photo_${Date.now()}.jpg`;
       a.click();
       status.textContent = 'Фото сохранено!';
     }
   });
+
+  // === Управление ===
+  startBtn.onclick = () => { initRecognition(); recognition.start(); };
+  stopBtn.onclick = () => { isListening = false; recognition.stop(); };
+  flashBtn.onclick = toggleFlashlight;
+  cameraBtn.onclick = () => cameraInput.click();
+
+  function stopListening() {
+    isListening = false;
+    status.textContent = 'Остановлено. Нажми "Начать"';
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+  }
+
+  // Автостарт при загрузке (опционально)
+  // window.onload = () => setTimeout(() => startBtn.click(), 1000);
 </script>
 
 </body>

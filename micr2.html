@@ -1,0 +1,327 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Распознаватель речи PRO</title>
+
+  <!-- PWA Manifest (иконка микрофона) -->
+  <link rel="manifest" href="data:application/manifest+json,{
+    \"name\": \"Распознаватель речи PRO\",
+    \"short_name\": \"STT Pro\",
+    \"start_url\": \".\",
+    \"display\": \"standalone\",
+    \"background_color\": \"#1a1a2e\",
+    \"theme_color\": \"#0f3460\",
+    \"icons\": [{
+      \"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E%F0%9F%8E%A4%3C/text%3E%3C/svg%3E\",
+      \"sizes\": \"192x192\",
+      \"type\": \"image/svg+xml\"
+    }]
+  }">
+
+  <style>
+    :root {
+      --bg: #f4f4f9;
+      --card: #ffffff;
+      --text: #333;
+      --accent: #0f3460;
+      --btn: #1a5fb4;
+      --btn-hover: #0d47a1;
+      --border: #ddd;
+      --shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a2e;
+        --card: #16213e;
+        --text: #e0e7ff;
+        --accent: #a0d2ff;
+        --btn: #1a5fb4;
+        --btn-hover: #2980b9;
+        --border: #334466;
+        --shadow: 0 4px 20px rgba(0,0,0,0.3);
+      }
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: var(--card);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      margin-bottom: 10px;
+      font-size: 2em;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      margin-bottom: 25px;
+      font-size: 1.1em;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+008      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    select, button {
+      padding: 10px 16px;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    select {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    button {
+      background: var(--btn);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: 600;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--btn-hover);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #startBtn { background: #27ae60; }
+    #startBtn:hover:not(:disabled) { background: #219a52; }
+
+    #stopBtn { background: #e74c3c; }
+    #stopBtn:hover:not(:disabled) { background: #c0392b; }
+
+    .status {
+      margin: 15px 0;
+      padding: 10px;
+      background: rgba(52, 152, 219, 0.1);
+      border-radius: 8px;
+      font-style: italic;
+      text-align: center;
+      color: var(--accent);
+    }
+
+    #output {
+      width: 100%;
+      height: 220px;
+      padding: 14px;
+      font-size: 17px;
+      line-height: 1.6;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+      color: var(--text);
+      resize: vertical;
+      margin-top: 10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #output { background: #0f1629; }
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #777;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle" id="themeToggle">🌙</button>
+
+  <div class="container">
+    <h1>Распознаватель речи PRO</h1>
+    <p class="subtitle">Говори — текст появляется мгновенно. Работает на ПК и телефоне!</p>
+
+    <div class="controls">
+      <select id="langSelect">
+        <option value="ru-RU">Русский</option>
+        <option value="uk-UA">Українська</option>
+        <option value="en-US">English</option>
+        <option value="de-DE">Deutsch</option>
+        <option value="fr-FR">Français</option>
+      </select>
+
+      <button id="startBtn">Начать слушать</button>
+      <button id="stopBtn" disabled>Остановить</button>
+      <button id="clearBtn">Очистить</button>
+      <button id="copyBtn">Копировать</button>
+    </div>
+
+    <div class="status" id="status">Готов. Выбери язык и нажми "Начать слушать"</div>
+
+    <textarea id="output" placeholder="Распознанный текст появится здесь..." readonly></textarea>
+
+    <div class="footer">
+      <p>🎤 Работает без интернета (частично) • Добавь на главный экран</p>
+    </div>
+  </div>
+
+  <script>
+    // === Элементы ===
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const output = document.getElementById('output');
+    const status = document.getElementById('status');
+    const langSelect = document.getElementById('langSelect');
+    const themeToggle = document.getElementById('themeToggle');
+
+    let recognition = null;
+    let isListening = false;
+
+    // === Проверка поддержки ===
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      status.textContent = 'Ваш браузер не поддерживает распознавание речи. Используйте Chrome или Edge.';
+      startBtn.disabled = true;
+    }
+
+    // === Инициализация распознавания ===
+    function initRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = langSelect.value;
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      recognition.onstart = () => {
+        isListening = true;
+        status.textContent = 'Слушаю... Говорите четко!';
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      };
+
+      recognition.onresult = (event) => {
+        let final = '';
+        let interim = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += transcript + ' ';
+          } else {
+            interim += transcript;
+          }
+        }
+
+        output.value = final + interim;
+        output.scrollTop = output.scrollHeight;
+      };
+
+      recognition.onerror = (event) => {
+        status.textContent = `Ошибка: ${event.error}. Попробуйте снова.`;
+        if (event.error === 'no-speech' || event.error === 'audio-capture') {
+          stopListening();
+        }
+      };
+
+      recognition.onend = () => {
+        if (isListening) {
+          recognition.start(); // Авторестарт
+        } else {
+          stopListening();
+        }
+      };
+    }
+
+    // === Управление ===
+    startBtn.addEventListener('click', () => {
+      initRecognition();
+      recognition.start();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      isListening = false;
+      if (recognition) recognition.stop();
+    });
+
+    function stopListening() {
+      isListening = false;
+      status.textContent = 'Остановлено. Нажми "Начать слушать" для продолжения.';
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    }
+
+    clearBtn.addEventListener('click', () => {
+      output.value = '';
+      status.textContent = 'Текст очищен.';
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (output.value.trim()) {
+        navigator.clipboard.writeText(output.value).then(() => {
+          status.textContent = 'Текст скопирован в буфер обмена!';
+          setTimeout(() => status.textContent = 'Готов к работе.', 2000);
+        });
+      } else {
+        status.textContent = 'Нет текста для копирования.';
+      }
+    });
+
+    langSelect.addEventListener('change', () => {
+      if (recognition) recognition.lang = langSelect.value;
+    });
+
+    // === Тёмная тема (переключатель) ===
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      themeToggle.textContent = isDark ? '🌙' : '☀️';
+    });
+
+    // Автоопределение темы
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeToggle.textContent = '☀️';
+    }
+  </script>
+
+</body>
+</html>

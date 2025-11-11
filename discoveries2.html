@@ -798,7 +798,7 @@
         </div>
     </div>
 
-    <script>
+<script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const mobileCanvas = document.getElementById('mobileCanvas');
@@ -829,7 +829,7 @@
             useUploadedImage: false
         };
 
-        // === НОВЫЙ КОД: ЛОГИКА РАСПОЗНАВАНИЯ РЕЧИ ===
+        // === ИСПРАВЛЕННАЯ ЛОГИКА РАСПОЗНАВАНИЯ РЕЧИ ===
         const micStartBtn = document.getElementById('micStartBtn');
         const micStopBtn = document.getElementById('micStopBtn');
         const micStatus = document.getElementById('micStatus');
@@ -838,7 +838,8 @@
 
         let recognition = null;
         let isListening = false;
-        let recognitionBaseText = ''; // Текст, который был до начала диктовки
+        let recognitionBaseText = ''; // Текст, который был в поле ДО начала диктовки
+        let sessionFinalTranscript = ''; // Текст, надиктованный в ЭТОЙ сессии
 
         // --- Проверка поддержки ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -860,33 +861,26 @@
                 micStatus.textContent = 'Слушаю... Говорите!';
                 micStartBtn.disabled = true;
                 micStopBtn.disabled = false;
-                // Сохраняем текст, который уже был в поле
-                recognitionBaseText = customVerse.value;
-                if (recognitionBaseText.trim().length > 0) {
-                    recognitionBaseText += ' '; // Добавляем пробел, если текст уже был
-                }
+                // НЕ ТРОГАЕМ TEXTAREA И ПЕРЕМЕННЫЕ ЗДЕСЬ
             };
 
             recognition.onresult = (event) => {
                 let interim = '';
-                let final = '';
 
+                // Перебираем только *новые* результаты
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        final += transcript + ' ';
+                        // Добавляем финальный результат в отдельный накопитель сессии
+                        sessionFinalTranscript += transcript + ' ';
                     } else {
-                        interim += transcript;
+                        interim = transcript; // Промежуточный результат всегда самый последний
                     }
                 }
 
-                // Обновляем базовый текст новым финальным результатом
-                if (final.length > 0) {
-                    recognitionBaseText += final;
-                }
-                
-                // Обновляем поле ввода
-                customVerse.value = recognitionBaseText + interim;
+                // Собираем все вместе: 
+                // (Текст, что был ДО) + (Надиктованный финальный) + (Надиктованный промежуточный)
+                customVerse.value = recognitionBaseText + sessionFinalTranscript + interim;
                 
                 // !!! ВАЖНО: Запускаем событие 'input', чтобы холст (canvas) обновился
                 customVerse.dispatchEvent(new Event('input'));
@@ -905,8 +899,6 @@
                     try {
                         recognition.start();
                     } catch(e) {
-                        // Иногда API выдает ошибку, если перезапустить слишком быстро
-                        console.warn("Ошибка авто-перезапуска, останавливаем.", e);
                         stopListening();
                     }
                 } else {
@@ -917,10 +909,18 @@
 
         // --- Управление ---
         micStartBtn.addEventListener('click', () => {
-            if (!recognition || !isListening) {
-                initRecognition();
-                recognition.start();
+            // 1. Фиксируем текст, который был ДО старта
+            recognitionBaseText = customVerse.value;
+            if (recognitionBaseText.trim().length > 0) {
+                recognitionBaseText += ' '; // Добавляем пробел, если текст уже был
             }
+            // 2. Сбрасываем накопитель текущей сессии
+            sessionFinalTranscript = '';
+
+            if (!recognition) {
+                initRecognition();
+            }
+            recognition.start();
         });
 
         micStopBtn.addEventListener('click', () => {
@@ -935,15 +935,25 @@
             micStatus.textContent = 'Остановлено. Готов к диктовке...';
             micStartBtn.disabled = false;
             micStopBtn.disabled = true;
-            recognition = null; // Сбрасываем объект
+            
+            // Принудительно обновляем холст с финальным текстом
+            customVerse.value = recognitionBaseText + sessionFinalTranscript;
+            customVerse.dispatchEvent(new Event('input'));
+
+            // Не сбрасываем recognition, чтобы можно было поменять язык
         }
 
         micLangSelect.addEventListener('change', () => {
             if (recognition) {
                 recognition.lang = micLangSelect.value;
+                // Если слушаем, перезапускаем с новым языком
+                if (isListening) {
+                    recognition.stop();
+                    // onend обработчик автоматически вызовет recognition.start()
+                }
             }
         });
-        // === КОНЕЦ НОВОГО КОДА РАСПОЗНАВАНИЯ ===
+        // === КОНЕЦ ИСПРАВЛЕННОЙ ЛОГИКИ ===
 
 
         const backgrounds = {
@@ -1281,91 +1291,91 @@
             if (settings.border !== 'none') drawBorder(ctx, canvas);
         }
 
-function drawText(ctx, canvas, progress = 1, animationType = settings.animationType) {
-    const text = settings.addQuotes ? `"${settings.verse}"` : settings.verse;
-    ctx.textAlign = settings.centerAlign ? 'center' : 'left';
-    ctx.textBaseline = 'middle';
-    const fontSize = canvas.width * 0.04 * (settings.textSize / 100);
-    ctx.font = `${fontSize}px ${settings.font}`;
-    const maxWidth = canvas.width * 0.75;
-    const lines = wrapText(text, maxWidth, ctx);
-    const lineHeight = canvas.width * 0.05 * (settings.textSize / 100);
-    const totalHeight = lines.length * lineHeight;
-    let y = (canvas.height - totalHeight) / 2;
-    const x = settings.centerAlign ? canvas.width / 2 : canvas.width * 0.1;
+        function drawText(ctx, canvas, progress = 1, animationType = settings.animationType) {
+            const text = settings.addQuotes ? `"${settings.verse}"` : settings.verse;
+            ctx.textAlign = settings.centerAlign ? 'center' : 'left';
+            ctx.textBaseline = 'middle';
+            const fontSize = canvas.width * 0.04 * (settings.textSize / 100);
+            ctx.font = `${fontSize}px ${settings.font}`;
+            const maxWidth = canvas.width * 0.75;
+            const lines = wrapText(text, maxWidth, ctx);
+            const lineHeight = canvas.width * 0.05 * (settings.textSize / 100);
+            const totalHeight = lines.length * lineHeight;
+            let y = (canvas.height - totalHeight) / 2;
+            const x = settings.centerAlign ? canvas.width / 2 : canvas.width * 0.1;
 
-    // Анимация текста
-    ctx.save();
+            // Анимация текста
+            ctx.save();
 
-    if (animationType === 'fadeIn') {
-        ctx.globalAlpha = progress;
-    } else if (animationType === 'slideUp') {
-        y += (canvas.height - y) * (1 - progress);
-    } else if (animationType === 'slideDown') {
-        y -= (canvas.height - y) * (1 - progress);
-    } else if (animationType === 'slideLeft') {
-        ctx.translate(canvas.width * (1 - progress), 0);
-    } else if (animationType === 'slideRight') {
-        ctx.translate(-canvas.width * (1 - progress), 0);
-    } else if (animationType === 'zoom') {
-        const scale = 0.5 + 0.5 * progress;
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.scale(scale, scale);
-        ctx.translate(-canvas.width / 2, -canvas.height / 2);
-    } else if (animationType === 'typewriter' || animationType === 'wordByWord') {
-        // === ИСПРАВЛЕНО: Печатная машинка и Слово за словом с переносами ===
-        const totalChars = text.length;
-        const words = text.split(' ');
-        const totalWords = words.length;
+            if (animationType === 'fadeIn') {
+                ctx.globalAlpha = progress;
+            } else if (animationType === 'slideUp') {
+                y += (canvas.height - y) * (1 - progress);
+            } else if (animationType === 'slideDown') {
+                y -= (canvas.height - y) * (1 - progress);
+            } else if (animationType === 'slideLeft') {
+                ctx.translate(canvas.width * (1 - progress), 0);
+            } else if (animationType === 'slideRight') {
+                ctx.translate(-canvas.width * (1 - progress), 0);
+            } else if (animationType === 'zoom') {
+                const scale = 0.5 + 0.5 * progress;
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.scale(scale, scale);
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            } else if (animationType === 'typewriter' || animationType === 'wordByWord') {
+                // === ИСПРАВЛЕНО: Печатная машинка и Слово за словом с переносами ===
+                const totalChars = text.length;
+                const words = text.split(' ');
+                const totalWords = words.length;
 
-        let currentText = '';
-        let currentLines = [];
+                let currentText = '';
+                let currentLines = [];
 
-        if (animationType === 'typewriter') {
-            // По символам
-            const charCount = Math.floor(totalChars * progress);
-            currentText = text.substring(0, charCount);
-        } else {
-            // По словам
-            const wordCount = Math.floor(totalWords * progress);
-            currentText = words.slice(0, wordCount).join(' ');
+                if (animationType === 'typewriter') {
+                    // По символам
+                    const charCount = Math.floor(totalChars * progress);
+                    currentText = text.substring(0, charCount);
+                } else {
+                    // По словам
+                    const wordCount = Math.floor(totalWords * progress);
+                    currentText = words.slice(0, wordCount).join(' ');
+                }
+
+                currentLines = wrapText(currentText, maxWidth, ctx);
+
+                let yLine = y;
+                currentLines.forEach(line => {
+                    applyTextEffect(line, x, yLine, ctx, canvas, settings.textColor);
+                    yLine += lineHeight;
+                });
+
+                // Ссылка появляется только в конце
+                if (progress >= 1 && settings.reference) {
+                    ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
+                    applyTextEffect(settings.reference, x, yLine + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
+                }
+
+                ctx.restore();
+                return; // Выходим — текст уже нарисован
+            } else if (animationType === 'glow') {
+                ctx.shadowBlur = 30 * progress;
+                ctx.shadowColor = settings.textColor;
+            }
+
+            // === Обычное рисование (для всех остальных анимаций) ===
+            lines.forEach(line => {
+                applyTextEffect(line, x, y, ctx, canvas, settings.textColor);
+                y += lineHeight;
+            });
+
+            // Ссылка на стих (для всех анимаций, кроме typewriter/wordByWord)
+            if (settings.reference) {
+                ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
+                applyTextEffect(settings.reference, x, y + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
+            }
+
+            ctx.restore();
         }
-
-        currentLines = wrapText(currentText, maxWidth, ctx);
-
-        let yLine = y;
-        currentLines.forEach(line => {
-            applyTextEffect(line, x, yLine, ctx, canvas, settings.textColor);
-            yLine += lineHeight;
-        });
-
-        // Ссылка появляется только в конце
-        if (progress >= 1 && settings.reference) {
-            ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
-            applyTextEffect(settings.reference, x, yLine + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
-        }
-
-        ctx.restore();
-        return; // Выходим — текст уже нарисован
-    } else if (animationType === 'glow') {
-        ctx.shadowBlur = 30 * progress;
-        ctx.shadowColor = settings.textColor;
-    }
-
-    // === Обычное рисование (для всех остальных анимаций) ===
-    lines.forEach(line => {
-        applyTextEffect(line, x, y, ctx, canvas, settings.textColor);
-        y += lineHeight;
-    });
-
-    // Ссылка на стих (для всех анимаций, кроме typewriter/wordByWord)
-    if (settings.reference) {
-        ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
-        applyTextEffect(settings.reference, x, y + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
-    }
-
-    ctx.restore();
-}
 
         function drawImage(progress = 1, animationType = settings.animationType) {
             drawBackground(ctx, canvas);
@@ -1554,6 +1564,12 @@ function drawText(ctx, canvas, progress = 1, animationType = settings.animationT
 
         document.getElementById('customVerse').addEventListener('input', e => {
             settings.verse = e.target.value || 'Введите текст стиха...';
+            // Если пользователь печатает вручную, а не диктует,
+            // сбрасываем привязку к диктовке
+            if (!isListening) {
+                recognitionBaseText = e.target.value;
+                sessionFinalTranscript = '';
+            }
             drawImage();
         });
 

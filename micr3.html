@@ -12,7 +12,7 @@
     \"start_url\": \".\",
     \"display\": \"standalone\",
     \"background_color\": \"#0f172a\",
-    \"theme_color\": \"#1e40af\",
+    \"theme_color\": \"#3b82f6\",
     \"icons\": [{
       \"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='80'%3E%F0%9F%97%A3%EF%B8%8F%3C/text%3E%3C/svg%3E\",
       \"sizes\": \"192x192\",
@@ -22,171 +22,103 @@
 
   <style>
     :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #1e293b;
-      --accent: #1e40af;
-      --btn: #3b82f6;
-      --btn-hover: #2563eb;
-      --border: #e2e8f0;
-      --shadow: 0 10px 25px rgba(0,0,0,0.1);
+      --bg: #f8fafc; --card: #fff; --text: #1e293b; --accent: #3b82f6;
+      --btn: #3b82f6; --btn-hover: #2563eb; --border: #cbd5e1;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f172a;
-        --card: #1e293b;
-        --text: #e2e8f0;
-        --accent: #60a5fa;
-        --btn: #3b82f6;
-        --btn-hover: #2563eb;
+        --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --accent: #60a5fa;
         --border: #334155;
-        --shadow: 0 10px 25px rgba(0,0,0,0.4);
       }
     }
-
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: 16px;
-    }
-
-    .container {
-      max-width: 500px;
-      margin: 20px auto;
-      background: var(--card);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: var(--shadow);
-    }
-
-    h1 {
-      text-align: center;
-      color: var(--accent);
-      margin: 0 0 8px;
-      font-size: 1.8em;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #64748b;
-      font-size: 0.95em;
-      margin-bottom: 20px;
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
+    body { margin:0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding:16px; }
+    .container { max-width:500px; margin:20px auto; background:var(--card); border-radius:20px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
+    h1 { text-align:center; color:var(--accent); margin:0 0 8px; font-size:1.8em; }
+    .subtitle { text-align:center; color:#64748b; font-size:0.9em; margin-bottom:20px; }
+    .controls { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
     button {
-      padding: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      padding:14px 8px; font-size:14px; font-weight:600; border:none; border-radius:14px;
+      cursor:pointer; transition:0.2s; display:flex; flex-direction:column; align-items:center; gap:4px;
+      background:var(--btn); color:white;
     }
-
-    button:hover:not(:disabled) { transform: translateY(-2px); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    #startBtn { background: #10b981; color: white; }
-    #stopBtn { background: #ef4444; color: white; }
-    #flashBtn { background: #f59e0b; color: white; }
-    #cameraBtn { background: #8b5cf6; color: white; }
-
-    .status {
-      text-align: center;
-      padding: 10px;
-      background: rgba(59, 130, 246, 0.1);
-      border-radius: 10px;
-      margin: 12px 0;
-      font-size: 0.95em;
-      min-height: 20px;
-    }
-
-    #output {
-      width: 100%;
-      height: 160px;
-      padding: 14px;
-      font-size: 16px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fafafa;
-      color: var(--text);
-      resize: none;
-      margin-top: 8px;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      #output { background: #1e293b; }
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.8em;
-      color: #94a3b8;
-    }
-
-    .hidden { display: none; }
+    button:hover:not(:disabled) { background:var(--btn-hover); transform:translateY(-2px); }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+    .hint { font-size:11px; opacity:0.9; }
+    #startBtn { background:#10b981; } #stopBtn { background:#ef4444; }
+    .status { text-align:center; padding:12px; background:rgba(59,130,246,0.1); border-radius:12px; margin:14px 0; font-size:0.95em; min-height:20px; }
+    #output { width:100%; height:130px; padding:14px; font-size:16px; border:1px solid var(--border); border-radius:12px; background:#fafafa; color:var(--text); resize:none; margin-top:8px; }
+    @media (prefers-color-scheme: dark) { #output { background:#1e293b; } }
+    .hidden { display:none; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <h1>Голосовой ассистент</h1>
-  <p class="subtitle">Говори — телефон слушается!</p>
+  <p class="subtitle">Говори или нажимай — всё работает</p>
 
   <div class="controls">
-    <button id="startBtn">Начать</button>
-    <button id="stopBtn" disabled>Стоп</button>
-    <button id="flashBtn">Фонарик</button>
-    <button id="cameraBtn">Фото</button>
+    <button id="startBtn">
+      Начать
+      <span class="hint">Скажи: "слушай"</span>
+    </button>
+    <button id="stopBtn" disabled>
+      Стоп
+      <span class="hint">Остановить</span>
+    </button>
+
+    <button id="callBtn">
+      Позвони маме
+      <span class="hint">"позвони маме"</span>
+    </button>
+
+    <button id="flashBtn">
+      Фонарик
+      <span class="hint">"фонарик"</span>
+    </button>
+
+    <button id="cameraBtn">
+      Сделай фото
+      <span class="hint">"сделай фото"</span>
+    </button>
+
+    <button id="youtubeBtn">
+      YouTube
+      <span class="hint">"включи [песня]"</span>
+    </button>
+
+    <button id="calcBtn">
+      Калькулятор
+      <span class="hint">"посчитай 5 + 7"</span>
+    </button>
+
+    <button id="weatherBtn">
+      Погода
+      <span class="hint">"погода в Киеве"</span>
+    </button>
   </div>
 
-  <div class="status" id="status">Нажми "Начать" и говори команду</div>
-
-  <textarea id="output" placeholder="Текст появится здесь..." readonly></textarea>
-
+  <div class="status" id="status">Нажми "Начать" и говори</div>
+  <textarea id="output" placeholder="Распознано..." readonly></textarea>
   <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
-
-  <div class="footer">
-    <p>Позвони • SMS • Карты • Фонарик • Фото • YouTube</p>
-  </div>
 </div>
 
 <script>
-  // === Элементы ===
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
+  const callBtn = document.getElementById('callBtn');
   const flashBtn = document.getElementById('flashBtn');
   const cameraBtn = document.getElementById('cameraBtn');
+  const youtubeBtn = document.getElementById('youtubeBtn');
+  const calcBtn = document.getElementById('calcBtn');
+  const weatherBtn = document.getElementById('weatherBtn');
   const output = document.getElementById('output');
   const status = document.getElementById('status');
   const cameraInput = document.getElementById('cameraInput');
 
-  let recognition = null;
-  let isListening = false;
-  let track = null; // для фонарика
+  let recognition = null, isListening = false, track = null;
 
-  // === Проверка API ===
-  if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
-    status.textContent = 'Браузер не поддерживает речь. Используй Chrome.';
-    startBtn.disabled = true;
-  }
-
-  // === Инициализация речи ===
+  // === Речь ===
   function initRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
@@ -196,7 +128,7 @@
 
     recognition.onstart = () => {
       isListening = true;
-      status.textContent = 'Слушаю... Говори!';
+      status.textContent = 'Слушаю...';
       startBtn.disabled = true;
       stopBtn.disabled = false;
     };
@@ -207,111 +139,92 @@
         const t = e.results[i][0].transcript;
         e.results[i].isFinal ? final += t + ' ' : interim += t;
       }
-      const full = (output.value + final).trim();
-      output.value = full + interim;
+      output.value = (output.value + final).trim() + interim;
       output.scrollTop = output.scrollHeight;
-
-      if (final) processCommand(final.trim());
+      if (final) processCommand(final.trim().toLowerCase());
     };
 
-    recognition.onerror = () => {
-      status.textContent = 'Ошибка. Перезапусти.';
-      stopListening();
-    };
-
-    recognition.onend = () => {
-      if (isListening) recognition.start();
-      else stopListening();
-    };
+    recognition.onerror = () => stopListening();
+    recognition.onend = () => { if (isListening) recognition.start(); else stopListening(); };
   }
 
-  // === КОМАНДЫ ===
-  function processCommand(text) {
-    text = text.toLowerCase();
-
-    const commands = [
-      { regex: /позвони\s+(.+)/, action: (m) => open(`tel:${m}`, '_self') },
-      { regex: /напиши\s+sms\s*:?\s*(.+)/, action: (m) => open(`sms:?body=${encodeURIComponent(m)}`, '_self') },
-      { regex: /как доехать до\s+(.+)/, action: (m) => open(`https://maps.google.com?q=${encodeURIComponent(m)}`, '_blank') },
-      { regex: /поиск\s+(.+)/, action: (m) => open(`https://google.com/search?q=${encodeURIComponent(m)}`, '_blank') },
-      { regex: /включи\s+(.+)/, action: (m) => open(`https://youtube.com/results?search_query=${encodeURIComponent(m)}`, '_blank') },
-      { regex: /очисти/, action: () => { output.value = ''; status.textContent = 'Очищено!'; } },
-      { regex: /скопируй/, action: () => {
-        if (output.value) {
-          navigator.clipboard.writeText(output.value);
-          status.textContent = 'Скопировано!';
-          setTimeout(() => status.textContent = 'Готов.', 1500);
-        }
-      }},
-      { regex: /фонарик/, action: toggleFlashlight },
-      { regex: /сделай фото|сфоткай/, action: () => cameraInput.click() }
-    ];
-
-    for (const cmd of commands) {
-      const match = text.match(cmd.regex);
-      if (match) {
-        cmd.action(match[1] || '');
-        status.textContent = `Выполнено: "${text}"`;
-        return;
-      }
-    }
+  // === Команды ===
+  function processCommand(cmd) {
+    if (cmd.includes('позвони маме')) { callContact('мама'); }
+    else if (cmd.includes('фонарик')) { toggleFlashlight(); }
+    else if (cmd.includes('сделай фото') || cmd.includes('сфоткай')) { takePhoto(); }
+    else if (cmd.includes('включи ')) { playYouTube(cmd.replace('включи ', '')); }
+    else if (cmd.includes('посчитай ')) { calculate(cmd.replace('посчитай ', '')); }
+    else if (cmd.includes('погода в ')) { getWeather(cmd.replace('погода в ', '')); }
+    else if (cmd.includes('слушай')) { startListening(); }
   }
 
-  // === Фонарик ===
+  // === Функции ===
+  function callContact(name) {
+    location.href = `tel:${name}`;
+    status.textContent = `Звоню: ${name}`;
+  }
+
   async function toggleFlashlight() {
-    if (track) {
-      track.stop();
-      track = null;
-      flashBtn.textContent = 'Фонарик';
-      status.textContent = 'Фонарик выключен';
-      return;
-    }
-
+    if (track) { track.stop(); track = null; flashBtn.textContent = 'Фонарик'; status.textContent = 'Выключен'; return; }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       track = stream.getVideoTracks()[0];
-      const imageCapture = new ImageCapture(track);
-      const capabilities = track.getCapabilities();
-      if (capabilities.torch) {
+      if (track.getCapabilities().torch) {
         await track.applyConstraints({ advanced: [{ torch: true }] });
         flashBtn.textContent = 'Фонарик ВКЛ';
-        status.textContent = 'Фонарик включён';
+        status.textContent = 'Включён';
       }
-    } catch (e) {
-      status.textContent = 'Фонарик недоступен';
-    }
+    } catch { status.textContent = 'Фонарик недоступен'; }
   }
 
-  // === Фото ===
+  function takePhoto() { cameraInput.click(); }
+
+  function playYouTube(query) {
+    open(`https://m.youtube.com/results?search_query=${encodeURIComponent(query)}`, '_blank');
+    status.textContent = `YouTube: ${query}`;
+  }
+
+  function calculate(expr) {
+    try {
+      const result = eval(expr.replace(/плюс/g, '+').replace(/минус/g, '-').replace(/умножить на/g, '*').replace(/делить на/g, '/'));
+      status.textContent = `${expr} = ${result}`;
+      output.value += `\n${expr} = ${result}`;
+    } catch { status.textContent = 'Ошибка в расчёте'; }
+  }
+
+  async function getWeather(city) {
+    status.textContent = 'Загружаю погоду...';
+    try {
+      const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%C+%t`);
+      const text = await res.text();
+      status.textContent = `Погода в ${city}: ${text}`;
+    } catch { status.textContent = 'Не удалось загрузить погоду'; }
+  }
+
+  function startListening() { if (!recognition) initRecognition(); recognition.start(); }
+  function stopListening() { isListening = false; if (recognition) recognition.stop(); status.textContent = 'Остановлено'; startBtn.disabled = false; stopBtn.disabled = true; }
+
+  // === Кнопки ===
+  startBtn.onclick = startListening;
+  stopBtn.onclick = stopListening;
+  callBtn.onclick = () => callContact('мама');
+  flashBtn.onclick = toggleFlashlight;
+  cameraBtn.onclick = takePhoto;
+  youtubeBtn.onclick = () => playYouTube('Океан Ельзи');
+  calcBtn.onclick = () => calculate('5 + 7');
+  weatherBtn.onclick = () => getWeather('Киев');
+
+  // Фото
   cameraInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `photo_${Date.now()}.jpg`;
-      a.click();
+      a.href = url; a.download = `photo_${Date.now()}.jpg`; a.click();
       status.textContent = 'Фото сохранено!';
     }
   });
-
-  // === Управление ===
-  startBtn.onclick = () => { initRecognition(); recognition.start(); };
-  stopBtn.onclick = () => { isListening = false; recognition.stop(); };
-  flashBtn.onclick = toggleFlashlight;
-  cameraBtn.onclick = () => cameraInput.click();
-
-  function stopListening() {
-    isListening = false;
-    status.textContent = 'Остановлено. Нажми "Начать"';
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-  }
-
-  // Автостарт при загрузке (опционально)
-  // window.onload = () => setTimeout(() => startBtn.click(), 1000);
 </script>
 
 </body>

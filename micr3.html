@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Голосовой ассистент</title>
+  <title>Голосовой ассистент v2</title>
 
   <!-- PWA -->
   <link rel="manifest" href="data:application/manifest+json,{
-    \"name\": \"Голосовой ассистент\",
-    \"short_name\": \"Голос\",
+    \"name\": \"Голосовой ассистент v2\",
+    \"short_name\": \"Голос v2\",
     \"start_url\": \".\",
     \"display\": \"standalone\",
     \"background_color\": \"#0f172a\",
@@ -22,45 +22,142 @@
 
   <style>
     :root {
-      --bg: #f8fafc; --card: #fff; --text: #1e293b; --accent: #3b82f6;
-      --btn: #3b82f6; --btn-hover: #2563eb; --border: #cbd5e1;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --accent: #3b82f6;
+      --btn: #3b82f6;
+      --btn-hover: #2563eb;
+      --border: #cbd5e1;
+      --shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
+
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f172a; --card: #1e293b; --text: #e2e8f0; --accent: #60a5fa;
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #e2e8f0;
+        --accent: #60a5fa;
+        --btn: #3b82f6;
+        --btn-hover: #2563eb;
         --border: #334155;
+        --shadow: 0 10px 30px rgba(0,0,0,0.4);
       }
     }
-    body { margin:0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding:16px; }
-    .container { max-width:500px; margin:20px auto; background:var(--card); border-radius:20px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
-    h1 { text-align:center; color:var(--accent); margin:0 0 8px; font-size:1.8em; }
-    .subtitle { text-align:center; color:#64748b; font-size:0.9em; margin-bottom:20px; }
-    .controls { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
-    button {
-      padding:14px 8px; font-size:14px; font-weight:600; border:none; border-radius:14px;
-      cursor:pointer; transition:0.2s; display:flex; flex-direction:column; align-items:center; gap:4px;
-      background:var(--btn); color:white;
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
     }
-    button:hover:not(:disabled) { background:var(--btn-hover); transform:translateY(-2px); }
-    button:disabled { opacity:0.6; cursor:not-allowed; }
-    .hint { font-size:11px; opacity:0.9; }
-    #startBtn { background:#10b981; } #stopBtn { background:#ef4444; }
-    .status { text-align:center; padding:12px; background:rgba(59,130,246,0.1); border-radius:12px; margin:14px 0; font-size:0.95em; min-height:20px; }
-    #output { width:100%; height:130px; padding:14px; font-size:16px; border:1px solid var(--border); border-radius:12px; background:#fafafa; color:var(--text); resize:none; margin-top:8px; }
-    @media (prefers-color-scheme: dark) { #output { background:#1e293b; } }
-    .hidden { display:none; }
+
+    .container {
+      max-width: 500px;
+      margin: 20px auto;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      margin: 0 0 8px;
+      font-size: 1.8em;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.9em;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      padding: 14px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: var(--btn);
+      color: white;
+    }
+
+    button:hover:not(:disabled) { 
+      background: var(--btn-hover); 
+      transform: translateY(-2px);
+    }
+
+    button:disabled { 
+      opacity: 0.6; 
+      cursor: not-allowed; 
+    }
+
+    .hint {
+      font-size: 11px;
+      font-weight: normal;
+      opacity: 0.9;
+    }
+
+    #startBtn { background: #10b981; }
+    #stopBtn { background: #ef4444; }
+
+    .status {
+      text-align: center;
+      padding: 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 12px;
+      margin: 14px 0;
+      font-size: 0.95em;
+      min-height: 20px;
+    }
+
+    #output {
+      width: 100%;
+      height: 140px;
+      padding: 14px;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fafafa;
+      color: var(--text);
+      resize: none;
+      margin-top: 8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #output { background: #1e293b; }
+    }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Голосовой ассистент</h1>
-  <p class="subtitle">Говори или нажимай — всё работает</p>
+  <h1>Голосовой ассистент v2</h1>
+  <p class="subtitle">Говори или нажимай — всё работает!</p>
 
   <div class="controls">
     <button id="startBtn">
       Начать
-      <span class="hint">Скажи: "слушай"</span>
+      <span class="hint">Нажми или скажи "слушай"</span>
     </button>
     <button id="stopBtn" disabled>
       Стоп
@@ -69,56 +166,61 @@
 
     <button id="callBtn">
       Позвони маме
-      <span class="hint">"позвони маме"</span>
+      <span class="hint">Скажи: "позвони маме"</span>
     </button>
 
     <button id="flashBtn">
       Фонарик
-      <span class="hint">"фонарик"</span>
+      <span class="hint">Скажи: "фонарик"</span>
     </button>
 
     <button id="cameraBtn">
       Сделай фото
-      <span class="hint">"сделай фото"</span>
+      <span class="hint">Скажи: "сделай фото"</span>
     </button>
 
     <button id="youtubeBtn">
       YouTube
-      <span class="hint">"включи [песня]"</span>
+      <span class="hint">Скажи: "включи Лободу"</span>
     </button>
 
-    <button id="calcBtn">
-      Калькулятор
-      <span class="hint">"посчитай 5 + 7"</span>
-    </button>
-
-    <button id="weatherBtn">
-      Погода
-      <span class="hint">"погода в Киеве"</span>
+    <button id="timerBtn">
+      Таймер 3 мин
+      <span class="hint">Скажи: "таймер на 3 минуты"</span>
     </button>
   </div>
 
   <div class="status" id="status">Нажми "Начать" и говори</div>
-  <textarea id="output" placeholder="Распознано..." readonly></textarea>
+
+  <textarea id="output" placeholder="Распознанное..." readonly></textarea>
+
   <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden">
 </div>
 
 <script>
+  // === Элементы ===
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
   const callBtn = document.getElementById('callBtn');
   const flashBtn = document.getElementById('flashBtn');
   const cameraBtn = document.getElementById('cameraBtn');
   const youtubeBtn = document.getElementById('youtubeBtn');
-  const calcBtn = document.getElementById('calcBtn');
-  const weatherBtn = document.getElementById('weatherBtn');
+  const timerBtn = document.getElementById('timerBtn');
   const output = document.getElementById('output');
   const status = document.getElementById('status');
   const cameraInput = document.getElementById('cameraInput');
 
-  let recognition = null, isListening = false, track = null;
+  let recognition = null;
+  let isListening = false;
+  let track = null;
+  let timerId = null;
 
-  // === Речь ===
+  // === Инициализация ===
+  if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+    status.textContent = 'Браузер не поддерживает речь. Используй Chrome.';
+    startBtn.disabled = true;
+  }
+
   function initRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
@@ -141,6 +243,7 @@
       }
       output.value = (output.value + final).trim() + interim;
       output.scrollTop = output.scrollHeight;
+
       if (final) processCommand(final.trim().toLowerCase());
     };
 
@@ -148,72 +251,106 @@
     recognition.onend = () => { if (isListening) recognition.start(); else stopListening(); };
   }
 
-  // === Команды ===
-  function processCommand(cmd) {
-    if (cmd.includes('позвони маме')) { callContact('мама'); }
+  // === КОМАНДЫ ===
+  function processCommand(text) {
+    const cmd = text.toLowerCase();
+
+    if (cmd.includes('позвони маме')) { callContact('маме'); }
     else if (cmd.includes('фонарик')) { toggleFlashlight(); }
     else if (cmd.includes('сделай фото') || cmd.includes('сфоткай')) { takePhoto(); }
     else if (cmd.includes('включи ')) { playYouTube(cmd.replace('включи ', '')); }
-    else if (cmd.includes('посчитай ')) { calculate(cmd.replace('посчитай ', '')); }
-    else if (cmd.includes('погода в ')) { getWeather(cmd.replace('погода в ', '')); }
-    else if (cmd.includes('слушай')) { startListening(); }
+    else if (cmd.includes('таймер на')) {
+      const mins = cmd.match(/таймер на (\d+) минут/i);
+      if (mins) startTimer(parseInt(mins[1]));
+    }
+    else if (cmd.includes('слушай') || cmd.includes('старт')) { startListening(); }
   }
 
-  // === Функции ===
+  // === ФУНКЦИИ ===
   function callContact(name) {
-    location.href = `tel:${name}`;
+    location.href = `tel:${name === 'маме' ? 'мама' : name}`;
     status.textContent = `Звоню: ${name}`;
   }
 
   async function toggleFlashlight() {
-    if (track) { track.stop(); track = null; flashBtn.textContent = 'Фонарик'; status.textContent = 'Выключен'; return; }
+    if (track) {
+      track.stop();
+      track = null;
+      flashBtn.textContent = 'Фонарик';
+      status.textContent = 'Фонарик выключен';
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: 1, height: 1 }
+      });
       track = stream.getVideoTracks()[0];
-      if (track.getCapabilities().torch) {
+      const caps = track.getCapabilities();
+      if ('torch' in caps) {
         await track.applyConstraints({ advanced: [{ torch: true }] });
         flashBtn.textContent = 'Фонарик ВКЛ';
-        status.textContent = 'Включён';
+        status.textContent = 'Фонарик включён';
+      } else {
+        throw new Error('no torch');
       }
-    } catch { status.textContent = 'Фонарик недоступен'; }
+    } catch (e) {
+      track = null;
+      status.textContent = 'Фонарик недоступен на этом устройстве';
+    }
   }
 
-  function takePhoto() { cameraInput.click(); }
+  function takePhoto() {
+    cameraInput.click();
+  }
 
   function playYouTube(query) {
     open(`https://m.youtube.com/results?search_query=${encodeURIComponent(query)}`, '_blank');
-    status.textContent = `YouTube: ${query}`;
+    status.textContent = `Ищу: ${query}`;
   }
 
-  function calculate(expr) {
-    try {
-      const result = eval(expr.replace(/плюс/g, '+').replace(/минус/g, '-').replace(/умножить на/g, '*').replace(/делить на/g, '/'));
-      status.textContent = `${expr} = ${result}`;
-      output.value += `\n${expr} = ${result}`;
-    } catch { status.textContent = 'Ошибка в расчёте'; }
+  function startTimer(minutes) {
+    if (timerId) clearTimeout(timerId);
+    const seconds = minutes * 60;
+    let remaining = seconds;
+    status.textContent = `Таймер: ${minutes} мин`;
+
+    timerId = setInterval(() => {
+      remaining--;
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      status.textContent = `Таймер: ${m}:${s.toString().padStart(2, '0')}`;
+
+      if (remaining <= 0) {
+        clearInterval(timerId);
+        timerId = null;
+        status.textContent = 'Таймер завершён!';
+        if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+      }
+    }, 1000);
   }
 
-  async function getWeather(city) {
-    status.textContent = 'Загружаю погоду...';
-    try {
-      const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=%C+%t`);
-      const text = await res.text();
-      status.textContent = `Погода в ${city}: ${text}`;
-    } catch { status.textContent = 'Не удалось загрузить погоду'; }
+  function startListening() {
+    if (!recognition) initRecognition();
+    recognition.start();
   }
 
-  function startListening() { if (!recognition) initRecognition(); recognition.start(); }
-  function stopListening() { isListening = false; if (recognition) recognition.stop(); status.textContent = 'Остановлено'; startBtn.disabled = false; stopBtn.disabled = true; }
+  function stopListening() {
+    isListening = false;
+    if (recognition) recognition.stop();
+    status.textContent = 'Остановлено';
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+  }
 
-  // === Кнопки ===
+  // === КНОПКИ ===
   startBtn.onclick = startListening;
   stopBtn.onclick = stopListening;
-  callBtn.onclick = () => callContact('мама');
+  callBtn.onclick = () => callContact('маме');
   flashBtn.onclick = toggleFlashlight;
   cameraBtn.onclick = takePhoto;
   youtubeBtn.onclick = () => playYouTube('Океан Ельзи');
-  calcBtn.onclick = () => calculate('5 + 7');
-  weatherBtn.onclick = () => getWeather('Киев');
+  timerBtn.onclick = () => startTimer(3);
 
   // Фото
   cameraInput.addEventListener('change', (e) => {
@@ -221,7 +358,9 @@
     if (file) {
       const url = URL.createObjectURL(file);
       const a = document.createElement('a');
-      a.href = url; a.download = `photo_${Date.now()}.jpg`; a.click();
+      a.href = url;
+      a.download = `photo_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.jpg`;
+      a.click();
       status.textContent = 'Фото сохранено!';
     }
   });

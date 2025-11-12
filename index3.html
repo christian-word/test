@@ -1303,19 +1303,25 @@ function drawText(ctx, canvas, progress = 1, animationType = settings.animationT
             const chunks = [];
 
             recorder.ondataavailable = e => chunks.push(e.data);
-            recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${settings.reference ? settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_') : 'bible_verse'}.webm`;
-                a.click();
-                URL.revokeObjectURL(url);
-                if (audioUrl) URL.revokeObjectURL(audioUrl);
-                videoProgress.style.display = 'none';
-                progressBar.style.width = '0%';
-                drawImage(1); // Восстановить статичное изображение
-            };
+recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${settings.reference ? settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_') : 'bible_verse'}.webm`;
+    a.click();                       // тихо скачали
+
+    // показать «успешно»
+    document.getElementById('videoSavedModal').style.display = 'block';
+
+    // очистить
+    URL.revokeObjectURL(url);
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    videoProgress.style.display = 'none';
+    progressBar.style.width = '0%';
+    drawImage(1);
+};
 
             recorder.start();
             if (audioElement) audioElement.play();
@@ -1587,7 +1593,26 @@ if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) 
     };
 }
 
+function closeVideoSavedModal() {
+    document.getElementById('videoSavedModal').style.display = 'none';
+}
+
         initCanvas();
     </script>
+
+<!-- Успешное сохранение -->
+<div id="videoSavedModal" class="modal">
+  <div class="modal-content" style="max-width:320px;text-align:center">
+    <div class="modal-header">
+      <h3>Готово!</h3>
+      <span class="close" onclick="closeVideoSavedModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p>Видео успешно сохранено.</p>
+      <button class="btn" onclick="closeVideoSavedModal()">ОК</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -1,0 +1,1593 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:image" content="gen1.png">
+    <title>Фото-видео генератор библейских стихов (версия 2.0)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;600&family=Crimson+Text:ital@0;1&family=Raleway:wght@300;400;700&family=Cormorant+Garamond:wght@300;400;600&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 25%, #8b5cf6 50%, #ec4899 75%, #f59e0b 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: headerGlow 6s ease-in-out infinite;
+        }
+        @keyframes headerGlow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10%, 10%); }
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .control-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .control-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+        .control-panel::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 8px;
+        }
+        .section {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .section:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .section h3 {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        .verse-select, .custom-verse {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: border-color 0.2s;
+        }
+        .verse-select:focus, .custom-verse:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .custom-verse {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            max-width: 200px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn.round {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            max-width: 40px;
+        }
+        .download-btn, .mobile-download-btn {
+            margin: 10px auto;
+            display: block;
+            width: 100%;
+            max-width: 200px;
+        }
+        .background-grid, .font-grid, .format-grid, .effect-grid, .border-grid {
+            display: grid;
+            gap: 8px;
+        }
+        .background-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .font-grid, .effect-grid, .border-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .format-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .bg-option, .font-option, .format-option, .effect-option, .border-option {
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            padding: 10px;
+        }
+        .bg-option {
+            height: 60px;
+            position: relative;
+        }
+        .bg-option:hover, .font-option:hover, .format-option:hover, .effect-option:hover, .border-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .bg-option.active, .font-option.active, .format-option.active, .effect-option.active, .border-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: #fff;
+        }
+        .bg-option.active::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #667eea;
+            color: #fff;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+        .uploaded-image-preview {
+            margin-top: 8px;
+            position: relative;
+        }
+        .uploaded-image-preview img {
+            width: 100%;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .color-input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .slider-container {
+            margin-top: 8px;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 4px;
+            background: #dee2e6;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 8px;
+            background: #fff;
+            border-radius: 6px;
+        }
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .label {
+            margin-bottom: 6px;
+            margin-top: 8px;
+            color: #495057;
+            font-weight: 500;
+        }
+        .preview-panel {
+            position: sticky;
+            top: 15px;
+        }
+        .canvas-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+        #canvas, #mobileCanvas {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .mobile-preview-toggle, .help-button {
+            display: none;
+            position: fixed;
+            bottom: 60px;
+            z-index: 1000;
+        }
+        .mobile-preview-toggle {
+            right: 15px;
+        }
+        .help-button {
+            left: 15px;
+        }
+        .mobile-preview-panel {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.98);
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 -3px 20px rgba(0,0,0,0.2);
+            z-index: 999;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            max-height: 40vh;
+        }
+        .mobile-preview-panel.active {
+            transform: translateY(0);
+        }
+        .mobile-preview-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mobile-preview-header h3 {
+            margin: 0;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mobile-preview-content {
+            padding: 8px;
+            overflow-y: auto;
+            max-height: calc(40vh - 40px);
+        }
+        .mobile-canvas-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            margin: 5% auto;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.4);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.4em;
+        }
+        .close {
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 15px;
+        }
+        .help-section {
+            background: #fff;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .help-section h3 {
+            margin: 0 0 10px;
+            font-size: 1.1em;
+        }
+        .help-section p {
+            margin: 6px 0;
+            color: #555;
+            line-height: 1.4;
+        }
+        .help-section strong {
+            color: #764ba2;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.85em;
+            color: #666;
+            border-top: 1px solid #e9ecef;
+            border-radius: 0 0 20px 20px;
+        }
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 10px;
+            }
+            .preview-panel {
+                display: none;
+            }
+            .control-panel {
+                max-height: none;
+                padding-bottom: 80px;
+            }
+            .background-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .font-grid, .effect-grid, .border-grid, .format-grid {
+                grid-template-columns: 1fr;
+            }
+            .mobile-preview-toggle, .help-button {
+                display: flex;
+            }
+            .mobile-preview-panel {
+                display: block;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            .container {
+                border-radius: 15px;
+            }
+            .header h1 {
+                font-size: 1.5em;
+            }
+            .header p {
+                font-size: 0.9em;
+            }
+            .section {
+                padding: 10px;
+            }
+            .section h3 {
+                font-size: 1em;
+            }
+            .bg-option {
+                height: 50px;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+            .modal-header h2 {
+                font-size: 1.2em;
+            }
+        }
+
+#micBtn.recording {
+    background: #ff4d4d !important;
+    color: white;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📖 Фото-видео генератор библейских стихов</h1>
+            <p>Создавайте красивые картинки за минуту (версия 2.0)</p>
+        </div>
+        <div class="main-content">
+            <div class="control-panel">
+                <div class="section">
+                    <h3>📖 Выберите стих</h3>
+                    <select class="verse-select" id="verseSelect">
+                        <option value="">Выберите стих...</option>
+                        <option value="Ибо так возлюбил Бог мир, что отдал Сына Своего Единородного, дабы всякий верующий в Него, не погиб, но имел жизнь вечную.|Иоанна 3:16">Иоанна 3:16</option>
+                        <option value="Я есмь путь и истина и жизнь; никто не приходит к Отцу, как только через Меня.|Иоанна 14:6">Иоанна 14:6</option>
+                        <option value="Ибо возмездие за грех - смерть, а дар Божий - жизнь вечная во Христе Иисусе, Господе нашем.|Римлянам 6:23">Римлянам 6:23</option>
+                        <option value="Все могу в укрепляющем меня Иисусе Христе.|Филиппийцам 4:13">Филиппийцам 4:13</option>
+                        <option value="Не бойся, ибо Я с тобою; не смущайся, ибо Я - Бог твой; Я укреплю тебя, и помогу тебе.|Исаия 41:10">Исаия 41:10</option>
+                        <option value="Господь - Пастырь мой; я ни в чем не буду нуждаться.|Псалом 22:1">Псалом 22:1</option>
+                        <option value="Возложи на Господа заботы твои, и Он поддержит тебя.|Псалом 54:23">Псалом 54:23</option>
+                        <option value="Вот, Я с вами во все дни до скончания века.|Матфея 28:20">Матфея 28:20</option>
+                        <option value="Ищите же прежде Царства Божия и правды Его, и это все приложится вам.|Матфея 6:33">Матфея 6:33</option>
+                        <option value="Просите, и дано будет вам; ищите, и найдете; стучите, и отворят вам.|Матфея 7:7">Матфея 7:7</option>
+                    </select>
+<label class="label">Свой текст:</label>
+<div style="position: relative;">
+    <textarea class="custom-verse" id="customVerse" placeholder="Введите стих..."></textarea>
+    <button type="button" id="micBtn" class="btn round" style="position: absolute; right: 8px; top: 8px; width: 36px; height: 36px; font-size: 1.2em;" title="Распознать речь">🎤</button>
+</div>
+                    <label class="label">Ссылка на стих:</label>
+                    <input type="text" class="verse-select" id="verseReference" placeholder="Например: Иоанна 3:16">
+                </div>
+                <div class="section">
+                    <h3>🎨 Фон</h3>
+                    <button class="btn" onclick="document.getElementById('imageUpload').click()">📁 Загрузить</button>
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    <div id="uploadedImagePreview" class="uploaded-image-preview" style="display: none;">
+                        <img id="uploadedImg" src="" alt="Uploaded">
+                        <button class="btn round remove-image" onclick="removeUploadedImage()">×</button>
+                    </div>
+                    <div class="background-grid">
+                        <div class="bg-option active" data-bg="gradient1" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                        <div class="bg-option" data-bg="gradient2" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+                        <div class="bg-option" data-bg="gradient3" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                        <div class="bg-option" data-bg="gradient4" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></div>
+                        <div class="bg-option" data-bg="gradient5" style="background: linear-gradient(135deg, #fa709a, #fee140);"></div>
+                        <div class="bg-option" data-bg="gradient6" style="background: linear-gradient(135deg, #30cfd0, #330867);"></div>
+                        <div class="bg-option" data-bg="gradient7" style="background: linear-gradient(135deg, #a8edea, #fed6e3);"></div>
+                        <div class="bg-option" data-bg="gradient8" style="background: linear-gradient(135deg, #ff9a56, #ff6a88);"></div>
+                        <div class="bg-option" data-bg="gradient9" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);"></div>
+                        <div class="bg-option" data-bg="gradient10" style="background: linear-gradient(135deg, #08203e, #557c93);"></div>
+                        <div class="bg-option" data-bg="gradient11" style="background: linear-gradient(135deg, #5f2c82, #49a09d);"></div>
+                        <div class="bg-option" data-bg="gradient12" style="background: linear-gradient(135deg, #134e5e, #71b280);"></div>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3>🖋 Шрифт</h3>
+                    <div class="font-grid">
+                        <div class="font-option active" data-font="Georgia" style="font-family: Georgia;">Классический</div>
+                        <div class="font-option" data-font="'Playfair Display', serif" style="font-family: 'Playfair Display', serif;">Элегантный</div>
+                        <div class="font-option" data-font="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif;">Современный</div>
+                        <div class="font-option" data-font="'Crimson Text', serif" style="font-family: 'Crimson Text', serif;">Художественный</div>
+                        <div class="font-option" data-font="'Raleway', sans-serif" style="font-family: 'Raleway', sans-serif;">Утонченный</div>
+                        <div class="font-option" data-font="'Cormorant Garamond', serif" style="font-family: 'Cormorant Garamond', serif;">Винтажный</div>
+                        <div class="font-option" data-font="'Lora', serif" style="font-family: 'Lora', serif;">Книжный</div>
+                        <div class="font-option" data-font="Arial, sans-serif" style="font-family: Arial, sans-serif;">Минимализм</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3>✨ Эффекты текста</h3>
+                    <div class="effect-grid">
+                        <div class="effect-option active" data-effect="none">Без эффекта</div>
+                        <div class="effect-option" data-effect="shadow">Тень</div>
+                        <div class="effect-option" data-effect="glow">Свечение</div>
+                        <div class="effect-option" data-effect="outline">Контур</div>
+                        <div class="effect-option" data-effect="3d">3D эффект</div>
+                        <div class="effect-option" data-effect="emboss">Рельеф</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3>🖼 Рамки</h3>
+                    <div class="border-grid">
+                        <div class="border-option active" data-border="none">Без рамки</div>
+                        <div class="border-option" data-border="simple">Простая</div>
+                        <div class="border-option" data-border="double">Двойная</div>
+                        <div class="border-option" data-border="ornament">Орнамент</div>
+                        <div class="border-option" data-border="corners">Уголки</div>
+                        <div class="border-option" data-border="vintage">Винтаж</div>
+                        <div class="border-option" data-border="rounded">Скругленная</div>
+                        <div class="border-option" data-border="dashed">Пунктир</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3>🎭 Настройки</h3>
+                    <div class="slider-container">
+                        <div class="slider-label"><span>Прозрачность фона</span><span id="bgOpacityValue">100%</span></div>
+                        <input type="range" class="slider" id="bgOpacity" min="0" max="100" value="100">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label"><span>Размер текста</span><span id="textSizeValue">100%</span></div>
+                        <input type="range" class="slider" id="textSize" min="60" max="150" value="100">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label"><span>Виньетка</span><span id="vignetteValue">30%</span></div>
+                        <input type="range" class="slider" id="vignette" min="0" max="100" value="30">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label"><span>Затемнение (фото)</span><span id="overlayValue">30%</span></div>
+                        <input type="range" class="slider" id="overlay" min="0" max="100" value="30">
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" class="checkbox" id="centerAlign" checked>
+                        <label for="centerAlign">Выровнять по центру</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" class="checkbox" id="addQuotes" checked>
+                        <label for="addQuotes">Добавить кавычки</label>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3>🎨 Цвета</h3>
+                    <label class="label">Текст:</label>
+                    <input type="color" class="color-input" id="textColor" value="#ffffff">
+                    <label class="label">Ссылка:</label>
+                    <input type="color" class="color-input" id="referenceColor" value="#ffffff">
+                    <label class="label">Рамка:</label>
+                    <input type="color" class="color-input" id="borderColor" value="#ffffff">
+                </div>
+                <div class="section">
+                    <h3>📐 Формат</h3>
+                    <div class="format-grid">
+                        <div class="format-option active" data-format="square"><div>📱 Квадрат</div><div>1080×1080</div></div>
+                        <div class="format-option" data-format="story"><div>📲 Сторис</div><div>1080×1920</div></div>
+                        <div class="format-option" data-format="post"><div>🖼 Пост</div><div>1080×1350</div></div>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3>🎨 Стили</h3>
+<select class="verse-select" id="presetSelect">
+        <option value="">Выберите стиль...</option>
+        <option value="elegant">Элегантный</option>
+        <option value="modern">Современный</option>
+        <option value="vintage">Винтажный</option>
+        <option value="nature">Природа</option>
+        <option value="minimalist">Минимализм</option>
+        <option value="baroque">Барокко</option>
+        <option value="hipster">Хипстер</option>
+        <option value="dark">Темный</option>
+        <option value="romantic">Романтичный</option>
+        <option value="ocean">Океан</option>
+        <option value="sunset">Закат</option>
+        <option value="nordic">Нордический</option>
+    </select>
+                </div>
+                <div class="section">
+                    <h3>🎬 Анимация видео</h3>
+                    <label class="label">Тип анимации:</label>
+                    <select class="verse-select" id="animationType">
+                        <option value="fadeIn">✨ Появление</option>
+                        <option value="slideUp">⬆️ Снизу вверх</option>
+                        <option value="slideDown">⬇️ Сверху вниз</option>
+                        <option value="slideLeft">⬅️ Справа налево</option>
+                        <option value="slideRight">➡️ Слева направо</option>
+                        <option value="zoom">🔍 Увеличение</option>
+                        <option value="typewriter">⌨️ Печатная машинка</option>
+                        <option value="wordByWord">📝 Слово за словом</option>
+                        <option value="glow">🌟 Свечение</option>
+                    </select>
+                    <div class="slider-container">
+                        <div class="slider-label"><span>Длительность</span><span id="durationValue">5 сек</span></div>
+                        <input type="range" class="slider" id="duration" min="3" max="15" value="5">
+                    </div>
+                    <label class="label">Голос (озвучка):</label>
+                    <select class="verse-select" id="voiceSelect">
+                        <option value="">— Без озвучки —</option>
+                        <option value="JBFqnCBsd6RMkjVDRZzb">Rachel (спокойная, женская)</option>
+                        <option value="EXAVITQu4vr4xnSDxMaL">Adam (мужской, уверенный)</option>
+                        <option value="21m00Tcm4TlvDq8ikWAM">Matilda (мягкая, вдохновляющая)</option>
+                        <option value="pNInz6obpgDQGcFmaJgB">Dom (глубокий, мужской)</option>
+                        <option value="D38z5RcWu1voky8WS1ja">Sarah (эмоциональная)</option>
+                    </select>
+                </div>
+                <button class="btn" id="generateVideoBtn">🎥 Создать видео</button>
+            </div>
+            <div class="preview-panel">
+                <div class="canvas-container">
+                    <canvas id="canvas"></canvas>
+                </div>
+                <button class="btn download-btn" onclick="downloadImage()">📥 Скачать фото</button>
+            </div>
+        </div>
+        <div class="footer">
+            © 2023 Фото генератор библейских стихов
+        </div>
+    </div>
+
+    <button class="btn mobile-download-btn" onclick="downloadImage()">📥 Скачать фото</button>
+    <button class="btn round mobile-preview-toggle" onclick="toggleMobilePreview()">👁</button>
+    <button class="btn round help-button" onclick="openHelpModal()">?</button>
+
+    <div class="mobile-preview-panel" id="mobilePreviewPanel">
+        <div class="mobile-preview-header">
+            <h3>👁 Предпросмотр</h3>
+            <button class="btn round" onclick="toggleMobilePreview()">×</button>
+        </div>
+        <div class="mobile-preview-content">
+            <div class="mobile-canvas-container">
+                <canvas id="mobileCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Инструкция</h2>
+                <span class="close" onclick="closeHelpModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h3>Как использовать</h3>
+                    <p>1. Выберите стих из списка или введите свой текст.</p>
+                    <p>2. Настройте фон, шрифт, эффекты и цвета.</p>
+                    <p>3. Установите формат для изображения или видео.</p>
+                    <p>4. Для видео выберите анимацию и озвучку.</p>
+                    <p>5. Нажмите "Скачать фото" или "Создать видео".</p>
+                </div>
+                <div class="help-section">
+                    <h3>Советы</h3>
+                    <p><strong>Фон:</strong> Загружайте свои фото для персонализации.</p>
+                    <p><strong>Анимация:</strong> Выберите тип и длительность для динамичного видео.</p>
+                    <p><strong>Озвучка:</strong> Добавьте голос ElevenLabs для реалистичного звучания.</p>
+                    <p><strong>Форматы:</strong> Квадрат для Instagram, сторис для вертикального просмотра.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="videoProgress" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index: 1001;">
+        <div id="progressText">Подготовка...</div>
+        <div style="width: 200px; height: 10px; background: #eee; margin-top: 10px; border-radius: 5px;">
+            <div id="progressBar" style="width: 0%; height: 100%; background: #667eea; border-radius: 5px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const mobileCanvas = document.getElementById('mobileCanvas');
+        const mobileCtx = mobileCanvas.getContext('2d');
+        let uploadedImage = null;
+        const settings = {
+            apiKey: "sk_e2a53594d971d16e3af8f849040f95d9eadfa1dc96378ab0", // ElevenLabs API Key
+            verse: 'Введите стих...',
+            reference: '',
+            background: ['#667eea', '#764ba2'],
+            font: 'Georgia',
+            effect: 'none',
+            border: 'none',
+            textColor: '#ffffff',
+            referenceColor: '#ffffff',
+            borderColor: '#ffffff',
+            format: 'square',
+            bgOpacity: 100,
+            textSize: 100,
+            vignette: 30,
+            overlay: 30,
+            centerAlign: true,
+            addQuotes: true,
+            animationType: 'fadeIn',
+            duration: 5,
+            voice: '',
+            previewAnimation: false,
+            useUploadedImage: false
+        };
+
+        const backgrounds = {
+            gradient1: ['#667eea', '#764ba2'],
+            gradient2: ['#f093fb', '#f5576c'],
+            gradient3: ['#4facfe', '#00f2fe'],
+            gradient4: ['#43e97b', '#38f9d7'],
+            gradient5: ['#fa709a', '#fee140'],
+            gradient6: ['#30cfd0', '#330867'],
+            gradient7: ['#a8edea', '#fed6e3'],
+            gradient8: ['#ff9a56', '#ff6a88'],
+            gradient9: ['#ffecd2', '#fcb69f'],
+            gradient10: ['#08203e', '#557c93'],
+            gradient11: ['#5f2c82', '#49a09d'],
+            gradient12: ['#134e5e', '#71b280']
+        };
+
+        const presets = {
+            elegant: {
+                background: backgrounds.gradient1,
+                font: "'Playfair Display', serif",
+                effect: 'shadow',
+                border: 'simple',
+                textColor: '#ffffff',
+                referenceColor: '#dddddd',
+                borderColor: '#ffffff',
+                vignette: 20,
+                textSize: 110
+            },
+            modern: {
+                background: backgrounds.gradient3,
+                font: "'Montserrat', sans-serif",
+                effect: 'glow',
+                border: 'none',
+                textColor: '#ffffff',
+                referenceColor: '#ffffff',
+                borderColor: '#ffffff',
+                vignette: 0,
+                textSize: 100
+            },
+            vintage: {
+                background: backgrounds.gradient10,
+                font: "'Cormorant Garamond', serif",
+                effect: 'emboss',
+                border: 'vintage',
+                textColor: '#e6d7b9',
+                referenceColor: '#d4c09a',
+                borderColor: '#b89b6e',
+                vignette: 50,
+                textSize: 105
+            },
+            nature: {
+                background: backgrounds.gradient4,
+                font: "'Lora', serif",
+                effect: 'none',
+                border: 'ornament',
+                textColor: '#ffffff',
+                referenceColor: '#ffffff',
+                borderColor: '#ffffff',
+                vignette: 30,
+                textSize: 100
+            },
+            minimalist: {
+                background: backgrounds.gradient7,
+                font: 'Arial, sans-serif',
+                effect: 'none',
+                border: 'none',
+                textColor: '#000000',
+                referenceColor: '#333333',
+                borderColor: '#000000',
+                vignette: 0,
+                textSize: 90
+            },
+            baroque: {
+                background: backgrounds.gradient9,
+                font: "'Crimson Text', serif",
+                effect: '3d',
+                border: 'ornament',
+                textColor: '#4a2c0b',
+                referenceColor: '#6b451a',
+                borderColor: '#8b5a2b',
+                vignette: 40,
+                textSize: 115
+            },
+            hipster: {
+                background: backgrounds.gradient8,
+                font: "'Raleway', sans-serif",
+                effect: 'outline',
+                border: 'dashed',
+                textColor: '#ffffff',
+                referenceColor: '#ffffff',
+                borderColor: '#ffffff',
+                vignette: 10,
+                textSize: 95
+            },
+            dark: {
+                background: backgrounds.gradient10,
+                font: "'Montserrat', sans-serif",
+                effect: 'glow',
+                border: 'double',
+                textColor: '#ffffff',
+                referenceColor: '#cccccc',
+                borderColor: '#ffffff',
+                vignette: 60,
+                textSize: 100
+            },
+            romantic: {
+                background: backgrounds.gradient2,
+                font: "'Playfair Display', serif",
+                effect: 'shadow',
+                border: 'rounded',
+                textColor: '#ffffff',
+                referenceColor: '#ffddee',
+                borderColor: '#ff69b4',
+                vignette: 25,
+                textSize: 105
+            },
+            ocean: {
+                background: backgrounds.gradient3,
+                font: "'Lora', serif",
+                effect: 'none',
+                border: 'simple',
+                textColor: '#ffffff',
+                referenceColor: '#ffffff',
+                borderColor: '#ffffff',
+                vignette: 35,
+                textSize: 100
+            },
+            sunset: {
+                background: backgrounds.gradient5,
+                font: "'Crimson Text', serif",
+                effect: 'glow',
+                border: 'corners',
+                textColor: '#ffffff',
+                referenceColor: '#ffcc99',
+                borderColor: '#ff6600',
+                vignette: 45,
+                textSize: 110
+            },
+            nordic: {
+                background: backgrounds.gradient11,
+                font: "'Raleway', sans-serif",
+                effect: 'shadow',
+                border: 'none',
+                textColor: '#ffffff',
+                referenceColor: '#dddddd',
+                borderColor: '#ffffff',
+                vignette: 15,
+                textSize: 95
+            }
+        };
+
+        function initCanvas() {
+            const formats = {
+                square: { width: 1080, height: 1080 },
+                story: { width: 1080, height: 1920 },
+                post: { width: 1080, height: 1350 }
+            };
+            const { width, height } = formats[settings.format];
+            canvas.width = width;
+            canvas.height = height;
+            mobileCanvas.width = width / 2;
+            mobileCanvas.height = height / 2;
+            drawImage();
+        }
+
+        function createGradient(colors, ctx, canvas) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, colors[0]);
+            gradient.addColorStop(1, colors[1]);
+            return gradient;
+        }
+
+        function wrapText(text, maxWidth, ctx) {
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(`${currentLine} ${word}`).width;
+                if (width < maxWidth) {
+                    currentLine += ` ${word}`;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        function applyTextEffect(text, x, y, ctx, canvas, color) {
+            ctx.fillStyle = color;
+            const effect = settings.effect;
+            if (effect === 'shadow') {
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+            } else if (effect === 'glow') {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            } else if (effect === 'outline') {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 1;
+                ctx.strokeText(text, x, y);
+                ctx.fillStyle = '#000';
+            } else if (effect === '3d') {
+                ctx.fillText(text, x + 2, y + 2);
+                ctx.fillStyle = color;
+            } else if (effect === 'emboss') {
+                ctx.shadowColor = 'rgba(255,255,255,0.5)';
+                ctx.shadowBlur = 1;
+                ctx.shadowOffsetX = -1;
+                ctx.shadowOffsetY = -1;
+                ctx.fillText(text, x, y);
+                ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                ctx.shadowBlur = 1;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+                ctx.fillText(text, x, y);
+                return; // Чтобы не рисовать еще раз
+            }
+            ctx.fillText(text, x, y);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        function drawBorder(ctx, canvas) {
+            const border = settings.border;
+            const margin = canvas.width * 0.02;
+            const bw = canvas.width * 0.005;
+            ctx.strokeStyle = settings.borderColor;
+            ctx.lineWidth = bw;
+            if (border === 'simple') {
+                ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
+            } else if (border === 'double') {
+                ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
+                ctx.strokeRect(margin + bw * 2, margin + bw * 2, canvas.width - margin * 4, canvas.height - margin * 4);
+            } else if (border === 'corners') {
+                ctx.lineWidth = bw * 1.5;
+                const cs = canvas.width * 0.08;
+                [[margin, margin, 1, 1], [canvas.width - margin, margin, -1, 1], 
+                 [margin, canvas.height - margin, 1, -1], 
+                 [canvas.width - margin, canvas.height - margin, -1, -1]].forEach(([x, y, dx, dy]) => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + cs * dy);
+                    ctx.lineTo(x, y);
+                    ctx.lineTo(x + cs * dx, y);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x + bw * dx, y + cs * dy + bw * dy);
+                    ctx.lineTo(x + bw * dx, y + bw * dy);
+                    ctx.lineTo(x + cs * dx + bw * dx, y + bw * dy);
+                    ctx.stroke();
+                });
+            } else if (border === 'ornament') {
+                ctx.lineWidth = bw * 1.5;
+                ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
+                const cs = canvas.width * 0.06;
+                [[margin, margin, 1, 1], [canvas.width - margin, margin, -1, 1], 
+                 [margin, canvas.height - margin, 1, -1], 
+                 [canvas.width - margin, canvas.height - margin, -1, -1]].forEach(([x, y, dx, dy]) => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y + cs * dy);
+                    ctx.lineTo(x, y);
+                    ctx.lineTo(x + cs * dx, y);
+                    ctx.stroke();
+                });
+                ctx.setLineDash([bw * 2, bw]);
+                ctx.strokeRect(margin + cs, margin + cs, canvas.width - margin * 2 - cs * 2, canvas.height - margin * 2 - cs * 2);
+                ctx.setLineDash([]);
+            } else if (border === 'vintage') {
+                ctx.lineWidth = bw * 1.5;
+                ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
+                ctx.lineWidth = bw * 0.5;
+                ctx.strokeRect(margin + bw * 4, margin + bw * 4, canvas.width - margin * 8, canvas.height - margin * 8);
+            } else if (border === 'rounded') {
+                const r = canvas.width * 0.04;
+                ctx.beginPath();
+                ctx.moveTo(margin + r, margin);
+                ctx.lineTo(canvas.width - margin - r, margin);
+                ctx.arcTo(canvas.width - margin, margin, canvas.width - margin, margin + r, r);
+                ctx.lineTo(canvas.width - margin, canvas.height - margin - r);
+                ctx.arcTo(canvas.width - margin, canvas.height - margin, canvas.width - margin - r, canvas.height - margin, r);
+                ctx.lineTo(margin + r, canvas.height - margin);
+                ctx.arcTo(margin, canvas.height - margin, margin, canvas.height - margin - r, r);
+                ctx.lineTo(margin, margin + r);
+                ctx.arcTo(margin, margin, margin + r, margin, r);
+                ctx.closePath();
+                ctx.stroke();
+            } else if (border === 'dashed') {
+                ctx.setLineDash([bw * 2, bw * 1.5]);
+                ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
+                ctx.setLineDash([]);
+            }
+        }
+
+        function drawBackground(ctx, canvas) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Отрисовка фона или загруженного изображения
+            if (settings.useUploadedImage && uploadedImage) {
+                ctx.globalAlpha = settings.bgOpacity / 100;
+                const scale = Math.max(canvas.width / uploadedImage.width, canvas.height / uploadedImage.height);
+                const x = (canvas.width - uploadedImage.width * scale) / 2;
+                const y = (canvas.height - uploadedImage.height * scale) / 2;
+                ctx.drawImage(uploadedImage, x, y, uploadedImage.width * scale, uploadedImage.height * scale);
+                // Применяем затемнение только к изображению
+                ctx.globalAlpha = settings.overlay / 100;
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.globalAlpha = 1; // Сбрасываем прозрачность
+            } else {
+                ctx.globalAlpha = settings.bgOpacity / 100;
+                ctx.fillStyle = createGradient(settings.background, ctx, canvas);
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.globalAlpha = 1;
+            }
+
+            // Виньетка (применяется после изображения и затемнения)
+            if (settings.vignette > 0) {
+                const vignette = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 1.5);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)');
+                vignette.addColorStop(1, `rgba(0,0,0,${settings.vignette / 100})`);
+                ctx.fillStyle = vignette;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Рамка
+            if (settings.border !== 'none') drawBorder(ctx, canvas);
+        }
+
+function drawText(ctx, canvas, progress = 1, animationType = settings.animationType) {
+    const text = settings.addQuotes ? `"${settings.verse}"` : settings.verse;
+    ctx.textAlign = settings.centerAlign ? 'center' : 'left';
+    ctx.textBaseline = 'middle';
+    const fontSize = canvas.width * 0.04 * (settings.textSize / 100);
+    ctx.font = `${fontSize}px ${settings.font}`;
+    const maxWidth = canvas.width * 0.75;
+    const lines = wrapText(text, maxWidth, ctx);
+    const lineHeight = canvas.width * 0.05 * (settings.textSize / 100);
+    const totalHeight = lines.length * lineHeight;
+    let y = (canvas.height - totalHeight) / 2;
+    const x = settings.centerAlign ? canvas.width / 2 : canvas.width * 0.1;
+
+    // Анимация текста
+    ctx.save();
+
+    if (animationType === 'fadeIn') {
+        ctx.globalAlpha = progress;
+    } else if (animationType === 'slideUp') {
+        y += (canvas.height - y) * (1 - progress);
+    } else if (animationType === 'slideDown') {
+        y -= (canvas.height - y) * (1 - progress);
+    } else if (animationType === 'slideLeft') {
+        ctx.translate(canvas.width * (1 - progress), 0);
+    } else if (animationType === 'slideRight') {
+        ctx.translate(-canvas.width * (1 - progress), 0);
+    } else if (animationType === 'zoom') {
+        const scale = 0.5 + 0.5 * progress;
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(scale, scale);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    } else if (animationType === 'typewriter' || animationType === 'wordByWord') {
+        // === ИСПРАВЛЕНО: Печатная машинка и Слово за словом с переносами ===
+        const totalChars = text.length;
+        const words = text.split(' ');
+        const totalWords = words.length;
+
+        let currentText = '';
+        let currentLines = [];
+
+        if (animationType === 'typewriter') {
+            // По символам
+            const charCount = Math.floor(totalChars * progress);
+            currentText = text.substring(0, charCount);
+        } else {
+            // По словам
+            const wordCount = Math.floor(totalWords * progress);
+            currentText = words.slice(0, wordCount).join(' ');
+        }
+
+        currentLines = wrapText(currentText, maxWidth, ctx);
+
+        let yLine = y;
+        currentLines.forEach(line => {
+            applyTextEffect(line, x, yLine, ctx, canvas, settings.textColor);
+            yLine += lineHeight;
+        });
+
+        // Ссылка появляется только в конце
+        if (progress >= 1 && settings.reference) {
+            ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
+            applyTextEffect(settings.reference, x, yLine + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
+        }
+
+        ctx.restore();
+        return; // Выходим — текст уже нарисован
+    } else if (animationType === 'glow') {
+        ctx.shadowBlur = 30 * progress;
+        ctx.shadowColor = settings.textColor;
+    }
+
+    // === Обычное рисование (для всех остальных анимаций) ===
+    lines.forEach(line => {
+        applyTextEffect(line, x, y, ctx, canvas, settings.textColor);
+        y += lineHeight;
+    });
+
+    // Ссылка на стих (для всех анимаций, кроме typewriter/wordByWord)
+    if (settings.reference) {
+        ctx.font = `italic ${fontSize * 0.8}px ${settings.font}`;
+        applyTextEffect(settings.reference, x, y + lineHeight * 0.8, ctx, canvas, settings.referenceColor);
+    }
+
+    ctx.restore();
+}
+
+        function drawImage(progress = 1, animationType = settings.animationType) {
+            drawBackground(ctx, canvas);
+            drawText(ctx, canvas, progress, animationType);
+            drawBackground(mobileCtx, mobileCanvas);
+            drawText(mobileCtx, mobileCanvas, progress, animationType);
+        }
+
+        function animatePreview() {
+            if (!settings.previewAnimation) return;
+            let startTime = null;
+            const durationMs = settings.duration * 1000;
+
+            function animate(time) {
+                if (!startTime) startTime = time;
+                const progress = Math.min((time - startTime) / durationMs, 1);
+                drawImage(progress, settings.animationType);
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Сброс после анимации
+                    drawImage(1);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        async function generateAudio(text, voiceId) {
+            const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+                method: 'POST',
+                headers: {
+                    'xi-api-key': settings.apiKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    model_id: "eleven_turbo_v2_5",
+                    voice_settings: {
+                        stability: 0.75,
+                        similarity_boost: 0.85,
+                        style: 0.6,
+                        use_speaker_boost: true
+                    }
+                })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail?.message || `HTTP ${res.status}`);
+            }
+
+            return await res.blob();
+        }
+
+        async function generateVideo() {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const videoProgress = document.getElementById('videoProgress');
+            videoProgress.style.display = 'block';
+            progressText.textContent = 'Подготовка...';
+
+            let audioBlob = null;
+            let audioElement = null;
+            let audioDuration = null;
+            let audioUrl = null;
+
+            if (settings.voice) {
+                progressText.textContent = 'Генерация озвучки (ElevenLabs)...';
+                try {
+                    audioBlob = await generateAudio(settings.verse, settings.voice);
+                    audioUrl = URL.createObjectURL(audioBlob);
+                    audioElement = new Audio(audioUrl);
+                    await new Promise(resolve => audioElement.onloadedmetadata = resolve);
+                    audioDuration = audioElement.duration;
+                    settings.duration = audioDuration;
+                } catch (err) {
+                    console.error(err);
+                    alert('Ошибка генерации озвучки: ' + err.message);
+                    videoProgress.style.display = 'none';
+                    return;
+                }
+            }
+
+            const fps = 30;
+            const durationMs = settings.duration * 1000;
+            let startTime = null;
+
+            const videoStream = canvas.captureStream(fps);
+            let combinedStream = videoStream;
+
+            if (audioElement) {
+                const audioStream = audioElement.captureStream();
+                combinedStream = new MediaStream([...videoStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
+            }
+
+            const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+            const chunks = [];
+
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${settings.reference ? settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_') : 'bible_verse'}.webm`;
+                a.click();
+                URL.revokeObjectURL(url);
+                if (audioUrl) URL.revokeObjectURL(audioUrl);
+                videoProgress.style.display = 'none';
+                progressBar.style.width = '0%';
+                drawImage(1); // Восстановить статичное изображение
+            };
+
+            recorder.start();
+            if (audioElement) audioElement.play();
+
+            progressText.textContent = 'Генерация видео...';
+
+            function animate(time) {
+                if (!startTime) startTime = time;
+                const elapsed = time - startTime;
+                const progress = Math.min(elapsed / durationMs, 1);
+                drawImage(progress, settings.animationType);
+                progressBar.style.width = `${progress * 100}%`;
+                progressText.textContent = `Генерация: ${Math.round(progress * 100)}%`;
+                if (elapsed < durationMs) {
+                    requestAnimationFrame(animate);
+                } else {
+                    recorder.stop();
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function removeUploadedImage() {
+            uploadedImage = null;
+            settings.useUploadedImage = false;
+            document.getElementById('uploadedImagePreview').style.display = 'none';
+            document.getElementById('imageUpload').value = '';
+            document.querySelector('.bg-option').classList.add('active');
+            drawImage();
+        }
+
+        function toggleMobilePreview() {
+            document.getElementById('mobilePreviewPanel').classList.toggle('active');
+        }
+
+        function openHelpModal() {
+            document.getElementById('helpModal').style.display = 'block';
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+
+        document.getElementById('imageUpload').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = event => {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedImage = img;
+                        settings.useUploadedImage = true;
+                        document.getElementById('uploadedImg').src = event.target.result;
+                        document.getElementById('uploadedImagePreview').style.display = 'block';
+                        document.querySelectorAll('.bg-option').forEach(o => o.classList.remove('active'));
+                        drawImage();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('verseSelect').addEventListener('change', e => {
+            if (e.target.value) {
+                const [verse, reference] = e.target.value.split('|');
+                settings.verse = verse;
+                settings.reference = reference;
+                document.getElementById('customVerse').value = verse;
+                document.getElementById('verseReference').value = reference;
+                drawImage();
+            }
+        });
+
+        document.getElementById('customVerse').addEventListener('input', e => {
+            settings.verse = e.target.value || 'Введите текст стиха...';
+            drawImage();
+        });
+
+        document.getElementById('verseReference').addEventListener('input', e => {
+            settings.reference = e.target.value;
+            drawImage();
+        });
+
+        document.querySelectorAll('.bg-option').forEach(o => {
+            o.addEventListener('click', () => {
+                document.querySelectorAll('.bg-option').forEach(opt => opt.classList.remove('active'));
+                o.classList.add('active');
+                settings.background = backgrounds[o.dataset.bg];
+                settings.useUploadedImage = false;
+                drawImage();
+            });
+        });
+
+        document.querySelectorAll('.font-option').forEach(o => {
+            o.addEventListener('click', () => {
+                document.querySelectorAll('.font-option').forEach(opt => opt.classList.remove('active'));
+                o.classList.add('active');
+                settings.font = o.dataset.font;
+                drawImage();
+            });
+        });
+
+        document.querySelectorAll('.effect-option').forEach(o => {
+            o.addEventListener('click', () => {
+                document.querySelectorAll('.effect-option').forEach(opt => opt.classList.remove('active'));
+                o.classList.add('active');
+                settings.effect = o.dataset.effect;
+                drawImage();
+            });
+        });
+
+        document.querySelectorAll('.border-option').forEach(o => {
+            o.addEventListener('click', () => {
+                document.querySelectorAll('.border-option').forEach(opt => opt.classList.remove('active'));
+                o.classList.add('active');
+                settings.border = o.dataset.border;
+                drawImage();
+            });
+        });
+
+        document.getElementById('textColor').addEventListener('input', e => {
+            settings.textColor = e.target.value;
+            drawImage();
+        });
+
+        document.getElementById('referenceColor').addEventListener('input', e => {
+            settings.referenceColor = e.target.value;
+            drawImage();
+        });
+
+        document.getElementById('borderColor').addEventListener('input', e => {
+            settings.borderColor = e.target.value;
+            drawImage();
+        });
+
+        document.querySelectorAll('.format-option').forEach(o => {
+            o.addEventListener('click', () => {
+                document.querySelectorAll('.format-option').forEach(opt => opt.classList.remove('active'));
+                o.classList.add('active');
+                settings.format = o.dataset.format;
+                initCanvas();
+            });
+        });
+
+        document.getElementById('bgOpacity').addEventListener('input', e => {
+            settings.bgOpacity = +e.target.value;
+            document.getElementById('bgOpacityValue').textContent = e.target.value + '%';
+            drawImage();
+        });
+
+        document.getElementById('textSize').addEventListener('input', e => {
+            settings.textSize = +e.target.value;
+            document.getElementById('textSizeValue').textContent = e.target.value + '%';
+            drawImage();
+        });
+
+        document.getElementById('vignette').addEventListener('input', e => {
+            settings.vignette = +e.target.value;
+            document.getElementById('vignetteValue').textContent = e.target.value + '%';
+            drawImage();
+        });
+
+        document.getElementById('overlay').addEventListener('input', e => {
+            settings.overlay = +e.target.value;
+            document.getElementById('overlayValue').textContent = e.target.value + '%';
+            drawImage();
+        });
+
+        document.getElementById('centerAlign').addEventListener('change', e => {
+            settings.centerAlign = e.target.checked;
+            drawImage();
+        });
+
+        document.getElementById('addQuotes').addEventListener('change', e => {
+            settings.addQuotes = e.target.checked;
+            drawImage();
+        });
+
+        document.getElementById('presetSelect').addEventListener('change', e => {
+            if (!e.target.value) return;
+            const preset = presets[e.target.value];
+            Object.assign(settings, preset);
+            settings.useUploadedImage = false;
+            document.getElementById('textColor').value = preset.textColor;
+            document.getElementById('referenceColor').value = preset.referenceColor;
+            document.getElementById('borderColor').value = preset.borderColor;
+            document.getElementById('textSize').value = preset.textSize;
+            document.getElementById('textSizeValue').textContent = preset.textSize + '%';
+            document.getElementById('vignette').value = preset.vignette;
+            document.getElementById('vignetteValue').textContent = preset.vignette + '%';
+            document.querySelectorAll('.font-option').forEach(o => o.classList.toggle('active', o.dataset.font === preset.font));
+            document.querySelectorAll('.effect-option').forEach(o => o.classList.toggle('active', o.dataset.effect === preset.effect));
+            document.querySelectorAll('.border-option').forEach(o => o.classList.toggle('active', o.dataset.border === preset.border));
+            drawImage();
+        });
+
+        document.getElementById('animationType').addEventListener('change', e => {
+            settings.animationType = e.target.value;
+            animatePreview();
+        });
+
+        document.getElementById('duration').addEventListener('input', e => {
+            settings.duration = +e.target.value;
+            document.getElementById('durationValue').textContent = e.target.value + ' сек';
+            animatePreview();
+        });
+
+        document.getElementById('voiceSelect').addEventListener('change', e => {
+            settings.voice = e.target.value;
+        });
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = settings.reference ? `${settings.reference.replace(/[^а-яА-Яa-zA-Z0-9]/g, '_')}.png` : 'bible_verse.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        window.addEventListener('click', e => {
+            if (e.target === document.getElementById('helpModal')) {
+                closeHelpModal();
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeHelpModal();
+        });
+
+        document.getElementById('generateVideoBtn').addEventListener('click', generateVideo);
+
+// Распознавание речи
+if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    document.getElementById('micBtn').style.display = 'none';
+} else {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    const micBtn = document.getElementById('micBtn');
+    const customVerse = document.getElementById('customVerse');
+
+    micBtn.addEventListener('click', () => {
+        if (micBtn.classList.contains('recording')) {
+            recognition.stop();
+            return;
+        }
+        recognition.start();
+        micBtn.classList.add('recording');
+        micBtn.textContent = '⏹';
+    });
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        customVerse.value = transcript;
+        settings.verse = transcript;
+        drawImage();
+    };
+
+    recognition.onerror = (event) => {
+        alert('Ошибка распознавания: ' + event.error);
+    };
+
+    recognition.onend = () => {
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '🎤';
+    };
+}
+
+        initCanvas();
+    </script>
+</body>
+</html>

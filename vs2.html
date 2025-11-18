@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Говори — я покажу текст</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      height: 100vh;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+      touch-action: manipulation;
+    }
+    #text {
+      font-size: 11vw;
+      font-weight: 900;
+      line-height: 1.15;
+      padding: 10vh 6vw;
+      text-align: center;
+      word-wrap: break-word;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: pre-wrap;
+    }
+    #mic {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+      height: 90px;
+      background: #0f0;
+      border: none;
+      border-radius: 50%;
+      font-size: 44px;
+      box-shadow: 0 8px 30px rgba(0,255,0,0.5);
+      z-index: 10;
+      cursor: pointer;
+      color: white;
+    }
+    #mic.recording {
+      background: #f00;
+      animation: pulse 1.2s infinite;
+      box-shadow: 0 8px 40px rgba(255,0,0,0.6);
+    }
+    #status {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      padding: 10px 25px;
+      border-radius: 30px;
+      font-size: 5vw;
+      font-weight: bold;
+      z-index: 11;
+      text-align: center;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.15); }
+    }
+    .error {
+      color: #ff6b6b !important;
+      background: rgba(255,0,0,0.2) !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="text">Нажми микрофон и говори</div>
+  <div id="status">Готов</div>
+  <button id="mic">🎤</button>
+
+  <script>
+    const textDiv = document.getElementById('text');
+    const statusDiv = document.getElementById('status');
+    const micBtn = document.getElementById('mic');
+
+    let recognition = null;
+    let isListening = false;
+
+    // Проверка поддержки (твой код)
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      statusDiv.textContent = 'Браузер не поддерживает речь. Используй Chrome/Edge.';
+      statusDiv.classList.add('error');
+      micBtn.disabled = true;
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (isListening) {
+        stopListening();
+      } else {
+        startListening();
+      }
+    });
+
+    function startListening() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'ru-RU';  // Можно добавить селект, как в твоём
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('recording');
+        statusDiv.textContent = 'Слушаю... Говори четко!';
+        textDiv.innerHTML = '';  // Очистка экрана
+      };
+
+      recognition.onresult = (event) => {
+        let final = '';
+        let interim = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += transcript + ' ';
+          } else {
+            interim = transcript;
+          }
+        }
+
+        // Огромный текст: финальный белый, промежуточный серый
+        const current = textDiv.innerText.split('▏')[0].trim();
+        textDiv.innerHTML = current + (final ? final + ' ' : '') + (interim ? '<span style="color:#aaa;font-size:0.8em;">' + interim + '▏</span>' : '');
+        textDiv.scrollTop = textDiv.scrollHeight;  // Если нужно скролл, но в нашем дизайне не надо
+      };
+
+      recognition.onerror = (event) => {
+        statusDiv.textContent = `Ошибка: ${event.error}`;
+        statusDiv.classList.add('error');
+        if (event.error === 'not-allowed') {
+          textDiv.innerHTML = 'Разреши микрофон в настройках браузера или используй HTTPS.';
+        }
+        if (event.error === 'no-speech' || event.error === 'audio-capture') {
+          stopListening();
+        }
+      };
+
+      recognition.onend = () => {
+        if (isListening) {
+          recognition.start();  // Твой гениальный авторестарт!
+        } else {
+          stopListening();
+        }
+      };
+
+      recognition.start();
+    }
+
+    function stopListening() {
+      isListening = false;
+      if (recognition) recognition.stop();
+      micBtn.classList.remove('recording');
+      statusDiv.textContent = 'Остановлено. Нажми для продолжения.';
+      statusDiv.classList.remove('error');
+    }
+
+    // Долгое нажатие = очистить (как в нашем)
+    let timer;
+    const clear = () => {
+      textDiv.innerHTML = 'Экран очищен';
+      statusDiv.textContent = 'Очищено';
+      setTimeout(() => { if (!isListening) textDiv.innerHTML = 'Нажми микрофон и говори'; }, 1500);
+    };
+    micBtn.addEventListener('touchstart', e => { e.preventDefault(); timer = setTimeout(clear, 2000); });
+    micBtn.addEventListener('touchend', e => { e.preventDefault(); clearTimeout(timer); });
+    micBtn.addEventListener('mousedown', () => timer = setTimeout(clear, 2000));
+    micBtn.addEventListener('mouseup', () => clearTimeout(timer));
+  </script>
+</body>
+</html>

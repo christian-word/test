@@ -2,14 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Голосовой переводчик</title>
+<title>Голосовой переводчик (исправленный)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column}
     #input, #output{
         flex:1;padding:5vw;font-size:7.5vw;line-height:1.4;overflow-y:auto;
-        white-space:pre-wrap;word-break:break-word;background:#161b22;
+        white-space:pre-wrap;word-break:break-word;background:#161b22;border:1px solid #30363d;
     }
     #output{background:#21262d;color:#7cffa0;}
     #controls{
@@ -19,11 +19,14 @@
     button{
         width:70vw;max-width:320px;height:70vw;max-height:130px;
         border-radius:50vw;border:none;font-size:12vw;color:white;
-        box-shadow:0 10px 30px rgba(0,0,0,0.6);
+        box-shadow:0 10px 30px rgba(0,0,0,0.6);cursor:pointer;transition:background 0.2s;
     }
     #micFrom{background:#ff3b30;}
+    #micFrom.active{background:#ff9500;}
     #micTo{background:#28a745;}
+    #micTo.active{background:#00d26a;}
     #swap{font-size:9vw;background:#333;width:60vw;height:60vw;max-width:100px;max-height:100px;}
+    #swap:hover{background:#555;}
     #status{text-align:center;padding:2vh;font-size:5vw;color:#58a6ff;}
     @media(min-width:600px){
         #input,#output{font-size:40px}
@@ -38,14 +41,19 @@
 <div id="output">Перевод появится здесь</div>
 
 <div id="controls">
-    <button id="micFrom">Микрофон</button>
-    <button id="swap">↔</button>
-    <button id="micTo">Микрофон</button>
+    <button id="micFrom" title="Говорите на исходном языке">🎤 RU</button>
+    <button id="swap" title="Сменить направление">↔</button>
+    <button id="micTo" title="Говорите на целевом языке">🎤 EN</button>
 </div>
-<div id="status">Готов</div>
+<div id="status">Готов. Дайте разрешение на микрофон при первом клике.</div>
 
 <script>
-// Языки (можно добавить любые)
+if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+    document.getElementById('status').textContent = 'Ваш браузер не поддерживает распознавание речи. Используйте Chrome/Edge.';
+    document.querySelectorAll('button').forEach(b => b.disabled = true);
+}
+
+// Языки
 const langs = {
     ru: 'ru-RU', en: 'en-US', uk: 'uk-UA', es: 'es-ES',
     de: 'de-DE', fr: 'fr-FR', it: 'it-IT', pl: 'pl-PL',
@@ -63,6 +71,8 @@ const recTo = new (window.SpeechRecognition || window.webkitSpeechRecognition)()
 
 recFrom.continuous = recTo.continuous = true;
 recFrom.interimResults = recTo.interimResults = true;
+recFrom.lang = langs[fromLang];
+recTo.lang = langs[toLang];
 
 const input = document.getElementById('input');
 const output = document.getElementById('output');
@@ -72,72 +82,132 @@ const swap = document.getElementById('swap');
 const status = document.getElementById('status');
 
 function updateButtons() {
-    micFrom.textContent = fromLang.toUpperCase();
-    micTo.textContent = toLang.toUpperCase();
+    micFrom.textContent = `🎤 ${fromLang.toUpperCase()}`;
+    micTo.textContent = `🎤 ${toLang.toUpperCase()}`;
 }
 
-// Перевод через Google (работает всегда)
-async function translate(text, target) {
+// Простой перевод через Google API (работает без ключей)
+async function translate(text, targetLangCode) {
     if (!text.trim()) return '';
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return data[0].map(x => x[0]).join('');
+    try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLangCode}&dt=t&q=${encodeURIComponent(text)}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network error');
+        const data = await response.json();
+        return data[0].map(([trans]) => trans).join('');
+    } catch (error) {
+        console.error('Translate error:', error);
+        return 'Ошибка перевода. Проверьте интернет.';
+    }
 }
 
-// Общий обработчик результата
-function handleResult(rec, isFrom) {
-    return e => {
-        let text = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-            text += e.results[i][0].transcript;
-        }
-        if (isFrom) {
-            input.textContent = text;
-            if (e.results[e.results.length-1].isFinal) {
-                translate(text, toLang).then(tr => output.textContent = tr);
-            }
-        } else {
-            output.textContent = text;
-            if (e.results[e.results.length-1].isFinal) {
-                translate(text, fromLang).then(tr => input.textContent = tr);
-            }
-        }
-    };
-}
-
-recFrom.onresult = handleResult(recFrom, true);
-recTo.onresult = handleResult(recTo, false);
-
-recFrom.onstart = () => { listeningFrom = true; micFrom.style.background = '#ff9500'; status.textContent = 'Слушаю...'; };
-recFrom.onend = () => { listeningFrom = false; micFrom.style.background = '#ff3b30'; };
-recTo.onstart = () => { listeningTo = true; micTo.style.background = '#00d26a'; status.textContent = 'Слушаю...'; };
-recTo.onend = () => { listeningTo = false; micTo.style.background = '#28a745'; };
-
-// Клик по микрофонам
-micFrom.onclick = () => {
-    if (listeningFrom) recFrom.stop(); else { recTo.stop(); recFrom.lang = langs[fromLang]; recFrom.start(); }
+// Обработчик результата для from
+recFrom.onresult = async (e) => {
+    let text = '';
+    for (let i = e.resultIndex; i < e.results.length; ++i) {
+        text += e.results[i][0].transcript;
+    }
+    input.textContent = text;
+    if (e.results[e.results.length - 1].isFinal && text.trim()) {
+        status.textContent = 'Перевожу...';
+        const translated = await translate(text, toLang);
+        output.textContent = translated;
+        status.textContent = 'Готов';
+    }
 };
-micTo.onclick = () => {
-    if (listeningTo) recTo.stop(); else { recFrom.stop(); recTo.lang = langs[toLang]; recTo.start(); }
+
+// Обработчик для to (обратный перевод)
+recTo.onresult = async (e) => {
+    let text = '';
+    for (let i = e.resultIndex; i < e.results.length; ++i) {
+        text += e.results[i][0].transcript;
+    }
+    output.textContent = text;
+    if (e.results[e.results.length - 1].isFinal && text.trim()) {
+        status.textContent = 'Перевожу...';
+        const translated = await translate(text, fromLang);
+        input.textContent = translated;
+        status.textContent = 'Готов';
+    }
 };
+
+recFrom.onstart = () => {
+    listeningFrom = true;
+    micFrom.classList.add('active');
+    status.textContent = `Слушаю ${fromLang.toUpperCase()}...`;
+};
+recFrom.onend = () => {
+    listeningFrom = false;
+    micFrom.classList.remove('active');
+    if (!listeningTo) status.textContent = 'Готов';
+};
+recFrom.onerror = (e) => {
+    console.error('RecFrom error:', e.error);
+    status.textContent = `Ошибка: ${e.error}. Попробуйте снова.`;
+    recFrom.stop();
+};
+
+recTo.onstart = () => {
+    listeningTo = true;
+    micTo.classList.add('active');
+    status.textContent = `Слушаю ${toLang.toUpperCase()}...`;
+};
+recTo.onend = () => {
+    listeningTo = false;
+    micTo.classList.remove('active');
+    if (!listeningFrom) status.textContent = 'Готов';
+};
+recTo.onerror = (e) => {
+    console.error('RecTo error:', e.error);
+    status.textContent = `Ошибка: ${e.error}. Попробуйте снова.`;
+    recTo.stop();
+};
+
+// Клик по micFrom
+micFrom.addEventListener('click', () => {
+    if (listeningFrom) {
+        recFrom.stop();
+    } else {
+        // Остановить другой, если работает
+        if (listeningTo) recTo.stop();
+        recFrom.start();
+    }
+});
+
+// Клик по micTo
+micTo.addEventListener('click', () => {
+    if (listeningTo) {
+        recTo.stop();
+    } else {
+        // Остановить другой
+        if (listeningFrom) recFrom.stop();
+        recTo.start();
+    }
+});
 
 // Смена направления
-swap.onclick = () => {
+swap.addEventListener('click', () => {
     [fromLang, toLang] = [toLang, fromLang];
+    recFrom.lang = langs[fromLang];
+    recTo.lang = langs[toLang];
     updateButtons();
     status.textContent = `${fromLang.toUpperCase()} → ${toLang.toUpperCase()}`;
-    setTimeout(() => status.textContent = 'Готов', 1500);
-};
+    setTimeout(() => {
+        if (!listeningFrom && !listeningTo) status.textContent = 'Готов';
+    }, 1500);
+});
 
 // Инициализация
 updateButtons();
-status.textContent = `${fromLang.toUpperCase()} → ${toLang.toUpperCase()}`;
+status.textContent = `${fromLang.toUpperCase()} → ${toLang.toUpperCase()}. Нажмите микрофон.`;
 
-// Поддержка вибрации
-function v(p){ if('vibrate' in navigator) navigator.vibrate(p); }
-micFrom.onclick = () => { v(50); /* ... */ };
-micTo.onclick = () => { v(50); /* ... */ };
+// Вибрация для мобильных (опционально)
+function vibrate(duration = 50) {
+    if ('vibrate' in navigator) navigator.vibrate(duration);
+}
+micFrom.addEventListener('click', () => vibrate(100));
+micTo.addEventListener('click', () => vibrate(100));
+swap.addEventListener('click', () => vibrate(50));
 </script>
 </body>
 </html>

@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OCR — Распознавание текста в браузере</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f4f4f9;
+      color: #333;
+    }
+    h1 { color: #2c3e50; text-align: center; }
+    .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    #imagePreview { max-width: 100%; margin: 15px 0; border: 2px dashed #ccc; border-radius: 8px; }
+    textarea { width: 100%; height: 150px; margin-top: 15px; padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    button {
+      background: #3498db; color: white; border: none; padding: 12px 24px;
+      font-size: 16px; border-radius: 6px; cursor: pointer; margin-top: 10px;
+    }
+    button:hover { background: #2980b9; }
+    button:disabled { background: #95a5a6; cursor: not-allowed; }
+    .progress { margin-top: 10px; color: #7f8c8d; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Распознавание текста (OCR) в браузере</h1>
+  <p>Загрузи изображение с текстом — получи распознанный текст мгновенно!</p>
+
+  <input type="file" id="imageInput" accept="image/*" />
+  <div id="imagePreview"></div>
+
+  <button id="recognizeBtn" disabled>Распознать текст</button>
+  <div class="progress" id="progress"></div>
+
+  <textarea id="result" placeholder="Результат появится здесь..." readonly></textarea>
+</div>
+
+<!-- Подключаем Tesseract.js -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const recognizeBtn = document.getElementById('recognizeBtn');
+  const result = document.getElementById('result');
+  const progress = document.getElementById('progress');
+
+  let worker = null;
+
+  // Инициализация Tesseract (один раз)
+  async function initWorker() {
+    if (!worker) {
+      progress.textContent = 'Загрузка OCR-движка...';
+      worker = await Tesseract.createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            progress.textContent = `Распознавание: ${Math.round(m.progress * 100)}%`;
+          }
+        }
+      });
+      await worker.load();
+      await worker.loadLanguage('rus+eng');
+      await worker.initialize('rus+eng');
+      progress.textContent = 'Готово! Выбери изображение.';
+    }
+  }
+
+  // Обработка загрузки изображения
+  imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      imagePreview.innerHTML = `<img src="${ev.target.result}" alt="Preview" style="max-width:100%; border-radius:8px;">`;
+      recognizeBtn.disabled = false;
+      result.value = '';
+      progress.textContent = '';
+      initWorker(); // Предзагрузка
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Клик по кнопке — распознавание
+  recognizeBtn.addEventListener('click', async () => {
+    const file = imageInput.files[0];
+    if (!file || !worker) return;
+
+    recognizeBtn.disabled = true;
+    recognizeBtn.textContent = 'Распознаём...';
+    progress.textContent = 'Обработка изображения...';
+
+    try {
+      const { data: { text } } = await worker.recognize(file);
+      result.value = text.trim() || 'Текст не найден';
+    } catch (err) {
+      result.value = 'Ошибка: ' + err.message;
+    }
+
+    recognizeBtn.disabled = false;
+    recognizeBtn.textContent = 'Распознать текст';
+    progress.textContent = 'Готово!';
+  });
+</script>
+
+</body>
+</html>

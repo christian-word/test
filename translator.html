@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Голосовой переводчик</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column}
+    #input, #output{
+        flex:1;padding:5vw;font-size:7.5vw;line-height:1.4;overflow-y:auto;
+        white-space:pre-wrap;word-break:break-word;background:#161b22;
+    }
+    #output{background:#21262d;color:#7cffa0;}
+    #controls{
+        padding:3vw;display:flex;gap:4vw;justify-content:center;align-items:center;
+        background:#161b22;border-top:1px solid #30363d;
+    }
+    button{
+        width:70vw;max-width:320px;height:70vw;max-height:130px;
+        border-radius:50vw;border:none;font-size:12vw;color:white;
+        box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    }
+    #micFrom{background:#ff3b30;}
+    #micTo{background:#28a745;}
+    #swap{font-size:9vw;background:#333;width:60vw;height:60vw;max-width:100px;max-height:100px;}
+    #status{text-align:center;padding:2vh;font-size:5vw;color:#58a6ff;}
+    @media(min-width:600px){
+        #input,#output{font-size:40px}
+        button{width:300px;height:110px;font-size:60px;border-radius:60px}
+        #swap{width:90px;height:90px;font-size:50px}
+    }
+</style>
+</head>
+<body>
+
+<div id="input" aria-live="polite">Нажмите красный микрофон и говорите</div>
+<div id="output">Перевод появится здесь</div>
+
+<div id="controls">
+    <button id="micFrom">Микрофон</button>
+    <button id="swap">↔</button>
+    <button id="micTo">Микрофон</button>
+</div>
+<div id="status">Готов</div>
+
+<script>
+// Языки (можно добавить любые)
+const langs = {
+    ru: 'ru-RU', en: 'en-US', uk: 'uk-UA', es: 'es-ES',
+    de: 'de-DE', fr: 'fr-FR', it: 'it-IT', pl: 'pl-PL',
+    tr: 'tr-TR', pt: 'pt-PT', ja: 'ja-JP', ko: 'ko-KR',
+    zh: 'zh-CN', ar: 'ar-SA', hi: 'hi-IN'
+};
+
+let fromLang = 'ru';
+let toLang = 'en';
+let listeningFrom = false;
+let listeningTo = false;
+
+const recFrom = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+const recTo = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+recFrom.continuous = recTo.continuous = true;
+recFrom.interimResults = recTo.interimResults = true;
+
+const input = document.getElementById('input');
+const output = document.getElementById('output');
+const micFrom = document.getElementById('micFrom');
+const micTo = document.getElementById('micTo');
+const swap = document.getElementById('swap');
+const status = document.getElementById('status');
+
+function updateButtons() {
+    micFrom.textContent = fromLang.toUpperCase();
+    micTo.textContent = toLang.toUpperCase();
+}
+
+// Перевод через Google (работает всегда)
+async function translate(text, target) {
+    if (!text.trim()) return '';
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data[0].map(x => x[0]).join('');
+}
+
+// Общий обработчик результата
+function handleResult(rec, isFrom) {
+    return e => {
+        let text = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+            text += e.results[i][0].transcript;
+        }
+        if (isFrom) {
+            input.textContent = text;
+            if (e.results[e.results.length-1].isFinal) {
+                translate(text, toLang).then(tr => output.textContent = tr);
+            }
+        } else {
+            output.textContent = text;
+            if (e.results[e.results.length-1].isFinal) {
+                translate(text, fromLang).then(tr => input.textContent = tr);
+            }
+        }
+    };
+}
+
+recFrom.onresult = handleResult(recFrom, true);
+recTo.onresult = handleResult(recTo, false);
+
+recFrom.onstart = () => { listeningFrom = true; micFrom.style.background = '#ff9500'; status.textContent = 'Слушаю...'; };
+recFrom.onend = () => { listeningFrom = false; micFrom.style.background = '#ff3b30'; };
+recTo.onstart = () => { listeningTo = true; micTo.style.background = '#00d26a'; status.textContent = 'Слушаю...'; };
+recTo.onend = () => { listeningTo = false; micTo.style.background = '#28a745'; };
+
+// Клик по микрофонам
+micFrom.onclick = () => {
+    if (listeningFrom) recFrom.stop(); else { recTo.stop(); recFrom.lang = langs[fromLang]; recFrom.start(); }
+};
+micTo.onclick = () => {
+    if (listeningTo) recTo.stop(); else { recFrom.stop(); recTo.lang = langs[toLang]; recTo.start(); }
+};
+
+// Смена направления
+swap.onclick = () => {
+    [fromLang, toLang] = [toLang, fromLang];
+    updateButtons();
+    status.textContent = `${fromLang.toUpperCase()} → ${toLang.toUpperCase()}`;
+    setTimeout(() => status.textContent = 'Готов', 1500);
+};
+
+// Инициализация
+updateButtons();
+status.textContent = `${fromLang.toUpperCase()} → ${toLang.toUpperCase()}`;
+
+// Поддержка вибрации
+function v(p){ if('vibrate' in navigator) navigator.vibrate(p); }
+micFrom.onclick = () => { v(50); /* ... */ };
+micTo.onclick = () => { v(50); /* ... */ };
+</script>
+</body>
+</html>

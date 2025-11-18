@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Голос в текст – помощь глухим</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+    :root {
+        --accent:#1976d2;
+        --accent-dark:#0d47a1;
+        --bg:#f5f5f5;
+        --radius:8px;
+        --font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+        background:var(--bg);
+        font:var(--font);
+        display:flex;
+        flex-direction:column;
+        min-height:100vh;
+        align-items:center;
+        justify-content:center;
+        padding:1rem;
+    }
+    h1{color:var(--accent);margin-bottom:.5rem;text-align:center}
+    .card{
+        background:#fff;
+        width:100%;
+        max-width:600px;
+        border-radius:var(--radius);
+        box-shadow:0 2px 6px rgba(0,0,0,.15);
+        padding:1.2rem;
+    }
+    #output{
+        width:100%;
+        min-height:160px;
+        border:1px solid #bbb;
+        border-radius:var(--radius);
+        padding:.6rem;
+        font-size:1.1rem;
+        resize:vertical;
+    }
+    .controls{
+        display:flex;
+        gap:.6rem;
+        margin-top:1rem;
+        flex-wrap:wrap;
+    }
+    button{
+        flex:1 1 120px;
+        padding:.7rem;
+        border:none;
+        border-radius:var(--radius);
+        font-size:1rem;
+        color:#fff;
+        background:var(--accent);
+        cursor:pointer;
+        transition:background .2s;
+    }
+    button:disabled{background:#90a4ae;cursor:not-allowed}
+    button:hover:not(:disabled){background:var(--accent-dark)}
+    #status{margin-top:.6rem;font-size:.9rem;color:#555;min-height:1.2rem}
+    #bigMic{
+        width:100%;
+        height:60px;
+        font-size:1.3rem;
+        margin-bottom:.5rem;
+    }
+    @media (prefers-color-scheme:dark){
+        :root{--bg:#121212;--accent:#90caf9;--accent-dark:#42a5f5}
+        body{color:#eee}
+        .card{background:#1e1e1e}
+        #output{background:#1e1e1e;color:#eee;border-color:#444}
+    }
+</style>
+</head>
+<body>
+
+<h1>Голос → Текст</h1>
+
+<div class="card">
+    <button id="bigMic" aria-label="Слушать/Остановить">🎤 Слушать</button>
+
+    <textarea id="output" placeholder="Распознанный текст появится здесь…"></textarea>
+
+    <div class="controls">
+        <button id="copyBtn">📋 Копировать</button>
+        <button id="clearBtn">🗑 Очистить</button>
+        <button id="langBtn">Сменить язык</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script>
+/* ==========  НАСТРОЙКИ  ========== */
+const LANGS = ['ru-RU','uk-UA','en-US','es-ES','de-DE','fr-FR']; // ← добавлен uk-UA
+let   curLang = 0;
+
+/* ==========  ЭЛЕМЕНТЫ  ========== */
+const out      = document.getElementById('output');
+const mic      = document.getElementById('bigMic');
+const copyBtn  = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+const langBtn  = document.getElementById('langBtn');
+const status   = document.getElementById('status');
+
+/* ==========  РАСПОЗНАВАНИЕ  ========== */
+window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(!window.SpeechRecognition){
+    alert('Ваш браузер не поддерживает Web Speech API. Используйте Chrome/Edge/Samsung Internet.');
+    mic.disabled = true;
+}else{
+    const rec = new SpeechRecognition();
+    rec.lang           = LANGS[curLang];
+    rec.interimResults = true;
+    rec.continuous     = true;
+
+    let listening = false;
+    let fullTranscript = '';
+
+    rec.onstart = ()=>{
+        listening = true;
+        mic.textContent = '⏹ Остановить';
+        status.textContent = 'Слушаю…';
+    };
+    rec.onend = ()=>{
+        listening = false;
+        mic.textContent = '🎤 Слушать';
+        status.textContent = 'Готов';
+    };
+    rec.onresult = (e)=>{
+        let interim = '';
+        for(let i=e.resultIndex;i<e.results.length;i++){
+            const res = e.results[i];
+            if(res.isFinal) fullTranscript += res[0].transcript+' ';
+            else            interim         += res[0].transcript;
+        }
+        out.value = fullTranscript + interim;
+        out.scrollTop = out.scrollHeight;
+    };
+    rec.onerror = (e)=>{
+        status.textContent = 'Ошибка: '+e.error;
+        rec.stop();
+    };
+
+    mic.addEventListener('click',()=>{
+        if(listening) rec.stop();
+        else{
+            fullTranscript = out.value;
+            rec.start();
+        }
+    });
+}
+
+/* ==========  КНОПКИ  ========== */
+copyBtn.addEventListener('click',()=>{
+    out.select();
+    document.execCommand('copy');
+    status.textContent = 'Скопировано!';
+    setTimeout(()=>status.textContent='',1200);
+});
+clearBtn.addEventListener('click',()=>{
+    out.value='';
+    status.textContent='';
+});
+langBtn.addEventListener('click',()=>{
+    curLang = (curLang+1)%LANGS.length;
+    if(window.rec) rec.lang = LANGS[curLang];
+    status.textContent = 'Язык: '+LANGS[curLang];
+});
+</script>
+
+</body>
+</html>

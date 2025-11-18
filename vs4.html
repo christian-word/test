@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Голос → Текст</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
+    body{display:flex;flex-direction:column}
+
+    #output{
+        flex:1;
+        padding:6vw;
+        font-size:8.5vw;
+        line-height:1.35;
+        overflow-y:auto;
+        white-space:pre-wrap;
+        word-break:break-word;
+        background:rgba(255,255,255,0.06);
+        border-radius:20px 20px 0 0;
+    }
+
+    #controls{
+        padding:4vw;
+        background:#111;
+        display:flex;
+        justify-content:center;
+        gap:5vw;
+        align-items:center;
+    }
+
+    #micBtn{
+        width:68vw;
+        max-width:300px;
+        height:68vw;
+        max-height:120px;
+        border-radius:50vw;
+        border:none;
+        font-size:13vw;
+        background:#d32f2f;
+        color:white;
+        box-shadow:0 10px 35px rgba(211,47,47,0.6);
+    }
+    #micBtn.listening{
+        background:#4caf50;
+        box-shadow:0 10px 45px rgba(76,175,80,0.7);
+    }
+
+    #langBtn{
+        width:68vw;
+        max-width:300px;
+        height:68vw;
+        max-height:120px;
+        border-radius:50vw;
+        border:none;
+        font-size:9vw;
+        background:#333;
+        color:#fff;
+        box-shadow:0 8px 25px rgba(0,0,0,0.5);
+    }
+
+    #status{
+        text-align:center;
+        padding:2vh 0;
+        font-size:5vw;
+        color:#00e676;
+        min-height:7vh;
+    }
+
+    @media(min-width:500px){
+        #output{font-size:44px}
+        #micBtn,#langBtn{width:280px;height:100px;border-radius:60px}
+        #micBtn{font-size:70px}
+        #langBtn{font-size:50px}
+        #status{font-size:28px}
+    }
+</style>
+</head>
+<body>
+
+<div id="output" aria-live="polite"></div>
+
+<div id="controls">
+    <button id="langBtn">RU</button>
+    <button id="micBtn">Микрофон</button>
+</div>
+
+<div id="status">Нажмите микрофон и говорите</div>
+
+<script>
+// Проверка поддержки
+if(!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)){
+    document.body.innerHTML='<div style="padding:50px;font-size:50px;text-align:center;color:#fff">Браузер не поддерживает распознавание речи<br><br>Нужен Chrome / Edge / Samsung Internet</div>';
+}
+
+// Языки
+const LANGUAGES = [
+    {code:'ru-RU', name:'RU', flag:'RU'},
+    {code:'uk-UA', name:'UA', flag:'UA'},
+    {code:'en-US', name:'EN', flag:'US'},
+    {code:'es-ES', name:'ES', flag:'ES'},
+    {code:'de-DE', name:'DE', flag:'DE'},
+    {code:'fr-FR', name:'FR', flag:'FR'},
+    {code:'pl-PL', name:'PL', flag:'PL'},
+    {code:'tr-TR', name:'TR', flag:'TR'}
+];
+let currentLang = 0;
+
+const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+rec.continuous = true;
+rec.interimResults = true;
+rec.lang = LANGUAGES[currentLang].code;
+
+let listening = false;
+let final = '';
+
+const output = document.getElementById('output');
+const micBtn = document.getElementById('micBtn');
+const langBtn = document.getElementById('langBtn');
+const status = document.getElementById('status');
+
+function vibrate(p){ if('vibrate' in navigator) navigator.vibrate(p); }
+
+// Смена языка
+langBtn.addEventListener('click', ()=>{
+    currentLang = (currentLang + 1) % LANGUAGES.length;
+    rec.lang = LANGUAGES[currentLang].code;
+    langBtn.textContent = LANGUAGES[currentLang].flag;
+    status.textContent = `Язык: ${LANGUAGES[currentLang].name}`;
+    vibrate(100);
+    setTimeout(()=>status.textContent = listening ? 'СЛУШАЮ…' : 'Нажмите микрофон и говорите', 1500);
+});
+
+// Микрофон
+micBtn.addEventListener('click', ()=>{
+    if(listening){
+        rec.stop();
+    } else {
+        final = '';
+        output.textContent = '';
+        rec.start();
+    }
+});
+
+rec.onstart = ()=>{
+    listening = true;
+    micBtn.classList.add('listening');
+    micBtn.textContent = 'Стоп';
+    status.textContent = 'СЛУШАЮ…';
+    vibrate([100,50,100]);
+};
+
+rec.onend = ()=>{
+    listening = false;
+    micBtn.classList.remove('listening');
+    micBtn.textContent = 'Микрофон';
+    status.textContent = 'Нажмите микрофон и говорите';
+};
+
+rec.onresult = e=>{
+    let interim = '';
+    final = '';
+    for(let i=e.resultIndex; i<e.results.length; i++){
+        const t = e.results[i][0].transcript.trim();
+        e.results[i].isFinal ? final += t + ' ' : interim += t;
+    }
+    output.textContent = (final + interim).trim();
+    output.scrollTop = output.scrollHeight;
+};
+
+rec.onerror = ()=>{
+    status.textContent = 'Ошибка, нажмите ещё раз';
+    vibrate([200,100,200]);
+    rec.stop();
+};
+
+// Первое нажатие — инициализация
+document.body.addEventListener('touchstart', () => {}, {once:true});
+</script>
+</body>
+</html>

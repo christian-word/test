@@ -2,161 +2,120 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Голос → Текст (для глухих)</title>
+<title>Голос → Текст</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html, body {
-        height: 100%;
-        background: #000;
-        color: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        overflow: hidden;
-    }
-    body {
-        display: flex;
-        flex-direction: column;
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;background:#000;color:#fff;font-family:sans-serif;overflow:hidden}
+    body{display:flex;flex-direction:column}
+
+    #output{
+        flex:1;
+        padding:5vw;
+        font-size:8vw;
+        line-height:1.35;
+        overflow-y:auto;
+        white-space:pre-wrap;
+        word-break:break-word;
     }
 
-    /* Большая кнопка микрофона */
-    #micBtn {
-        width: 80vw;
-        height: 80vw;
-        max-width: 320px;
-        max-height: 320px;
-        margin: 10vh auto 5vh;
-        border-radius: 50%;
-        border: none;
-        font-size: 15vw;
-        background: #d32f2f;
-        color: white;
-        box-shadow: 0 10px 30px rgba(211,47,47,0.6);
-        animation: pulse 2s infinite;
-    }
-    #micBtn.listening {
-        background: #4caf50;
-        box-shadow: 0 10px 40px rgba(76,175,80,0.8);
-        animation: none;
-    }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
+    #controls{
+        padding:4vw;
+        background:rgba(255,255,255,0.05);
+        text-align:center;
     }
 
-    /* Текст распознавания */
-    #output {
-        flex: 1;
-        margin: 0 5vw;
-        padding: 5vw;
-        font-size: 7vw;
-        line-height: 1.4;
-        background: rgba(255,255,255,0.1);
-        border-radius: 20px;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        word-break: break-word;
+    #micBtn{
+        width:72vw;
+        max-width:300px;
+        height:72vw;
+        max-height:120px;
+        border-radius:50vw;
+        border:none;
+        font-size:14vw;
+        background:#d32f2f;
+        color:white;
+        box-shadow:0 8px 30px rgba(211,47,47,0.5);
+    }
+    #micBtn.listening{
+        background:#4caf50;
+        box-shadow:0 8px 40px rgba(76,175,80,0.6);
     }
 
-    /* Статус внизу */
-    #status {
-        text-align: center;
-        padding: 2vh 0;
-        font-size: 5vw;
-        color: #aaa;
-        min-height: 8vh;
+    #status{
+        margin-top:8px;
+        font-size:5vw;
+        color:#aaa;
     }
 
-    @media (min-width: 500px) {
-        #micBtn { font-size: 80px; }
-        #output { font-size: 36px; }
-        #status { font-size: 28px; }
+    @media(min-width:500px){
+        #output{font-size:42px}
+        #micBtn{width:280px;height:100px;font-size:70px;border-radius:60px}
+        #status{font-size:28px}
     }
 </style>
 </head>
 <body>
 
-<button id="micBtn" aria-label="Начать/остановить прослушивание">🎤</button>
 <div id="output" aria-live="polite"></div>
-<div id="status">Нажмите микрофон и говорите</div>
+
+<div id="controls">
+    <button id="micBtn">Микрофон</button>
+    <div id="status">Нажмите и говорите</div>
+</div>
 
 <script>
-if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-    document.body.innerHTML = '<div style="padding:30px;font-size:48px;text-align:center">Ваш браузер не поддерживает распознавание речи<br>Нужен Chrome / Edge / Samsung Internet</div>';
+if(!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)){
+    document.body.innerHTML='<div style="padding:40px;font-size:48px;text-align:center;color:#fff">Браузер не поддерживает речь<br>Нужен Chrome / Edge</div>';
+    throw '';
 }
 
-// Вибрация (если поддерживается)
-function vibrate(pattern = 100) {
-    if ('vibrate' in navigator) navigator.vibrate(pattern);
-}
+const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+rec.lang = 'ru-RU';
+rec.continuous = true;
+rec.interimResults = true;
 
-const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-recognition.lang = 'ru-RU';
-recognition.continuous = true;
-recognition.interimResults = true;
+let listening = false;
+let final = '';
 
-let isListening = false;
-let finalText = '';
+const btn = document.getElementById('micBtn');
+const out = document.getElementById('output');
+const stat = document.getElementById('status');
 
-const micBtn = document.getElementById('micBtn');
-const output = document.getElementById('output');
-const status = document.getElementById('status');
+function vibrate(p){ if('vibrate' in navigator) navigator.vibrate(p); }
 
-recognition.onstart = () => {
-    isListening = true;
-    micBtn.classList.add('listening');
-    micBtn.textContent = '⏹';
-    status.textContent = 'СЛУШАЮ…';
-    vibrate([100, 50, 100]);
+rec.onstart = ()=>{
+    listening=true;
+    btn.classList.add('listening');
+    btn.textContent='Стоп';
+    stat.textContent='СЛУШАЮ…';
+    vibrate([100,50,100]);
 };
-
-recognition.onend = () => {
-    isListening = false;
-    micBtn.classList.remove('listening');
-    micBtn.textContent = '🎤';
-    status.textContent = 'Нажмите и говорите';
-    vibrate(200);
+rec.onend = ()=>{
+    listening=false;
+    btn.classList.remove('listening');
+    btn.textContent='Микрофон';
+    stat.textContent='Нажмите и говорите';
 };
-
-recognition.onresult = (e) => {
-    let interim = '';
-    finalText = '';
-
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-        const transcript = e.results[i][0].transcript;
-        if (e.results[i].isFinal) {
-            finalText += transcript + ' ';
-        } else {
-            interim += transcript;
-        }
+rec.onresult = e=>{
+    let interim='';
+    final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+        const t = e.results[i][0].transcript;
+        e.results[i].isFinal ? final+=t+' ' : interim+=t;
     }
-
-    output.textContent = finalText + interim;
-    output.scrollTop = output.scrollHeight;
+    out.textContent = final+interim;
+    out.scrollTop = out.scrollHeight;
 };
+rec.onerror = ()=>{ stat.textContent='Ошибка, нажмите ещё раз'; rec.stop(); };
 
-recognition.onerror = (e) => {
-    status.textContent = 'Ошибка, попробуйте ещё';
-    recognition.stop();
-};
-
-micBtn.addEventListener('click', () => {
-    if (isListening) {
-        recognition.stop();
-    } else {
-        // Полная очистка при новом сеансе
-        finalText = '';
-        output.textContent = '';
-        recognition.start();
+btn.onclick = ()=>{
+    if(listening) rec.stop();
+    else{
+        final=''; out.textContent='';
+        rec.start();
     }
-});
-
-// Автостарт при первом касании (чтобы не просить два раза разрешения)
-document.body.addEventListener('touchstart', function init() {
-    document.body.removeEventListener('touchstart', init);
-    // микрофон активируется только по клику — это требование браузеров
-}, {once: true});
-
+};
 </script>
 </body>
 </html>

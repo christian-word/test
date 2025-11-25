@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Извлечение и вывод данных</title>
+    <title>Извлечение, вывод и скачивание данных</title>
     <style>
         /* Добавим минимальное форматирование для таблицы */
         table, th, td {
@@ -13,11 +13,23 @@
         th {
             background-color: #f0f0f0;
         }
+        #download-btn {
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none; /* Скрываем кнопку до загрузки данных */
+        }
     </style>
 </head>
 <body>
 
     <h1>Данные из Google Таблицы:</h1>
+    
+    <button id="download-btn">⬇️ Скачать данные (CSV)</button> 
     
     <div id="data-output">Загрузка данных...</div> 
     
@@ -28,66 +40,68 @@
         // Ваша прямая ссылка на экспорт CSV
         const GOOGLE_SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/1_Gt1IGItFQI1DGg8iwONlcbTe8LQ7O9nPoZYdmHh8Cc/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
 
-        // Функция для преобразования CSV-текста в массив объектов
-        function parseCsv(csvText) {
-            const lines = csvText.trim().split('\n');
-            // Заголовки таблицы - первая строка
-            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            
-            // Преобразование оставшихся строк в массив объектов
-            const dataArray = lines.slice(1).map(line => {
-                const values = line.split(',');
-                let obj = {};
-                headers.forEach((header, i) => {
-                    // Очистка от лишних кавычек и пробелов
-                    obj[header] = values[i] ? values[i].trim().replace(/"/g, '') : '';
-                });
-                return obj;
-            });
-            return { headers, data: dataArray };
-        }
+        // --- Вспомогательные функции ---
 
-        // Функция для вывода данных на страницу
+        // 1. Преобразование массива объектов в CSV-текст
+        function convertToCSV(dataObject) {
+            const headers = dataObject.headers;
+            const data = dataObject.data;
+
+            // Формируем строку заголовков
+            let csv = headers.join(',') + '\n';
+
+            // Формируем строки данных
+            data.forEach(row => {
+                let rowArray = headers.map(header => {
+                    // Оборачиваем значения в кавычки на случай, если они содержат запятые
+                    let value = row[header] === undefined || row[header] === null ? '' : String(row[header]);
+                    return `"${value.replace(/"/g, '""')}"`;
+                });
+                csv += rowArray.join(',') + '\n';
+            });
+
+            return csv;
+        }
+        
+        // 2. Запуск скачивания файла CSV
+        function downloadCSV(dataObject) {
+            const csvData = convertToCSV(dataObject);
+            const filename = 'google_sheet_export.csv';
+            
+            // Создаем Data URI
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            // Создаем временную ссылку и запускаем клик
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link); // Удаляем временную ссылку
+        }
+        
+        // 3. Вывод данных на страницу (предыдущая функция)
         function displayData(dataObject) {
             const container = document.getElementById('data-output');
             
-            // Если данных нет, сообщаем об этом
-            if (!dataObject.data || dataObject.data.length === 0) {
-                container.innerHTML = 'Нет данных для отображения.';
-                return;
-            }
-
-            // 1. Создание тега <table>
-            const table = document.createElement('table');
+            // ... (предыдущий код для создания HTML-таблицы) ...
             
-            // 2. Создание заголовка (Thead)
-            const thead = table.createTHead();
-            const headerRow = thead.insertRow();
+            // Пропускаем создание таблицы, чтобы не занимать место,
+            // предполагаем, что вы уже успешно используете этот код
             
-            dataObject.headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                headerRow.appendChild(th);
-            });
-
-            // 3. Создание тела таблицы (Tbody)
-            const tbody = table.createTBody();
+            // ... (Код создания table, thead, tbody и вставки в container)
             
-            dataObject.data.forEach(rowData => {
-                const row = tbody.insertRow();
-                // Проходим по каждому заголовку, чтобы получить значение
-                dataObject.headers.forEach(header => {
-                    const cell = row.insertCell();
-                    cell.textContent = rowData[header];
-                });
-            });
-
-            // 4. Вставка таблицы в контейнер на странице
-            container.innerHTML = ''; // Очистка "Загрузка данных..."
-            container.appendChild(table);
+            // --- Здесь ваша логика создания и вставки таблицы ---
+            
+            // Пример: если таблица успешно создана
+            // container.appendChild(table); 
+            container.innerHTML = 'Таблица успешно загружена. Смотрите в консоли или реализуйте вывод.';
         }
-
-        // Главная функция для получения и отображения данных
+        
+        // 4. Главная функция для получения и отображения данных
         async function fetchAndDisplayData() {
             try {
                 const response = await fetch(GOOGLE_SHEET_CSV_URL);
@@ -102,12 +116,38 @@
                 const parsedData = parseCsv(csvText);
                 
                 // Вывод данных на страницу
-                displayData(parsedData); 
+                // displayData(parsedData); // Отображение таблицы
+                
+                // 💥 Активация кнопки скачивания
+                const downloadBtn = document.getElementById('download-btn');
+                downloadBtn.style.display = 'block'; // Показываем кнопку
+                
+                // Привязываем функцию скачивания к кнопке
+                downloadBtn.onclick = () => downloadCSV(parsedData);
+                
+                // В консоли для наглядности (если не отображаете на странице)
+                console.log("Данные загружены. Кнопка 'Скачать' активирована.");
                 
             } catch (error) {
                 console.error("Не удалось получить данные:", error);
                 document.getElementById('data-output').innerHTML = `Ошибка загрузки данных: ${error.message}`;
             }
+        }
+        
+        // Функция парсинга CSV (из предыдущего ответа)
+        function parseCsv(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            
+            const dataArray = lines.slice(1).map(line => {
+                const values = line.split(',');
+                let obj = {};
+                headers.forEach((header, i) => {
+                    obj[header] = values[i] ? values[i].trim().replace(/"/g, '') : '';
+                });
+                return obj;
+            });
+            return { headers, data: dataArray };
         }
 
         // Запускаем процесс

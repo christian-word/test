@@ -2,57 +2,116 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Извлечение данных из Google Таблиц</title>
+    <title>Извлечение и вывод данных</title>
+    <style>
+        /* Добавим минимальное форматирование для таблицы */
+        table, th, td {
+            border: 1px solid #ccc;
+            border-collapse: collapse;
+            padding: 8px;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+    </style>
 </head>
 <body>
 
-    <h1>Данные извлечены в консоль браузера (F12)</h1>
+    <h1>Данные из Google Таблицы:</h1>
+    
+    <div id="data-output">Загрузка данных...</div> 
     
     <script>
-        // 1. Указываем прямую ссылку на экспорт CSV
-        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1_Gt1IGItFQI1DGg8iwONlcbTe8LQ7O9nPoZYdmHh8Cc/gviz/tq?tqx=out:csv&gid=0";
+        // Идентификатор первого листа таблицы
+        const SHEET_GID = "0"; 
+        
+        // Ваша прямая ссылка на экспорт CSV
+        const GOOGLE_SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/1_Gt1IGItFQI1DGg8iwONlcbTe8LQ7O9nPoZYdmHh8Cc/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
 
-        // 2. Функция для извлечения данных
-        async function fetchSheetData() {
+        // Функция для преобразования CSV-текста в массив объектов
+        function parseCsv(csvText) {
+            const lines = csvText.trim().split('\n');
+            // Заголовки таблицы - первая строка
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            
+            // Преобразование оставшихся строк в массив объектов
+            const dataArray = lines.slice(1).map(line => {
+                const values = line.split(',');
+                let obj = {};
+                headers.forEach((header, i) => {
+                    // Очистка от лишних кавычек и пробелов
+                    obj[header] = values[i] ? values[i].trim().replace(/"/g, '') : '';
+                });
+                return obj;
+            });
+            return { headers, data: dataArray };
+        }
+
+        // Функция для вывода данных на страницу
+        function displayData(dataObject) {
+            const container = document.getElementById('data-output');
+            
+            // Если данных нет, сообщаем об этом
+            if (!dataObject.data || dataObject.data.length === 0) {
+                container.innerHTML = 'Нет данных для отображения.';
+                return;
+            }
+
+            // 1. Создание тега <table>
+            const table = document.createElement('table');
+            
+            // 2. Создание заголовка (Thead)
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            
+            dataObject.headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+
+            // 3. Создание тела таблицы (Tbody)
+            const tbody = table.createTBody();
+            
+            dataObject.data.forEach(rowData => {
+                const row = tbody.insertRow();
+                // Проходим по каждому заголовку, чтобы получить значение
+                dataObject.headers.forEach(header => {
+                    const cell = row.insertCell();
+                    cell.textContent = rowData[header];
+                });
+            });
+
+            // 4. Вставка таблицы в контейнер на странице
+            container.innerHTML = ''; // Очистка "Загрузка данных..."
+            container.appendChild(table);
+        }
+
+        // Главная функция для получения и отображения данных
+        async function fetchAndDisplayData() {
             try {
-                // Выполняем HTTP-запрос
                 const response = await fetch(GOOGLE_SHEET_CSV_URL);
                 
                 if (!response.ok) {
                     throw new Error(`Ошибка HTTP: ${response.status}`);
                 }
 
-                // Читаем тело ответа как текст (в формате CSV)
                 const csvText = await response.text();
-
-                // Выводим сырой текст CSV в консоль
-                console.log("--- Сырые данные CSV ---");
-                console.log(csvText);
-
-                // Дополнительно: Можно преобразовать CSV в массив объектов
-                const lines = csvText.trim().split('\n');
-                const headers = lines[0].split(',');
                 
-                const dataArray = lines.slice(1).map(line => {
-                    const values = line.split(',');
-                    let obj = {};
-                    headers.forEach((header, i) => {
-                        // Очистка от лишних кавычек и пробелов
-                        obj[header.trim().replace(/"/g, '')] = values[i] ? values[i].trim().replace(/"/g, '') : '';
-                    });
-                    return obj;
-                });
-
-                console.log("\n--- Данные в виде массива объектов ---");
-                console.table(dataArray); // Вывод данных в удобном табличном виде
+                // Парсинг данных
+                const parsedData = parseCsv(csvText);
+                
+                // Вывод данных на страницу
+                displayData(parsedData); 
                 
             } catch (error) {
                 console.error("Не удалось получить данные:", error);
+                document.getElementById('data-output').innerHTML = `Ошибка загрузки данных: ${error.message}`;
             }
         }
 
-        // Запускаем функцию при загрузке страницы
-        fetchSheetData();
+        // Запускаем процесс
+        fetchAndDisplayData();
     </script>
 </body>
 </html>

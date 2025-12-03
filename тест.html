@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тест Українського Перекладу Біблії (bolls.life)</title>
+    <title>Тест Українського Перекладу (Через Проксі)</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f0f8ff; }
         .chapter-title { 
             font-size: 1.5em; 
-            color: #333; 
+            color: #1e40af; /* Blue-900 */
             margin-bottom: 15px;
-            border-bottom: 2px solid #ccc;
+            border-bottom: 2px solid #a5b4fc; /* Indigo-300 */
             padding-bottom: 5px;
         }
         .verse { 
             margin-bottom: 10px; 
             line-height: 1.6;
+            color: #333;
         }
         .verse strong { 
-            color: #0066cc; 
+            color: #059669; /* Emerald-600 */
             font-weight: bold; 
             margin-right: 5px; 
         }
@@ -26,9 +27,9 @@
             background-color: #fff; 
             padding: 20px; 
             border-radius: 8px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
         }
-        #status { color: red; }
+        #status { font-weight: bold; }
     </style>
 </head>
 <body>
@@ -44,14 +45,20 @@
             const contentDiv = document.getElementById('content');
             const statusMessage = document.getElementById('status');
             
-            // Параметри для українського перекладу Огієнка
-            const TRANSLATION_CODE = "ubio";
-            const BOOK = "GEN"; // Книга Буття (Genesis)
+            // --- ПАРАМЕТРИ API ---
+            const TRANSLATION_CODE = "ubio"; 
+            const BOOK = "GEN"; 
             const CHAPTER = 1;
             
-            const API_URL = `https://bolls.life/get-chapter/${TRANSLATION_CODE}/${BOOK}/${CHAPTER}`;
+            // --- МЕХАНИЗМ ОБХОДА CORS (CORS Proxy) ---
+            // Целевой URL, который был заблокирован
+            const TARGET_URL = `https://bolls.life/get-chapter/${TRANSLATION_CODE}/${BOOK}/${CHAPTER}`;
+            
+            // Используем публичный CORS-прокси для обхода ограничения браузера
+            const PROXY_BASE_URL = "https://api.allorigins.win/raw?url=";
+            const API_URL = `${PROXY_BASE_URL}${encodeURIComponent(TARGET_URL)}`;
 
-            statusMessage.textContent = `Запит до API: ${API_URL}`;
+            statusMessage.textContent = `Запит до проксі: ${API_URL}`;
 
             fetch(API_URL)
                 .then(response => {
@@ -63,12 +70,11 @@
                 .then(data => {
                     if (data && data.chapter && data.chapter.length > 0) {
                         statusMessage.style.color = 'green';
-                        statusMessage.textContent = `✅ Успішно завантажено: ${data.chapterName} ${CHAPTER} (Переклад: ${TRANSLATION_CODE})`;
+                        statusMessage.textContent = `✅ Успішно завантажено (Через проксі): ${data.chapterName} ${CHAPTER} (Переклад: ${TRANSLATION_CODE})`;
                         
                         let htmlContent = `<div class="chapter-title">${data.chapterName} ${CHAPTER}</div>`;
 
                         data.chapter.forEach(verse => {
-                            // API повертає текст у полі 'text'
                             const verseText = verse.text || 'Текст відсутній.';
                             htmlContent += `<p class="verse"><strong>${verse.verse}.</strong> ${verseText}</p>`;
                         });
@@ -79,7 +85,8 @@
                     }
                 })
                 .catch(error => {
-                    statusMessage.textContent = `❌ Помилка завантаження: ${error.message}`;
+                    statusMessage.style.color = 'red';
+                    statusMessage.textContent = `❌ Критична помилка завантаження: ${error.message}. Перевірте URL проксі або API.`;
                     console.error('Fetch error:', error);
                 });
         });

@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Українського Перекладу Біблії (bolls.life)</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .chapter-title { 
+            font-size: 1.5em; 
+            color: #333; 
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+        .verse { 
+            margin-bottom: 10px; 
+            line-height: 1.6;
+        }
+        .verse strong { 
+            color: #0066cc; 
+            font-weight: bold; 
+            margin-right: 5px; 
+        }
+        #content { 
+            background-color: #fff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        #status { color: red; }
+    </style>
+</head>
+<body>
+
+    <h1>Український переклад: Буття, 1 глава (ubio)</h1>
+    <p id="status">Завантаження...</p>
+    
+    <div id="content">
+        </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const contentDiv = document.getElementById('content');
+            const statusMessage = document.getElementById('status');
+            
+            // Параметри для українського перекладу Огієнка
+            const TRANSLATION_CODE = "ubio";
+            const BOOK = "GEN"; // Книга Буття (Genesis)
+            const CHAPTER = 1;
+            
+            const API_URL = `https://bolls.life/get-chapter/${TRANSLATION_CODE}/${BOOK}/${CHAPTER}`;
+
+            statusMessage.textContent = `Запит до API: ${API_URL}`;
+
+            fetch(API_URL)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Помилка HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.chapter && data.chapter.length > 0) {
+                        statusMessage.style.color = 'green';
+                        statusMessage.textContent = `✅ Успішно завантажено: ${data.chapterName} ${CHAPTER} (Переклад: ${TRANSLATION_CODE})`;
+                        
+                        let htmlContent = `<div class="chapter-title">${data.chapterName} ${CHAPTER}</div>`;
+
+                        data.chapter.forEach(verse => {
+                            // API повертає текст у полі 'text'
+                            const verseText = verse.text || 'Текст відсутній.';
+                            htmlContent += `<p class="verse"><strong>${verse.verse}.</strong> ${verseText}</p>`;
+                        });
+                        
+                        contentDiv.innerHTML = htmlContent;
+                    } else {
+                        statusMessage.textContent = '❌ Помилка: Не вдалося отримати текст глави.';
+                    }
+                })
+                .catch(error => {
+                    statusMessage.textContent = `❌ Помилка завантаження: ${error.message}`;
+                    console.error('Fetch error:', error);
+                });
+        });
+    </script>
+
+</body>
+</html>

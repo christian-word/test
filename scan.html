@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>MP3 Index Viewer</title>
+<style>
+body { font-family: Arial, sans-serif; background:#111; color:#eee; padding:20px }
+input, button { padding:6px; font-size:14px }
+a { color:#7dd3fc; text-decoration:none }
+a:hover { text-decoration:underline }
+ul { margin-top:15px }
+li { margin:4px 0 }
+</style>
+</head>
+<body>
+
+<h3>Просмотр содержимого каталога</h3>
+
+<input id="url" size="60" value="https://holychords.pro/uploads/music/20230314/">
+<button onclick="loadDir()">Загрузить</button>
+
+<ul id="list"></ul>
+
+<script>
+async function loadDir() {
+  const baseUrl = document.getElementById('url').value;
+  const list = document.getElementById('list');
+  list.innerHTML = 'Загрузка…';
+
+  try {
+    const res = await fetch(baseUrl, { mode: 'cors' });
+    if (!res.ok) throw new Error('Доступ запрещён');
+
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    const links = [...doc.querySelectorAll('a')]
+      .map(a => a.getAttribute('href'))
+      .filter(h => h && h.toLowerCase().endsWith('.mp3'));
+
+    if (!links.length) {
+      list.innerHTML = 'MP3 не найдено или листинг отключён';
+      return;
+    }
+
+    list.innerHTML = '';
+    links.forEach(file => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = baseUrl + file;
+      a.textContent = file;
+      a.target = '_blank';
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+  } catch (e) {
+    list.innerHTML = 'Невозможно получить список (CORS или листинг отключён)';
+  }
+}
+</script>
+
+</body>
+</html>

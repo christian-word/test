@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sacred Stream | AI Music Search</title>
+    <title>Sacred Stream | Поиск Христианской Музыки</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,9 +13,15 @@
             --bg-dark: #0f172a;
             --card-bg: #1e293b;
             --accent-blue: #38bdf8;
-            --accent-green: #10b981;
+            --accent-purple: #a78bfa;
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
@@ -23,68 +29,53 @@
             background-color: var(--bg-dark);
             background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 100%);
             color: var(--text-main);
-            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding-bottom: 50px;
+            padding: 40px 20px 50px;
         }
 
         header {
-            margin-top: 60px;
             text-align: center;
+            margin-bottom: 30px;
         }
 
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 700;
         }
 
-        .mode-container {
-            margin-top: 30px;
-            background: var(--card-bg);
-            padding: 5px;
-            border-radius: 16px;
-            display: flex;
-            gap: 5px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .mode-btn {
-            padding: 10px 20px;
-            border-radius: 12px;
-            border: none;
-            background: transparent;
+        .subtitle {
             color: var(--text-dim);
-            cursor: pointer;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: 0.3s;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
 
-        .mode-btn.active {
-            background: var(--accent-blue);
-            color: var(--bg-dark);
-        }
-
-        .search-section {
-            width: 90%;
-            max-width: 700px;
-            margin-top: 25px;
+        .controls-section {
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 25px;
         }
 
         .search-bar-wrapper {
             background: var(--card-bg);
-            padding: 8px;
+            padding: 10px;
             border-radius: 20px;
             display: flex;
+            gap: 10px;
             border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: border-color 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .search-bar-wrapper:focus-within {
+            border-color: var(--accent-blue);
         }
 
         .search-input {
@@ -92,165 +83,301 @@
             background: transparent;
             border: none;
             outline: none;
-            color: white;
-            padding: 12px 20px;
-            font-size: 1rem;
+            color: var(--text-main);
+            padding: 14px 20px;
+            font-size: 1.05rem;
+            font-family: inherit;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-dim);
         }
 
         .main-search-btn {
-            background: var(--text-main);
-            color: var(--bg-dark);
+            background: linear-gradient(135deg, #38bdf8, #3b82f6);
+            color: white;
             border: none;
-            padding: 10px 25px;
+            padding: 12px 30px;
             border-radius: 14px;
             font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
         }
 
-        .ai-status {
-            margin-top: 15px;
-            color: var(--accent-green);
-            display: none;
+        .main-search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .quick-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .tag-btn {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
             font-size: 0.9rem;
-            align-items: center;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .tag-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .utility-bar {
+            display: flex;
             gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .ai-card {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--accent-green);
-            border-radius: 15px;
-            padding: 15px;
-            margin-top: 20px;
-            display: none;
+        .utility-btn {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
         }
 
-        .ai-card.show { display: block; }
+        .utility-btn:hover {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .utility-btn.active {
+            background: var(--accent-purple);
+            border-color: var(--accent-purple);
+            color: white;
+        }
 
         #results-area {
-            width: 95%;
-            max-width: 900px;
-            margin-top: 30px;
+            width: 100%;
+            max-width: 950px;
             background: white;
             border-radius: 20px;
             overflow: hidden;
-            min-height: 100px;
+            min-height: 200px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
         }
 
-        .gsc-control-cse { padding: 20px !important; }
+        .gsc-control-cse { 
+            padding: 20px !important;
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* Модальное окно истории */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 70vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .history-item {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: rgba(56, 189, 248, 0.2);
+            transform: translateX(5px);
+        }
+
+        .history-query {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .history-time {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-dim);
+            padding: 40px 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .search-bar-wrapper {
+                flex-direction: column;
+            }
+
+            .main-search-btn {
+                width: 100%;
+            }
+
+            .quick-tags {
+                gap: 6px;
+            }
+
+            .tag-btn {
+                font-size: 0.85rem;
+                padding: 6px 12px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <h1>Sacred Stream</h1>
-        <p style="color: var(--text-dim)">Христианский музыкальный поиск</p>
+        <p class="subtitle">Поиск христианской музыки</p>
     </header>
 
-    <div class="mode-container">
-        <button class="mode-btn active" id="btn-simple" onclick="setMode('simple')">
-            <i class="fa-solid fa-magnifying-glass"></i> Простой
-        </button>
-        <button class="mode-btn" id="btn-ai" onclick="setMode('ai')">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Советник
-        </button>
-    </div>
-
-    <div class="search-section">
+    <div class="controls-section">
         <div class="search-bar-wrapper">
-            <input type="text" id="userInput" class="search-input" placeholder="Введите название или исполнителя..." autofocus>
-            <button class="main-search-btn" onclick="handleSearch()">Найти</button>
+            <input 
+                type="text" 
+                id="userInput" 
+                class="search-input" 
+                placeholder="Введите название песни, исполнителя или альбома..." 
+                autofocus
+            >
+            <button class="main-search-btn" onclick="handleSearch()">
+                <i class="fa-solid fa-magnifying-glass"></i> Найти
+            </button>
+        </div>
+        
+        <div class="quick-tags">
+            <button class="tag-btn" onclick="quickSearch('worship')">
+                <i class="fa-solid fa-hands-praying"></i> Worship
+            </button>
+            <button class="tag-btn" onclick="quickSearch('рок христианский')">
+                <i class="fa-solid fa-guitar"></i> Рок
+            </button>
+            <button class="tag-btn" onclick="quickSearch('инструментальная')">
+                <i class="fa-solid fa-music"></i> Инструментал
+            </button>
+            <button class="tag-btn" onclick="quickSearch('хвала поклонение')">
+                <i class="fa-solid fa-dove"></i> Хвала
+            </button>
+            <button class="tag-btn" onclick="quickSearch('gospel')">
+                <i class="fa-solid fa-cross"></i> Gospel
+            </button>
         </div>
 
-        <div class="ai-status" id="aiStatus">
-            <i class="fa-solid fa-spinner fa-spin"></i> AI анализирует запрос...
+        <div class="utility-bar">
+            <button class="utility-btn" onclick="showHistory()">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                История
+            </button>
+            <button class="utility-btn" onclick="clearSearch()">
+                <i class="fa-solid fa-broom"></i>
+                Очистить
+            </button>
         </div>
-
-        <div class="ai-card" id="aiCard"></div>
     </div>
 
     <div id="results-area">
         <div class="gcse-searchresults-only"></div>
     </div>
 
+    <!-- Модальное окно истории -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">История поиска</h2>
+                <button class="close-btn" onclick="closeHistory()">&times;</button>
+            </div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
     <script>
-        const API_CONFIG = {
-            KEY: "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",
-            URL: "https://api.groq.com/openai/v1/chat/completions",
-            MODEL: "llama-3.1-8b-instant"
-        };
+        // История поиска
+        let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
 
-        let currentMode = 'simple';
-
-        function setMode(mode) {
-            currentMode = mode;
-            document.getElementById('btn-simple').classList.toggle('active', mode === 'simple');
-            document.getElementById('btn-ai').classList.toggle('active', mode === 'ai');
-            document.getElementById('aiCard').classList.remove('show');
-            document.getElementById('userInput').placeholder = mode === 'ai' 
-                ? "Опишите что ищете (стиль, настроение, повод)..." 
-                : "Введите название или исполнителя...";
-        }
-
-        async function handleSearch() {
+        function handleSearch() {
             const query = document.getElementById('userInput').value.trim();
             if (!query) return;
 
-            // ВСЕГДА сначала ищем через Google
-            const searchQuery = query.includes('христиан') ? query : query + ' христианская музыка';
-            executeGoogle(searchQuery);
-
-            // Если режим AI - даем совет ПОСЛЕ поиска
-            if (currentMode === 'ai') {
-                await giveAdvice(query);
-            }
+            executeGoogle(query);
+            saveToHistory(query);
         }
 
-        async function giveAdvice(userQuery) {
-            const status = document.getElementById('aiStatus');
-            const card = document.getElementById('aiCard');
-            
-            status.style.display = 'flex';
-            card.classList.remove('show');
-
-            try {
-                const response = await fetch(API_CONFIG.URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_CONFIG.KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: API_CONFIG.MODEL,
-                        messages: [{
-                            role: 'system',
-                            content: 'Ты эксперт по христианской музыке. Дай краткий совет (2-3 предложения): какие исполнители/жанры подойдут для запроса пользователя. Будь конкретным и полезным.'
-                        }, {
-                            role: 'user', 
-                            content: `Пользователь ищет: "${userQuery}". Посоветуй что конкретно искать.`
-                        }],
-                        temperature: 0.7,
-                        max_tokens: 150
-                    })
-                });
-
-                const data = await response.json();
-                const advice = data.choices[0].message.content;
-
-                card.innerHTML = `
-                    <div style="font-weight: bold; color: var(--accent-green); margin-bottom: 8px;">
-                        <i class="fa-solid fa-lightbulb"></i> Совет AI:
-                    </div>
-                    <div style="font-size: 0.95rem; line-height: 1.5;">${advice}</div>
-                `;
-                card.classList.add('show');
-
-            } catch (error) {
-                console.error("AI Error:", error);
-                // Если AI не работает - ничего страшного, поиск уже работает
-            } finally {
-                status.style.display = 'none';
-            }
+        function quickSearch(tag) {
+            document.getElementById('userInput').value = tag;
+            executeGoogle(tag);
+            saveToHistory(tag);
         }
 
         function executeGoogle(q) {
@@ -262,14 +389,89 @@
                     throw new Error("CSE not ready");
                 }
             } catch (e) {
-                console.log("Ожидание загрузки Google...");
                 window.location.hash = 'gsc.q=' + encodeURIComponent(q);
+                setTimeout(() => window.location.reload(), 100);
             }
         }
 
-        // Enter для поиска
+        function saveToHistory(query) {
+            // Удаляем дубликаты
+            searchHistory = searchHistory.filter(item => item.query !== query);
+            
+            // Добавляем в начало
+            searchHistory.unshift({
+                query: query,
+                timestamp: new Date().toISOString()
+            });
+
+            // Оставляем только последние 20
+            searchHistory = searchHistory.slice(0, 20);
+
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        }
+
+        function showHistory() {
+            const modal = document.getElementById('historyModal');
+            const list = document.getElementById('historyList');
+
+            if (searchHistory.length === 0) {
+                list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i><p>История поиска пуста</p></div>';
+            } else {
+                list.innerHTML = searchHistory.map(item => {
+                    const date = new Date(item.timestamp);
+                    const timeStr = date.toLocaleDateString('ru-RU', { 
+                        day: 'numeric', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    return `
+                        <div class="history-item" onclick="searchFromHistory('${item.query.replace(/'/g, "\\'")}')">
+                            <span class="history-query">${item.query}</span>
+                            <span class="history-time">${timeStr}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            modal.classList.add('show');
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').classList.remove('show');
+        }
+
+        function searchFromHistory(query) {
+            document.getElementById('userInput').value = query;
+            executeGoogle(query);
+            closeHistory();
+        }
+
+        function clearSearch() {
+            document.getElementById('userInput').value = '';
+            document.getElementById('userInput').focus();
+        }
+
+        // Закрытие модалки по клику вне её
+        document.getElementById('historyModal').addEventListener('click', (e) => {
+            if (e.target.id === 'historyModal') {
+                closeHistory();
+            }
+        });
+
+        // Поддержка Enter
         document.getElementById('userInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSearch();
+        });
+
+        // Автопоиск при загрузке с хешем
+        window.addEventListener('load', () => {
+            const hash = window.location.hash;
+            if (hash.includes('gsc.q=')) {
+                const query = decodeURIComponent(hash.split('gsc.q=')[1]);
+                document.getElementById('userInput').value = query;
+            }
         });
     </script>
 

@@ -614,19 +614,24 @@
         }
 
         function handleSearch() {
-            const query = document.getElementById('userInput').value.trim();
-            if (!query) return;
+            const userQuery = document.getElementById('userInput').value.trim();
+            if (!userQuery) return;
 
-            const finalQuery = buildSearchQuery(query);
+            const finalQuery = buildSearchQuery(userQuery);
             if (!finalQuery) return;
 
+            // Не меняем поле ввода, отправляем только финальный запрос в Google
             executeGoogle(finalQuery);
-            saveToHistory(query, sites.filter(s => s.active).map(s => s.name));
+            saveToHistory(userQuery, sites.filter(s => s.active).map(s => s.name));
         }
 
         function quickSearch(tag) {
             document.getElementById('userInput').value = tag;
-            handleSearch();
+            const finalQuery = buildSearchQuery(tag);
+            if (!finalQuery) return;
+            
+            executeGoogle(finalQuery);
+            saveToHistory(tag, sites.filter(s => s.active).map(s => s.name));
         }
 
         function executeGoogle(q) {
@@ -695,8 +700,12 @@
 
         function searchFromHistory(query) {
             document.getElementById('userInput').value = query;
-            handleSearch();
             closeHistory();
+            
+            const finalQuery = buildSearchQuery(query);
+            if (!finalQuery) return;
+            
+            executeGoogle(finalQuery);
         }
 
         function clearSearch() {

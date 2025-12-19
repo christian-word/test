@@ -14,6 +14,7 @@
             --card-bg: #1e293b;
             --accent-blue: #38bdf8;
             --accent-purple: #a78bfa;
+            --accent-green: #10b981;
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
         }
@@ -111,6 +112,131 @@
             box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
         }
 
+        /* Фильтры сайтов */
+        .filters-section {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .filters-title {
+            font-weight: 600;
+            color: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-all-btn {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .toggle-all-btn:hover {
+            background: var(--accent-blue);
+            color: var(--bg-dark);
+        }
+
+        .sites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .site-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .site-checkbox:hover {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: var(--accent-blue);
+        }
+
+        .site-checkbox.active {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--accent-green);
+        }
+
+        .site-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent-green);
+        }
+
+        .site-info {
+            flex: 1;
+        }
+
+        .site-name {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .site-url {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-family: monospace;
+        }
+
+        .site-badge {
+            background: var(--accent-purple);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Статистика */
+        .stats-bar {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 12px;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
         .quick-tags {
             display: flex;
             gap: 8px;
@@ -163,12 +289,6 @@
             background: rgba(56, 189, 248, 0.1);
             border-color: var(--accent-blue);
             color: var(--accent-blue);
-        }
-
-        .utility-btn.active {
-            background: var(--accent-purple);
-            border-color: var(--accent-purple);
-            color: white;
         }
 
         #results-area {
@@ -285,13 +405,14 @@
                 width: 100%;
             }
 
-            .quick-tags {
-                gap: 6px;
+            .sites-grid {
+                grid-template-columns: 1fr;
             }
 
-            .tag-btn {
-                font-size: 0.85rem;
-                padding: 6px 12px;
+            .filters-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
         }
     </style>
@@ -315,6 +436,28 @@
             <button class="main-search-btn" onclick="handleSearch()">
                 <i class="fa-solid fa-magnifying-glass"></i> Найти
             </button>
+        </div>
+
+        <!-- Фильтры сайтов -->
+        <div class="filters-section">
+            <div class="filters-header">
+                <div class="filters-title">
+                    <i class="fa-solid fa-filter"></i>
+                    Искать на сайтах:
+                </div>
+                <button class="toggle-all-btn" onclick="toggleAll()">
+                    <i class="fa-solid fa-list-check"></i> Все / Нет
+                </button>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <i class="fa-solid fa-globe"></i>
+                    Выбрано: <span class="stat-value" id="activeCount">3</span> из <span class="stat-value">3</span>
+                </div>
+            </div>
+
+            <div class="sites-grid" id="sitesGrid"></div>
         </div>
         
         <div class="quick-tags">
@@ -363,21 +506,127 @@
     </div>
 
     <script>
+        // База данных сайтов
+        const sites = [
+            {
+                id: 'holychords',
+                name: 'Holy Chords',
+                url: 'holychords.pro',
+                type: 'Аккорды',
+                active: true
+            },
+            {
+                id: 'kgmusic',
+                name: 'KG Music',
+                url: 'kg-music.club',
+                type: 'Музыка',
+                active: true
+            },
+            {
+                id: 'fonki',
+                name: 'Fonki',
+                url: 'fonki.pro',
+                type: 'Фонограммы',
+                active: true
+            }
+        ];
+
         // История поиска
         let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+
+        // Загружаем сохраненное состояние фильтров
+        function loadSitesState() {
+            const saved = localStorage.getItem('sitesState');
+            if (saved) {
+                const state = JSON.parse(saved);
+                sites.forEach(site => {
+                    const savedSite = state.find(s => s.id === site.id);
+                    if (savedSite) {
+                        site.active = savedSite.active;
+                    }
+                });
+            }
+        }
+
+        // Сохраняем состояние фильтров
+        function saveSitesState() {
+            const state = sites.map(s => ({ id: s.id, active: s.active }));
+            localStorage.setItem('sitesState', JSON.stringify(state));
+        }
+
+        // Рендерим чекбоксы сайтов
+        function renderSites() {
+            const grid = document.getElementById('sitesGrid');
+            grid.innerHTML = sites.map(site => `
+                <label class="site-checkbox ${site.active ? 'active' : ''}" onclick="toggleSite('${site.id}')">
+                    <input type="checkbox" ${site.active ? 'checked' : ''} onclick="event.stopPropagation()">
+                    <div class="site-info">
+                        <div class="site-name">${site.name}</div>
+                        <div class="site-url">${site.url}</div>
+                    </div>
+                    <span class="site-badge">${site.type}</span>
+                </label>
+            `).join('');
+            updateStats();
+        }
+
+        // Переключение сайта
+        function toggleSite(id) {
+            const site = sites.find(s => s.id === id);
+            if (site) {
+                site.active = !site.active;
+                saveSitesState();
+                renderSites();
+            }
+        }
+
+        // Все/Нет
+        function toggleAll() {
+            const allActive = sites.every(s => s.active);
+            sites.forEach(s => s.active = !allActive);
+            saveSitesState();
+            renderSites();
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            const activeCount = sites.filter(s => s.active).length;
+            document.getElementById('activeCount').textContent = activeCount;
+        }
+
+        // Формирование поискового запроса
+        function buildSearchQuery(userQuery) {
+            const activeSites = sites.filter(s => s.active);
+            
+            if (activeSites.length === 0) {
+                alert('⚠️ Выберите хотя бы один сайт для поиска!');
+                return null;
+            }
+
+            if (activeSites.length === sites.length) {
+                // Все сайты активны - ищем везде
+                return userQuery;
+            }
+
+            // Формируем запрос с site: операторами
+            const siteQuery = activeSites.map(s => `site:${s.url}`).join(' OR ');
+            return `${userQuery} (${siteQuery})`;
+        }
 
         function handleSearch() {
             const query = document.getElementById('userInput').value.trim();
             if (!query) return;
 
-            executeGoogle(query);
-            saveToHistory(query);
+            const finalQuery = buildSearchQuery(query);
+            if (!finalQuery) return;
+
+            executeGoogle(finalQuery);
+            saveToHistory(query, sites.filter(s => s.active).map(s => s.name));
         }
 
         function quickSearch(tag) {
             document.getElementById('userInput').value = tag;
-            executeGoogle(tag);
-            saveToHistory(tag);
+            handleSearch();
         }
 
         function executeGoogle(q) {
@@ -394,19 +643,16 @@
             }
         }
 
-        function saveToHistory(query) {
-            // Удаляем дубликаты
+        function saveToHistory(query, activeSites) {
             searchHistory = searchHistory.filter(item => item.query !== query);
             
-            // Добавляем в начало
             searchHistory.unshift({
                 query: query,
+                sites: activeSites,
                 timestamp: new Date().toISOString()
             });
 
-            // Оставляем только последние 20
             searchHistory = searchHistory.slice(0, 20);
-
             localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
         }
 
@@ -426,9 +672,14 @@
                         minute: '2-digit'
                     });
 
+                    const sitesStr = item.sites ? `<br><small style="color: var(--text-dim);">${item.sites.join(', ')}</small>` : '';
+
                     return `
                         <div class="history-item" onclick="searchFromHistory('${item.query.replace(/'/g, "\\'")}')">
-                            <span class="history-query">${item.query}</span>
+                            <div>
+                                <span class="history-query">${item.query}</span>
+                                ${sitesStr}
+                            </div>
                             <span class="history-time">${timeStr}</span>
                         </div>
                     `;
@@ -444,7 +695,7 @@
 
         function searchFromHistory(query) {
             document.getElementById('userInput').value = query;
-            executeGoogle(query);
+            handleSearch();
             closeHistory();
         }
 
@@ -453,19 +704,23 @@
             document.getElementById('userInput').focus();
         }
 
-        // Закрытие модалки по клику вне её
+        // Закрытие модалки
         document.getElementById('historyModal').addEventListener('click', (e) => {
             if (e.target.id === 'historyModal') {
                 closeHistory();
             }
         });
 
-        // Поддержка Enter
+        // Enter для поиска
         document.getElementById('userInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSearch();
         });
 
-        // Автопоиск при загрузке с хешем
+        // Инициализация
+        loadSitesState();
+        renderSites();
+
+        // Автопоиск при загрузке
         window.addEventListener('load', () => {
             const hash = window.location.hash;
             if (hash.includes('gsc.q=')) {

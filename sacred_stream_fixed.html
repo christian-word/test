@@ -595,35 +595,41 @@
         }
 
         // Формирование поискового запроса
-        function buildSearchQuery(userQuery) {
-            const activeSites = sites.filter(s => s.active);
-            
-            if (activeSites.length === 0) {
-                alert('⚠️ Выберите хотя бы один сайт для поиска!');
-                return null;
-            }
+function buildSearchQuery(userQuery) {
+    const active = sites.filter(s => s.active);
 
-            if (activeSites.length === sites.length) {
-                // Все сайты активны - ищем везде
-                return userQuery;
-            }
+    if (active.length === 0) {
+        alert('⚠️ Выберите хотя бы один сайт для поиска!');
+        return null;
+    }
 
-            // Формируем запрос с site: операторами
-            const siteQuery = activeSites.map(s => `site:${s.url}`).join(' OR ');
-            return `${userQuery} (${siteQuery})`;
-        }
+    // Если все сайты выбраны — ищем везде, без операторов
+    if (active.length === sites.length) return userQuery;
 
-        function handleSearch() {
-            const userQuery = document.getElementById('userInput').value.trim();
-            if (!userQuery) return;
+    // Иначе добавляем site: в скрытую часть
+    const sitePart = active.map(s => `site:${s.url}`).join(' OR ');
+    return `${userQuery} (${sitePart})`;
+}
 
-            const finalQuery = buildSearchQuery(userQuery);
-            if (!finalQuery) return;
+function handleSearch() {
+    const rawQuery = document.getElementById('userInput').value.trim();
+    if (!rawQuery) return;
 
-            // Не меняем поле ввода, отправляем только финальный запрос в Google
-            executeGoogle(finalQuery);
-            saveToHistory(userQuery, sites.filter(s => s.active).map(s => s.name));
-        }
+    const finalQuery = buildSearchQuery(rawQuery);
+    if (!finalQuery) return;
+
+    executeGoogle(finalQuery);               // уходит в Google
+    saveToHistory(rawQuery,                 // в историю кладём оригинал
+                  sites.filter(s => s.active).map(s => s.name));
+}
+
+function quickSearch(tag) {
+    document.getElementById('userInput').value = tag;
+    const finalQuery = buildSearchQuery(tag);
+    if (!finalQuery) return;
+    executeGoogle(finalQuery);
+    saveToHistory(tag, sites.filter(s => s.active).map(s => s.name));
+}
 
         function quickSearch(tag) {
             document.getElementById('userInput').value = tag;

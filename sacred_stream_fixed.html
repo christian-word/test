@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -558,20 +558,20 @@
         function renderSites() {
             const grid = document.getElementById('sitesGrid');
             grid.innerHTML = sites.map(site => `
-                <label class="site-checkbox ${site.active ? 'active' : ''}" onclick="toggleSite('${site.id}')">
-                    <input type="checkbox" ${site.active ? 'checked' : ''} onclick="event.stopPropagation()">
+                <div class="site-checkbox ${site.active ? 'active' : ''}" onclick="toggleSite('${site.id}')">
+                    <input type="checkbox" ${site.active ? 'checked' : ''} onchange="toggleSite('${site.id}')" onclick="event.stopPropagation()">
                     <div class="site-info">
                         <div class="site-name">${site.name}</div>
                         <div class="site-url">${site.url}</div>
                     </div>
                     <span class="site-badge">${site.type}</span>
-                </label>
+                </div>
             `).join('');
             updateStats();
         }
 
         // Переключение сайта
-        function toggleSite(id) {
+        function toggleSite(id, fromCheckbox = false) {
             const site = sites.find(s => s.id === id);
             if (site) {
                 site.active = !site.active;

@@ -595,41 +595,44 @@
         }
 
         // Формирование поискового запроса
-function buildSearchQuery(userQuery) {
-    const active = sites.filter(s => s.active);
+        function buildSearchQuery(userQuery) {
+            const activeSites = sites.filter(s => s.active);
+            
+            if (activeSites.length === 0) {
+                alert('⚠️ Выберите хотя бы один сайт для поиска!');
+                return null;
+            }
 
-    if (active.length === 0) {
-        alert('⚠️ Выберите хотя бы один сайт для поиска!');
-        return null;
-    }
+            if (activeSites.length === sites.length) {
+                // Все сайты активны - ищем везде
+                return userQuery;
+            }
 
-    // Если все сайты выбраны — ищем везде, без операторов
-    if (active.length === sites.length) return userQuery;
+            // Формируем запрос с site: операторами
+            const siteQuery = activeSites.map(s => `site:${s.url}`).join(' OR ');
+            return `${userQuery} (${siteQuery})`;
+        }
 
-    // Иначе добавляем site: в скрытую часть
-    const sitePart = active.map(s => `site:${s.url}`).join(' OR ');
-    return `${userQuery} (${sitePart})`;
-}
+        function handleSearch() {
+            const userQuery = document.getElementById('userInput').value.trim();
+            if (!userQuery) return;
 
-function handleSearch() {
-    const rawQuery = document.getElementById('userInput').value.trim();
-    if (!rawQuery) return;
+            const finalQuery = buildSearchQuery(userQuery);
+            if (!finalQuery) return;
 
-    const finalQuery = buildSearchQuery(rawQuery);
-    if (!finalQuery) return;
-
-    executeGoogle(finalQuery);               // уходит в Google
-    saveToHistory(rawQuery,                 // в историю кладём оригинал
-                  sites.filter(s => s.active).map(s => s.name));
-}
-
-function quickSearch(tag) {
-    document.getElementById('userInput').value = tag;
-    const finalQuery = buildSearchQuery(tag);
-    if (!finalQuery) return;
-    executeGoogle(finalQuery);
-    saveToHistory(tag, sites.filter(s => s.active).map(s => s.name));
-}
+            // Сохраняем оригинальный запрос
+            const originalQuery = userQuery;
+            
+            // Выполняем поиск с site: операторами
+            executeGoogle(finalQuery);
+            
+            // Возвращаем оригинальный текст обратно через небольшую задержку
+            setTimeout(() => {
+                document.getElementById('userInput').value = originalQuery;
+            }, 100);
+            
+            saveToHistory(userQuery, sites.filter(s => s.active).map(s => s.name));
+        }
 
         function quickSearch(tag) {
             document.getElementById('userInput').value = tag;
@@ -637,6 +640,12 @@ function quickSearch(tag) {
             if (!finalQuery) return;
             
             executeGoogle(finalQuery);
+            
+            // Возвращаем чистый тег
+            setTimeout(() => {
+                document.getElementById('userInput').value = tag;
+            }, 100);
+            
             saveToHistory(tag, sites.filter(s => s.active).map(s => s.name));
         }
 
@@ -712,6 +721,11 @@ function quickSearch(tag) {
             if (!finalQuery) return;
             
             executeGoogle(finalQuery);
+            
+            // Возвращаем оригинальный запрос
+            setTimeout(() => {
+                document.getElementById('userInput').value = query;
+            }, 100);
         }
 
         function clearSearch() {

@@ -288,35 +288,35 @@
         .tags-category {
             background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 10px;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
         }
 
         .category-title {
             color: var(--accent-blue);
             font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .category-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 5px;
         }
 
         .tag-btn-small {
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-dim);
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: all 0.3s;
             font-weight: 500;
         }
@@ -331,11 +331,23 @@
             background: rgba(248, 113, 113, 0.1);
             border-color: rgba(248, 113, 113, 0.3);
             color: #f87171;
+            padding: 5px 10px;
+            font-size: 0.8rem;
         }
 
         .tag-btn-exclude:hover {
             border-color: #f87171;
             background: rgba(248, 113, 113, 0.2);
+        }
+
+        .tag-btn-exclude.active {
+            background: rgba(248, 113, 113, 0.25);
+            border-color: #f87171;
+            font-weight: 600;
+        }
+
+        .exclude-checkbox {
+            display: none;
         }
 
         @keyframes slideDown {
@@ -721,24 +733,33 @@
             <!-- Исключить -->
             <div class="tags-category">
                 <div class="category-title">
-                    <i class="fa-solid fa-ban"></i> Исключить из поиска
+                    <i class="fa-solid fa-ban"></i> Исключить из поиска (автоматически)
                 </div>
                 <div class="category-tags">
-                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('кавер cover')">
-                        <i class="fa-solid fa-minus-circle"></i> Каверы
-                    </button>
-                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('инструментал instrumental')">
-                        <i class="fa-solid fa-minus-circle"></i> Инструментал
-                    </button>
-                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('рэп rap')">
-                        <i class="fa-solid fa-minus-circle"></i> Рэп
-                    </button>
-                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('рок rock')">
-                        <i class="fa-solid fa-minus-circle"></i> Рок
-                    </button>
-                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('хор choir')">
-                        <i class="fa-solid fa-minus-circle"></i> Хор
-                    </button>
+                    <input type="checkbox" id="exclude-covers" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-covers'); saveExcludeFilters();">
+                    <label for="exclude-covers" class="tag-btn-small tag-btn-exclude" id="label-exclude-covers">
+                        <i class="fa-solid fa-xmark"></i> Каверы
+                    </label>
+
+                    <input type="checkbox" id="exclude-instrumental" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-instrumental'); saveExcludeFilters();">
+                    <label for="exclude-instrumental" class="tag-btn-small tag-btn-exclude" id="label-exclude-instrumental">
+                        <i class="fa-solid fa-xmark"></i> Инструментал
+                    </label>
+
+                    <input type="checkbox" id="exclude-rap" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-rap'); saveExcludeFilters();">
+                    <label for="exclude-rap" class="tag-btn-small tag-btn-exclude" id="label-exclude-rap">
+                        <i class="fa-solid fa-xmark"></i> Рэп
+                    </label>
+
+                    <input type="checkbox" id="exclude-rock" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-rock'); saveExcludeFilters();">
+                    <label for="exclude-rock" class="tag-btn-small tag-btn-exclude" id="label-exclude-rock">
+                        <i class="fa-solid fa-xmark"></i> Рок
+                    </label>
+
+                    <input type="checkbox" id="exclude-choir" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-choir'); saveExcludeFilters();">
+                    <label for="exclude-choir" class="tag-btn-small tag-btn-exclude" id="label-exclude-choir">
+                        <i class="fa-solid fa-xmark"></i> Хор
+                    </label>
                 </div>
             </div>
         </div>
@@ -1027,14 +1048,98 @@
                 return null;
             }
 
+            // Добавляем исключающие фильтры
+            const excludeFilters = getExcludeFilters();
+            let finalQuery = userQuery;
+            
+            if (excludeFilters) {
+                finalQuery = `${userQuery} ${excludeFilters}`;
+            }
+
             if (activeSites.length === sites.length) {
                 // Все сайты активны - ищем везде
-                return userQuery;
+                return finalQuery;
             }
 
             // Формируем запрос с site: операторами
             const siteQuery = activeSites.map(s => `site:${s.url}`).join(' OR ');
-            return `${userQuery} (${siteQuery})`;
+            return `${finalQuery} (${siteQuery})`;
+        }
+
+        // Переключение кнопок исключения
+        function toggleExcludeButton(checkboxId) {
+            const checkbox = document.getElementById(checkboxId);
+            const label = document.getElementById('label-' + checkboxId);
+            
+            if (checkbox.checked) {
+                label.classList.add('active');
+            } else {
+                label.classList.remove('active');
+            }
+        }
+
+        // Получить исключающие фильтры
+        function getExcludeFilters() {
+            const filters = [];
+            
+            if (document.getElementById('exclude-covers')?.checked) {
+                filters.push('-cover', '-кавер');
+            }
+            if (document.getElementById('exclude-instrumental')?.checked) {
+                filters.push('-instrumental', '-инструментал');
+            }
+            if (document.getElementById('exclude-rap')?.checked) {
+                filters.push('-rap', '-рэп');
+            }
+            if (document.getElementById('exclude-rock')?.checked) {
+                filters.push('-rock', '-рок');
+            }
+            if (document.getElementById('exclude-choir')?.checked) {
+                filters.push('-choir', '-хор');
+            }
+            
+            return filters.length > 0 ? filters.join(' ') : '';
+        }
+
+        // Сохранить состояние фильтров
+        function saveExcludeFilters() {
+            const state = {
+                covers: document.getElementById('exclude-covers')?.checked || false,
+                instrumental: document.getElementById('exclude-instrumental')?.checked || false,
+                rap: document.getElementById('exclude-rap')?.checked || false,
+                rock: document.getElementById('exclude-rock')?.checked || false,
+                choir: document.getElementById('exclude-choir')?.checked || false
+            };
+            localStorage.setItem('excludeFilters', JSON.stringify(state));
+        }
+
+        // Загрузить состояние фильтров
+        function loadExcludeFilters() {
+            const saved = localStorage.getItem('excludeFilters');
+            if (saved) {
+                const state = JSON.parse(saved);
+                
+                if (document.getElementById('exclude-covers')) {
+                    document.getElementById('exclude-covers').checked = state.covers;
+                    toggleExcludeButton('exclude-covers');
+                }
+                if (document.getElementById('exclude-instrumental')) {
+                    document.getElementById('exclude-instrumental').checked = state.instrumental;
+                    toggleExcludeButton('exclude-instrumental');
+                }
+                if (document.getElementById('exclude-rap')) {
+                    document.getElementById('exclude-rap').checked = state.rap;
+                    toggleExcludeButton('exclude-rap');
+                }
+                if (document.getElementById('exclude-rock')) {
+                    document.getElementById('exclude-rock').checked = state.rock;
+                    toggleExcludeButton('exclude-rock');
+                }
+                if (document.getElementById('exclude-choir')) {
+                    document.getElementById('exclude-choir').checked = state.choir;
+                    toggleExcludeButton('exclude-choir');
+                }
+            }
         }
 
         function handleSearch() {
@@ -1246,6 +1351,7 @@
         // Инициализация
         loadSitesState();
         renderSites();
+        loadExcludeFilters();
 
         // === AI МОДУЛЬ ===
         let aiAnalyzer = null;

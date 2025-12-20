@@ -277,11 +277,65 @@
 
         .extra-tags {
             display: none;
+            width: 100%;
             animation: slideDown 0.3s ease;
         }
 
         .extra-tags.show {
-            display: contents;
+            display: block;
+        }
+
+        .tags-category {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .category-title {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag-btn-small {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .tag-btn-small:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .tag-btn-exclude {
+            background: rgba(248, 113, 113, 0.1);
+            border-color: rgba(248, 113, 113, 0.3);
+            color: #f87171;
+        }
+
+        .tag-btn-exclude:hover {
+            border-color: #f87171;
+            background: rgba(248, 113, 113, 0.2);
         }
 
         @keyframes slideDown {
@@ -607,42 +661,86 @@
                 <i class="fa-solid fa-hands-praying"></i> Worship
             </button>
             <button class="tag-btn" onclick="quickSearch('минусовка')">
-                <i class="fa-solid fa-volume-xmark"></i> Минус
+                <i class="fa-solid fa-volume-xmark"></i> Минусовка
             </button>
-            <button class="tag-btn" onclick="quickSearch('хвала поклонение')">
-                <i class="fa-solid fa-dove"></i> Хвала
+            <button class="tag-btn" onclick="quickSearch('аккорды')">
+                <i class="fa-solid fa-guitar"></i> Аккорды
             </button>
-            <button class="tag-btn" onclick="quickSearch('gospel')">
-                <i class="fa-solid fa-cross"></i> Gospel
+            <button class="tag-btn" onclick="quickSearch('текст песни')">
+                <i class="fa-solid fa-file-lines"></i> Тексты
             </button>
-            
-            <div class="extra-tags" id="extraTags">
-                <button class="tag-btn" onclick="quickSearch('инструментальная')">
-                    <i class="fa-solid fa-music"></i> Инструментал
-                </button>
-                <button class="tag-btn" onclick="quickSearch('акапелла')">
-                    <i class="fa-solid fa-microphone"></i> Акапелла
-                </button>
-                <button class="tag-btn" onclick="quickSearch('детские песни')">
-                    <i class="fa-solid fa-child"></i> Детские
-                </button>
-                <button class="tag-btn" onclick="quickSearch('рождество')">
-                    <i class="fa-solid fa-star"></i> Рождество
-                </button>
-                <button class="tag-btn" onclick="quickSearch('трио')">
-                    <i class="fa-solid fa-users"></i> Трио
-                </button>
-                <button class="tag-btn" onclick="quickSearch('дуэт')">
-                    <i class="fa-solid fa-user-group"></i> Дуэт
-                </button>
-                <button class="tag-btn" onclick="quickSearch('хор')">
-                    <i class="fa-solid fa-people-group"></i> Хор
-                </button>
-            </div>
             
             <button class="tag-btn more-tags-btn" onclick="toggleExtraTags()">
                 <i class="fa-solid fa-angle-down" id="moreIcon"></i> Ещё
             </button>
+        </div>
+
+        <div class="extra-tags" id="extraTags">
+            <!-- Жанры/Стили -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-music"></i> Жанры и стили
+                </div>
+                <div class="category-tags">
+                    <button class="tag-btn-small" onclick="quickSearch('gospel')">Gospel</button>
+                    <button class="tag-btn-small" onclick="quickSearch('хвала поклонение')">Хвала</button>
+                    <button class="tag-btn-small" onclick="quickSearch('детские песни')">Детские</button>
+                    <button class="tag-btn-small" onclick="quickSearch('рождество')">Рождество</button>
+                    <button class="tag-btn-small" onclick="quickSearch('электронная музыка')">Электронная</button>
+                </div>
+            </div>
+
+            <!-- Формат исполнения -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-users"></i> Формат исполнения
+                </div>
+                <div class="category-tags">
+                    <button class="tag-btn-small" onclick="quickSearch('инструментальная')">Инструментал</button>
+                    <button class="tag-btn-small" onclick="quickSearch('акапелла')">Акапелла</button>
+                    <button class="tag-btn-small" onclick="quickSearch('хор')">Хор</button>
+                    <button class="tag-btn-small" onclick="quickSearch('трио')">Трио</button>
+                    <button class="tag-btn-small" onclick="quickSearch('дуэт')">Дуэт</button>
+                    <button class="tag-btn-small" onclick="quickSearch('соло')">Соло</button>
+                </div>
+            </div>
+
+            <!-- Тип контента -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-box"></i> Тип контента
+                </div>
+                <div class="category-tags">
+                    <button class="tag-btn-small" onclick="quickSearch('фонограмма')">Фонограмма</button>
+                    <button class="tag-btn-small" onclick="quickSearch('табы')">Табы</button>
+                    <button class="tag-btn-small" onclick="quickSearch('ноты')">Ноты</button>
+                    <button class="tag-btn-small" onclick="quickSearch('караоке')">Караоке</button>
+                </div>
+            </div>
+
+            <!-- Исключить -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-ban"></i> Исключить из поиска
+                </div>
+                <div class="category-tags">
+                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('кавер cover')">
+                        <i class="fa-solid fa-minus-circle"></i> Каверы
+                    </button>
+                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('инструментал instrumental')">
+                        <i class="fa-solid fa-minus-circle"></i> Инструментал
+                    </button>
+                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('рэп rap')">
+                        <i class="fa-solid fa-minus-circle"></i> Рэп
+                    </button>
+                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('рок rock')">
+                        <i class="fa-solid fa-minus-circle"></i> Рок
+                    </button>
+                    <button class="tag-btn-small tag-btn-exclude" onclick="quickSearchExclude('хор choir')">
+                        <i class="fa-solid fa-minus-circle"></i> Хор
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="utility-bar">

@@ -636,7 +636,7 @@
 
     <div class="controls-section">
         <!-- Фильтры сайтов -->
-        <div class="filters-section">
+        <div class="filters-section" id="filtersSection" style="display: none;">
             <div class="filters-header">
                 <div class="filters-title">
                     <i class="fa-solid fa-filter"></i>
@@ -767,6 +767,10 @@
         </div>
 
         <div class="utility-bar">
+            <button class="utility-btn" onclick="toggleSitesFilter()">
+                <i class="fa-solid fa-globe"></i>
+                <span id="sitesButtonText">Сайты (3/3)</span>
+            </button>
             <button class="utility-btn" onclick="showAdvancedSearch()">
                 <i class="fa-solid fa-sliders"></i>
                 Расширенный поиск
@@ -1015,6 +1019,7 @@
                 </div>
             `).join('');
             updateStats();
+            updateSitesButton();
         }
 
         // Переключение сайта
@@ -1039,6 +1044,23 @@
         function updateStats() {
             const activeCount = sites.filter(s => s.active).length;
             document.getElementById('activeCount').textContent = activeCount;
+        }
+
+        // Обновление текста кнопки
+        function updateSitesButton() {
+            const activeCount = sites.filter(s => s.active).length;
+            const totalCount = sites.length;
+            document.getElementById('sitesButtonText').textContent = `Сайты (${activeCount}/${totalCount})`;
+        }
+
+        // Переключение видимости фильтров сайтов
+        function toggleSitesFilter() {
+            const section = document.getElementById('filtersSection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
         }
 
         // Формирование поискового запроса

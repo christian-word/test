@@ -118,7 +118,7 @@
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
             padding: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .filters-header {
@@ -425,19 +425,6 @@
     </header>
 
     <div class="controls-section">
-        <div class="search-bar-wrapper">
-            <input 
-                type="text" 
-                id="userInput" 
-                class="search-input" 
-                placeholder="Введите название песни, исполнителя или альбома..." 
-                autofocus
-            >
-            <button class="main-search-btn" onclick="handleSearch()">
-                <i class="fa-solid fa-magnifying-glass"></i> Найти
-            </button>
-        </div>
-
         <!-- Фильтры сайтов -->
         <div class="filters-section">
             <div class="filters-header">
@@ -459,13 +446,26 @@
 
             <div class="sites-grid" id="sitesGrid"></div>
         </div>
+
+        <div class="search-bar-wrapper">
+            <input 
+                type="text" 
+                id="userInput" 
+                class="search-input" 
+                placeholder="Введите название песни, исполнителя или альбома..." 
+                autofocus
+            >
+            <button class="main-search-btn" onclick="handleSearch()">
+                <i class="fa-solid fa-magnifying-glass"></i> Найти
+            </button>
+        </div>
         
         <div class="quick-tags">
             <button class="tag-btn" onclick="quickSearch('worship')">
                 <i class="fa-solid fa-hands-praying"></i> Worship
             </button>
-            <button class="tag-btn" onclick="quickSearch('рок христианский')">
-                <i class="fa-solid fa-guitar"></i> Рок
+            <button class="tag-btn" onclick="quickSearch('минусовка')">
+                <i class="fa-solid fa-volume-xmark"></i> Минус
             </button>
             <button class="tag-btn" onclick="quickSearch('инструментальная')">
                 <i class="fa-solid fa-music"></i> Инструментал
@@ -475,6 +475,15 @@
             </button>
             <button class="tag-btn" onclick="quickSearch('gospel')">
                 <i class="fa-solid fa-cross"></i> Gospel
+            </button>
+            <button class="tag-btn" onclick="quickSearch('акапелла')">
+                <i class="fa-solid fa-microphone"></i> Акапелла
+            </button>
+            <button class="tag-btn" onclick="quickSearch('детские песни')">
+                <i class="fa-solid fa-child"></i> Детские
+            </button>
+            <button class="tag-btn" onclick="quickSearch('рождество')">
+                <i class="fa-solid fa-star"></i> Рождество
             </button>
         </div>
 

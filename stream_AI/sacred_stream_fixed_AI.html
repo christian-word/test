@@ -658,6 +658,11 @@
                     document.getElementById('userInput').value = currentInput;
                 }, 50);
             }
+
+            // Если AI включён - запускаем анализ
+            if (aiEnabled && aiAnalyzer) {
+                aiAnalyzer.analyzeSearchResults(searchQuery);
+            }
         }
 
         function quickSearch(tag) {
@@ -781,19 +786,6 @@
                     modelName: 'meta-llama/llama-4-maverick-17b-128e-instruct'
                 });
                 window.aiAnalyzer = aiAnalyzer; // для кнопки "обновить"
-            }
-        }
-
-        // === МОДИФИЦИРОВАННЫЙ ПОИСК ===
-        const originalExecuteGoogleSearch = executeGoogleSearch;
-        
-        function executeGoogleSearch(searchQuery) {
-            // Сначала выполняем обычный поиск
-            originalExecuteGoogleSearch(searchQuery);
-
-            // Если AI включён - запускаем анализ
-            if (aiEnabled && aiAnalyzer) {
-                aiAnalyzer.analyzeSearchResults(searchQuery);
             }
         }
 

@@ -867,7 +867,7 @@
         class AIAnalyzer {
           constructor(config) {
             this.config = {
-              API_KEY: config.apiKey || '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',
+              API_KEY: config.apiKey || '',
               API_URL: config.apiUrl || 'https://api.groq.com/openai/v1/chat/completions',
               MODEL_NAME: config.modelName || 'meta-llama/llama-4-maverick-17b-128e-instruct'
             };
@@ -938,11 +938,11 @@
               body: JSON.stringify({
                 model: this.config.MODEL_NAME,
                 messages: [
-                  { role: 'system', content: 'Ты эксперт по христианской музыке. Анализируй результаты поиска и давай краткую полезную сводку на русском языке. Будь конкретным и структурированным. В конце добавь "Рекомендуемые ссылки:" и перечисли номера самых релевантных результатов.' },
+                  { role: 'system', content: 'Ты лаконичный эксперт по христианской музыке. Давай ОЧЕНЬ краткие ответы (максимум 2 предложения). Никогда не перечисляй названия сайтов или URL.' },
                   { role: 'user', content: prompt }
                 ],
-                temperature: 0.7,
-                max_tokens: 300
+                temperature: 0.5,
+                max_tokens: 100
               })
             });
 

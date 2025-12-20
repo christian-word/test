@@ -779,6 +779,19 @@
                     >
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-compact-disc"></i>
+                        Альбом
+                    </label>
+                    <input 
+                        type="text" 
+                        id="adv-album" 
+                        class="form-input" 
+                        placeholder="Например: Сила Твоя, Zion"
+                    >
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">
@@ -1044,6 +1057,7 @@
 
             const artist = document.getElementById('adv-artist').value.trim();
             const song = document.getElementById('adv-song').value.trim();
+            const album = document.getElementById('adv-album').value.trim();
             const yearFrom = document.getElementById('adv-year-from').value.trim();
             const yearTo = document.getElementById('adv-year-to').value.trim();
 
@@ -1052,6 +1066,7 @@
             
             if (artist) queryParts.push(artist);
             if (song) queryParts.push(song);
+            if (album) queryParts.push(`альбом "${album}"`);
             
             if (yearFrom && yearTo) {
                 queryParts.push(`${yearFrom}..${yearTo}`);

@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:image" content="https://raw.githubusercontent.com/christian-word/test/main/stream_AI/ico.jpg">
     <title>Sacred Stream | Поиск Христианской Музыки</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -54,7 +53,7 @@
 
         .subtitle {
             color: var(--text-dim);
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             font-weight: 500;
         }
 
@@ -360,6 +359,79 @@
             margin-left: 5px;
         }
 
+        /* Расширенный поиск */
+        .advanced-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-input {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .search-btn-advanced {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .search-btn-advanced:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         #results-area {
             width: 100%;
             max-width: 950px;
@@ -573,6 +645,10 @@
         </div>
 
         <div class="utility-bar">
+            <button class="utility-btn" onclick="showAdvancedSearch()">
+                <i class="fa-solid fa-sliders"></i>
+                Расширенный поиск
+            </button>
             <button class="utility-btn" onclick="showHistory()">
                 <i class="fa-solid fa-clock-rotate-left"></i>
                 История
@@ -661,10 +737,83 @@
 
                 <div style="margin-top: 25px; padding: 15px; background: rgba(56, 189, 248, 0.1); border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);">
                     <p style="margin: 0; text-align: center; color: var(--accent-blue);">
-                        <i class="fa-solid fa-heart"></i> Создано для музыки
+                        <i class="fa-solid fa-heart"></i> Создано для поклонения
                     </p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно расширенного поиска -->
+    <div class="modal" id="advancedModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🔍 Расширенный поиск</h2>
+                <button class="close-btn" onclick="closeAdvancedSearch()">&times;</button>
+            </div>
+            <form class="advanced-form" onsubmit="performAdvancedSearch(event)">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-microphone"></i>
+                        Исполнитель
+                    </label>
+                    <input 
+                        type="text" 
+                        id="adv-artist" 
+                        class="form-input" 
+                        placeholder="Например: Авана, Hillsong, Bethel Music"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-music"></i>
+                        Название песни
+                    </label>
+                    <input 
+                        type="text" 
+                        id="adv-song" 
+                        class="form-input" 
+                        placeholder="Например: Благословенный Бог, Oceans"
+                    >
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fa-solid fa-calendar"></i>
+                            Год (от)
+                        </label>
+                        <input 
+                            type="number" 
+                            id="adv-year-from" 
+                            class="form-input" 
+                            placeholder="2020"
+                            min="1900"
+                            max="2025"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fa-solid fa-calendar"></i>
+                            Год (до)
+                        </label>
+                        <input 
+                            type="number" 
+                            id="adv-year-to" 
+                            class="form-input" 
+                            placeholder="2025"
+                            min="1900"
+                            max="2025"
+                        >
+                    </div>
+                </div>
+
+                <button type="submit" class="search-btn-advanced">
+                    <i class="fa-solid fa-magnifying-glass"></i> Найти
+                </button>
+            </form>
         </div>
     </div>
 
@@ -881,6 +1030,53 @@
             document.getElementById('helpModal').classList.remove('show');
         }
 
+        function showAdvancedSearch() {
+            document.getElementById('advancedModal').classList.add('show');
+        }
+
+        function closeAdvancedSearch() {
+            document.getElementById('advancedModal').classList.remove('show');
+        }
+
+        function performAdvancedSearch(event) {
+            event.preventDefault();
+
+            const artist = document.getElementById('adv-artist').value.trim();
+            const song = document.getElementById('adv-song').value.trim();
+            const yearFrom = document.getElementById('adv-year-from').value.trim();
+            const yearTo = document.getElementById('adv-year-to').value.trim();
+
+            // Собираем запрос
+            let queryParts = [];
+            
+            if (artist) queryParts.push(artist);
+            if (song) queryParts.push(song);
+            
+            if (yearFrom && yearTo) {
+                queryParts.push(`${yearFrom}..${yearTo}`);
+            } else if (yearFrom) {
+                queryParts.push(`after:${yearFrom}`);
+            } else if (yearTo) {
+                queryParts.push(`before:${yearTo}`);
+            }
+
+            if (queryParts.length === 0) {
+                alert('⚠️ Заполните хотя бы одно поле');
+                return;
+            }
+
+            const finalQuery = queryParts.join(' ');
+            
+            // Закрываем модалку
+            closeAdvancedSearch();
+            
+            // Вставляем запрос в основное поле
+            document.getElementById('userInput').value = finalQuery;
+            
+            // Выполняем поиск
+            handleSearch();
+        }
+
         function searchFromHistory(query) {
             document.getElementById('userInput').value = query;
             closeHistory();
@@ -922,6 +1118,12 @@
             }
         });
 
+        document.getElementById('advancedModal').addEventListener('click', (e) => {
+            if (e.target.id === 'advancedModal') {
+                closeAdvancedSearch();
+            }
+        });
+
         // Enter для поиска
         document.getElementById('userInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSearch();
@@ -932,14 +1134,11 @@
         renderSites();
 
         // === AI МОДУЛЬ ===
-        // === AI МОДУЛЬ ===
         let aiAnalyzer = null;
-        let aiEnabled = false; // ← ОТКЛЮЧЁН ПО УМОЛЧАНИЮ
+        let aiEnabled = localStorage.getItem('aiEnabled') === 'true';
 
-        // Проверяем сохранённое состояние (если пользователь ранее включал)
-        const savedState = localStorage.getItem('aiEnabled');
-        if (savedState === 'true') {
-            aiEnabled = true;
+        // Восстанавливаем состояние чекбокса
+        if (aiEnabled) {
             document.getElementById('ai-toggle').checked = true;
             initAI();
         }

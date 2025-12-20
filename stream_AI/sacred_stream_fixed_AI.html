@@ -243,6 +243,7 @@
             flex-wrap: wrap;
             justify-content: center;
             margin-bottom: 12px;
+            position: relative;
         }
 
         .tag-btn {
@@ -261,6 +262,30 @@
             border-color: var(--accent-blue);
             color: var(--accent-blue);
             transform: translateY(-2px);
+        }
+
+        .more-tags-btn {
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(56, 189, 248, 0.2));
+            border: 1px solid var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .more-tags-btn:hover {
+            border-color: var(--accent-purple);
+            color: var(--accent-purple);
+        }
+
+        .extra-tags {
+            display: none;
+            width: 100%;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .extra-tags.show {
+            display: flex;
         }
 
         .utility-bar {
@@ -476,6 +501,12 @@
             <button class="tag-btn" onclick="quickSearch('gospel')">
                 <i class="fa-solid fa-cross"></i> Gospel
             </button>
+            <button class="tag-btn more-tags-btn" onclick="toggleMoreTags()">
+                <i class="fa-solid fa-chevron-down"></i> Ещё
+            </button>
+        </div>
+
+        <div class="extra-tags" id="extraTags">
             <button class="tag-btn" onclick="quickSearch('акапелла')">
                 <i class="fa-solid fa-microphone"></i> Акапелла
             </button>
@@ -484,6 +515,15 @@
             </button>
             <button class="tag-btn" onclick="quickSearch('рождество')">
                 <i class="fa-solid fa-star"></i> Рождество
+            </button>
+            <button class="tag-btn" onclick="quickSearch('трио')">
+                <i class="fa-solid fa-users"></i> Трио
+            </button>
+            <button class="tag-btn" onclick="quickSearch('дуэт')">
+                <i class="fa-solid fa-user-group"></i> Дуэт
+            </button>
+            <button class="tag-btn" onclick="quickSearch('хор')">
+                <i class="fa-solid fa-people-group"></i> Хор
             </button>
         </div>
 
@@ -800,8 +840,9 @@
     </script>
 
     <script async src="https://cse.google.com/cse.js?cx=d454e3c095f214e80"></script>
-    <script async src="">ai_analyzer_module.js</script>
-
- 
+    
+    <!-- AI Analyzer Module (подключаем внешний файл) -->
+    <!-- Скопируйте код из ai-analyzer.js и вставьте в отдельный файл на вашем сервере -->
+    <script src="ai-analyzer.js"></script>
 </body>
 </html>

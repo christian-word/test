@@ -489,8 +489,8 @@
 <body>
 
     <header>
-        <h1>Sacred Stream 2025</h1>
-        <p class="subtitle">Поиск христианской музыки</p>
+        <h1>Sacred Stream</h1>
+        <p class="subtitle">Христианский поисковик Сумы 2025</p>
     </header>
 
     <div class="controls-section">
@@ -932,11 +932,14 @@
         renderSites();
 
         // === AI МОДУЛЬ ===
+        // === AI МОДУЛЬ ===
         let aiAnalyzer = null;
-        let aiEnabled = localStorage.getItem('aiEnabled') === 'true';
+        let aiEnabled = false; // ← ОТКЛЮЧЁН ПО УМОЛЧАНИЮ
 
-        // Восстанавливаем состояние чекбокса
-        if (aiEnabled) {
+        // Проверяем сохранённое состояние (если пользователь ранее включал)
+        const savedState = localStorage.getItem('aiEnabled');
+        if (savedState === 'true') {
+            aiEnabled = true;
             document.getElementById('ai-toggle').checked = true;
             initAI();
         }

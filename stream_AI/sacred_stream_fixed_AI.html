@@ -322,6 +322,43 @@
             color: var(--accent-blue);
         }
 
+        /* Модальное окно справки */
+        .help-content {
+            line-height: 1.8;
+        }
+
+        .help-content h3 {
+            color: var(--accent-blue);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .help-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .help-content li {
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .help-content strong {
+            color: var(--accent-green);
+        }
+
+        .help-content .feature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
         #results-area {
             width: 100%;
             max-width: 950px;
@@ -451,7 +488,7 @@
 <body>
 
     <header>
-        <h1>Sacred Stream</h1>
+        <h1>Sacred Stream 2025</h1>
         <p class="subtitle">Поиск христианской музыки</p>
     </header>
 
@@ -498,26 +535,26 @@
             <button class="tag-btn" onclick="quickSearch('минусовка')">
                 <i class="fa-solid fa-volume-xmark"></i> Минус
             </button>
-            <button class="tag-btn" onclick="quickSearch('инструментальная')">
-                <i class="fa-solid fa-music"></i> Инструментал
-            </button>
             <button class="tag-btn" onclick="quickSearch('хвала поклонение')">
                 <i class="fa-solid fa-dove"></i> Хвала
             </button>
             <button class="tag-btn" onclick="quickSearch('gospel')">
                 <i class="fa-solid fa-cross"></i> Gospel
             </button>
-            <button class="tag-btn" onclick="quickSearch('акапелла')">
-                <i class="fa-solid fa-microphone"></i> Акапелла
-            </button>
-            <button class="tag-btn" onclick="quickSearch('детские песни')">
-                <i class="fa-solid fa-child"></i> Детские
-            </button>
-            <button class="tag-btn" onclick="quickSearch('рождество')">
-                <i class="fa-solid fa-star"></i> Рождество
-            </button>
             
             <div class="extra-tags" id="extraTags">
+                <button class="tag-btn" onclick="quickSearch('инструментальная')">
+                    <i class="fa-solid fa-music"></i> Инструментал
+                </button>
+                <button class="tag-btn" onclick="quickSearch('акапелла')">
+                    <i class="fa-solid fa-microphone"></i> Акапелла
+                </button>
+                <button class="tag-btn" onclick="quickSearch('детские песни')">
+                    <i class="fa-solid fa-child"></i> Детские
+                </button>
+                <button class="tag-btn" onclick="quickSearch('рождество')">
+                    <i class="fa-solid fa-star"></i> Рождество
+                </button>
                 <button class="tag-btn" onclick="quickSearch('трио')">
                     <i class="fa-solid fa-users"></i> Трио
                 </button>
@@ -543,6 +580,10 @@
                 <i class="fa-solid fa-broom"></i>
                 Очистить
             </button>
+            <button class="utility-btn" onclick="showHelp()">
+                <i class="fa-solid fa-circle-question"></i>
+                Справка
+            </button>
             <label class="utility-btn" style="cursor: pointer;">
                 <input type="checkbox" id="ai-toggle" onchange="toggleAI(this.checked)" style="margin-right: 8px; cursor: pointer;">
                 <i class="fa-solid fa-robot"></i>
@@ -563,6 +604,66 @@
                 <button class="close-btn" onclick="closeHistory()">&times;</button>
             </div>
             <div id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно справки -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📖 Справка</h2>
+                <button class="close-btn" onclick="closeHelp()">&times;</button>
+            </div>
+            <div class="help-content">
+                <p style="font-size: 1.05rem; margin-bottom: 20px; color: var(--text-dim);">
+                    <strong style="color: var(--accent-blue);">Sacred Stream</strong> — христианский поисковик на базе трёх специализированных сайтов.
+                </p>
+
+                <h3><i class="fa-solid fa-database"></i> Источники</h3>
+                <ul>
+                    <li><strong>Fonki.pro</strong> — фонограммы и минусовки</li>
+                    <li><strong>KG-music.club</strong> — музыкальные треки и альбомы</li>
+                    <li><strong>Holy Chords</strong> — аккорды, тексты и переводы песен</li>
+                </ul>
+                <p style="color: var(--text-dim); font-size: 0.9rem;">
+                    💡 Сайты можно подключать или отключать по отдельности через чекбоксы выше
+                </p>
+
+                <h3><i class="fa-solid fa-tags"></i> Расширенный поиск</h3>
+                <p>Быстрые теги для популярных жанров и стилей:</p>
+                <ul>
+                    <li><strong>Worship, Gospel, Хвала</strong> — богослужебная музыка</li>
+                    <li><strong>Минус, Инструментал</strong> — без вокала</li>
+                    <li><strong>Акапелла, Хор, Дуэт, Трио</strong> — по составу исполнителей</li>
+                    <li><strong>Детские, Рождество</strong> — тематические подборки</li>
+                </ul>
+
+                <h3><i class="fa-solid fa-clock-rotate-left"></i> История</h3>
+                <p>Все ваши запросы автоматически сохраняются. Можно быстро повторить предыдущий поиск одним кликом.</p>
+
+                <h3><i class="fa-solid fa-robot"></i> AI Анализатор <span class="feature-badge">ОПЦИОНАЛЬНО</span></h3>
+                <p>Включается чекбоксом в меню. Искусственный интеллект:</p>
+                <ul>
+                    <li>Анализирует найденные результаты</li>
+                    <li>Показывает краткую сводку (что нашлось)</li>
+                    <li>Предоставляет кликабельные ссылки на самые релевантные результаты</li>
+                </ul>
+                <p style="color: var(--text-dim); font-size: 0.9rem;">
+                    ⚠️ AI можно отключить в любой момент — поисковик продолжит работать в обычном режиме
+                </p>
+
+                <h3><i class="fa-solid fa-keyboard"></i> Горячие клавиши</h3>
+                <ul>
+                    <li><strong>Enter</strong> — выполнить поиск</li>
+                    <li><strong>Все/Нет</strong> — быстро включить/выключить все сайты</li>
+                </ul>
+
+                <div style="margin-top: 25px; padding: 15px; background: rgba(56, 189, 248, 0.1); border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                    <p style="margin: 0; text-align: center; color: var(--accent-blue);">
+                        <i class="fa-solid fa-heart"></i> Создано для музыки
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -771,6 +872,14 @@
             document.getElementById('historyModal').classList.remove('show');
         }
 
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('show');
+        }
+
         function searchFromHistory(query) {
             document.getElementById('userInput').value = query;
             closeHistory();
@@ -803,6 +912,12 @@
         document.getElementById('historyModal').addEventListener('click', (e) => {
             if (e.target.id === 'historyModal') {
                 closeHistory();
+            }
+        });
+
+        document.getElementById('helpModal').addEventListener('click', (e) => {
+            if (e.target.id === 'helpModal') {
+                closeHelp();
             }
         });
 

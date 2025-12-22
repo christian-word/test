@@ -3,49 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Умный Плейлист</title>
+    <title>Умный Плейлист — Фиксированный размер</title>
     <style>
-        body { font-family: sans-serif; background-color: #181818; color: white; padding: 20px; }
-        h1 { text-align: center; color: #ff0000; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background-color: #121212; 
+            color: white; 
+            padding: 20px; 
+            margin: 0;
+        }
+        h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
+        
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
+            gap: 25px;
             max-width: 1400px;
             margin: 0 auto;
         }
-        .video-card { background: #282828; border-radius: 12px; padding: 10px; }
+        
+        .video-card { 
+            background: #1e1e1e; 
+            border-radius: 15px; 
+            padding: 12px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        /* Контейнер для сохранения пропорций 16:9 */
         .video-container {
             position: relative;
-            padding-bottom: 56.25%;
+            padding-bottom: 56.25%; 
             height: 0;
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 10px;
+            background: #000;
         }
-        /* Стили для контейнера API */
+
+        /* Силовое исправление размера для iframe и div, которые создаст YouTube API */
+        .video-container iframe, 
         .video-container div {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .video-title {
+            margin-top: 12px;
+            font-size: 14px;
+            text-align: center;
+            color: #bbb;
         }
     </style>
 </head>
 <body>
 
-<h1>YouTube Галерея (Играет только один)</h1>
+<h1>YouTube Галерея</h1>
 
 <div class="video-grid">
-    <div class="video-card"><div class="video-container"><div id="player1"></div></div></div>
-    <div class="video-card"><div class="video-container"><div id="player2"></div></div></div>
-    <div class="video-card"><div class="video-container"><div id="player3"></div></div></div>
-    <div class="video-card"><div class="video-container"><div id="player4"></div></div></div>
-    <div class="video-card"><div class="video-container"><div id="player5"></div></div></div>
-    <div class="video-card"><div class="video-container"><div id="player6"></div></div></div>
-    <div class="video-card"><div class="video-container"><div id="player7"></div></div></div>
-    <div class="video-card"><div class="video-container"><div id="player8"></div></div></div>
+    <div class="video-card"><div class="video-container"><div id="player1"></div></div><div class="video-title">Видео 1</div></div>
+    <div class="video-card"><div class="video-container"><div id="player2"></div></div><div class="video-title">Видео 2</div></div>
+    <div class="video-card"><div class="video-container"><div id="player3"></div></div><div class="video-title">Видео 3</div></div>
+    <div class="video-card"><div class="video-container"><div id="player4"></div></div><div class="video-title">Видео 4</div></div>
+    <div class="video-card"><div class="video-container"><div id="player5"></div></div><div class="video-title">Видео 5</div></div>
+    <div class="video-card"><div class="video-container"><div id="player6"></div></div><div class="video-title">Видео 6</div></div>
+    <div class="video-card"><div class="video-container"><div id="player7"></div></div><div class="video-title">Видео 7</div></div>
+    <div class="video-card"><div class="video-container"><div id="player8"></div></div><div class="video-title">Видео 8</div></div>
 </div>
 
 <script>
-    // 1. Загружаем API YouTube
+    // Загрузка API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -53,7 +81,7 @@
 
     var players = [];
 
-    // 2. Список ваших видео с ID и временем старта
+    // Список видео
     const videoList = [
         { id: 'player1', videoId: 'oZKO22Y1c88', start: 53 },
         { id: 'player2', videoId: '5LQ9IUyjg3c', start: 67 },
@@ -65,12 +93,17 @@
         { id: 'player8', videoId: 'mv1GVLR4MI8', start: 0 }
     ];
 
-    // 3. Создаем плееры после загрузки API
     function onYouTubeIframeAPIReady() {
         videoList.forEach(function(item) {
             var player = new YT.Player(item.id, {
+                width: '100%',   // Важно для корректного размера
+                height: '100%',  // Важно для корректного размера
                 videoId: item.videoId,
-                playerVars: { 'start': item.start, 'rel': 0 },
+                playerVars: { 
+                    'start': item.start, 
+                    'rel': 0,
+                    'modestbranding': 1
+                },
                 events: {
                     'onStateChange': onPlayerStateChange
                 }
@@ -79,11 +112,11 @@
         });
     }
 
-    // 4. Главная функция: если одно видео заиграло, стопаем остальные
     function onPlayerStateChange(event) {
+        // Если видео начало воспроизводиться
         if (event.data == YT.PlayerState.PLAYING) {
             players.forEach(function(p) {
-                // Если это не тот плеер, который только что запустили, и он играет — ставим на паузу
+                // Останавливаем все остальные плееры
                 if (p !== event.target && p.getPlayerState() == YT.PlayerState.PLAYING) {
                     p.pauseVideo();
                 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -1453,8 +1453,8 @@
                 return;
               }
               
-              const aiData = await this.sendToAI(query, results);
-              this.displaySmartTags(aiData.tags, query);
+              const analysisData = await this.sendToAI(query, results);
+              this.displayAnalysis(analysisData.text, analysisData.results);
             } catch (error) {
               console.error('AI Analyzer error:', error);
               this.showError('AI временно недоступен');
@@ -1499,30 +1499,17 @@
               body: JSON.stringify({
                 model: this.config.MODEL_NAME,
                 messages: [
-                  { role: 'system', content: 'Ты эксперт по христианской музыке. Создаёшь умные поисковые запросы для похожей музыки. ВСЕГДА отвечай только валидным JSON массивом строк, без пояснений.' },
+                  { role: 'system', content: 'Ты лаконичный эксперт по христианской музыке. Давай ОЧЕНЬ краткие ответы (максимум 2 предложения). Никогда не перечисляй названия сайтов или URL.' },
                   { role: 'user', content: prompt }
                 ],
-                temperature: 0.7,
-                max_tokens: 200
+                temperature: 0.5,
+                max_tokens: 100
               })
             });
 
             if (!response.ok) throw new Error(`API error: ${response.status}`);
             const data = await response.json();
-            
-            // Парсим JSON ответ
-            let aiText = data.choices[0].message.content.trim();
-            
-            // Убираем markdown если есть
-            aiText = aiText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            
-            try {
-              const tags = JSON.parse(aiText);
-              return { tags: tags };
-            } catch (e) {
-              console.error('Failed to parse AI response:', aiText);
-              return { tags: [] };
-            }
+            return { text: data.choices[0].message.content, results: results };
           }
 
           buildPrompt(query, results) {
@@ -1548,65 +1535,116 @@
             container.innerHTML = '<div style="display: flex; align-items: center; gap: 12px;"><i class="fa-solid fa-robot" style="font-size: 1.5rem; color: #a78bfa;"></i><div><div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 5px;">🤖 AI анализирует результаты...</div><div style="color: #94a3b8; font-size: 0.9rem;">Обрабатываю найденную информацию</div></div></div>';
           }
 
-          displaySmartTags(tags, originalQuery) {
+          displayAnalysis(analysisText, results) {
             const container = document.getElementById('ai-analysis-container');
             if (!container) return;
             
-            if (!tags || tags.length === 0) {
-              container.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; color: #f87171;">
-                  <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem;"></i>
-                  <div>
-                    <div style="font-weight: 700; margin-bottom: 3px;">⚠️ Не удалось создать теги</div>
-                    <div style="font-size: 0.85rem; color: #94a3b8;">AI временно недоступен</div>
-                  </div>
-                </div>
-              `;
-              return;
+            // Извлекаем рекомендации из текста AI
+            let mainText = analysisText;
+            let recommendations = [];
+            
+            const recMatch = analysisText.match(/Похожее:\s*(.+)/i);
+            if (recMatch) {
+              const recText = recMatch[1].trim();
+              recommendations = recText.split(',').map(tag => tag.trim()).filter(t => t.length > 0);
+              mainText = analysisText.replace(/Похожее:.+/i, '').trim();
             }
             
-            // Создаём кликабельные теги
-            const tagsHTML = tags.map(tag => `
-              <button onclick="window.aiSearchByTag('${tag.replace(/'/g, "\\'")}')" style="
-                background: linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(56, 189, 248, 0.15));
-                border: 1px solid rgba(167, 139, 250, 0.4);
-                color: #a78bfa;
-                padding: 8px 16px;
-                border-radius: 10px;
-                cursor: pointer;
-                font-size: 0.9rem;
-                font-weight: 600;
-                transition: all 0.3s;
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-              " onmouseover="this.style.background='linear-gradient(135deg, rgba(167, 139, 250, 0.25), rgba(56, 189, 248, 0.25))'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(56, 189, 248, 0.15))'; this.style.transform='translateY(0)'">
-                <i class="fa-solid fa-sparkles"></i>
-                ${tag}
-              </button>
-            `).join('');
+            // Преобразуем текст в HTML
+            let htmlText = mainText.replace(/\n/g, '<br>');
+            
+            // Создаём кнопки рекомендаций
+            let recsHTML = '';
+            if (recommendations.length > 0) {
+              recsHTML = '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(167, 139, 250, 0.3);">';
+              recsHTML += '<div style="font-weight: 600; margin-bottom: 10px; color: #a78bfa;">✨ Попробуйте также:</div>';
+              recsHTML += '<div style="display: flex; flex-wrap: wrap; gap: 6px;">';
+              
+              recommendations.forEach(tag => {
+                recsHTML += `
+                  <button onclick="quickSearch('${tag.replace(/'/g, "\\'")}')" style="
+                    background: rgba(167, 139, 250, 0.15);
+                    border: 1px solid rgba(167, 139, 250, 0.4);
+                    color: #a78bfa;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                    transition: all 0.3s;
+                  " onmouseover="this.style.background='rgba(167, 139, 250, 0.25)'" onmouseout="this.style.background='rgba(167, 139, 250, 0.15)'">
+                    ${tag}
+                  </button>
+                `;
+              });
+              
+              recsHTML += '</div></div>';
+            }
+            
+            // Создаём список кликабельных ссылок
+            let linksHTML = '';
+            if (results && results.length > 0) {
+              linksHTML = '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(167, 139, 250, 0.3);">';
+              linksHTML += '<div style="font-weight: 600; margin-bottom: 10px; color: #a78bfa;">🔗 Рекомендуемые ссылки:</div>';
+              
+              results.forEach((result, index) => {
+                if (result.link) {
+                  linksHTML += `
+                    <div style="margin-bottom: 8px;">
+                      <a href="${result.link}" target="_blank" style="
+                        color: #38bdf8;
+                        text-decoration: none;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 8px;
+                        background: rgba(56, 189, 248, 0.1);
+                        border-radius: 8px;
+                        transition: all 0.3s;
+                      " onmouseover="this.style.background='rgba(56, 189, 248, 0.2)'" onmouseout="this.style.background='rgba(56, 189, 248, 0.1)'">
+                        <span style="font-weight: 700; color: #a78bfa;">${index + 1}.</span>
+                        <span style="flex: 1;">${result.title}</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.8rem;"></i>
+                      </a>
+                    </div>
+                  `;
+                }
+              });
+              
+              linksHTML += '</div>';
+            }
             
             container.innerHTML = `
               <div style="display: flex; gap: 15px;">
                 <div style="flex-shrink: 0;">
-                  <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 1.8rem; color: #a78bfa;"></i>
+                  <i class="fa-solid fa-lightbulb" style="font-size: 1.8rem; color: #fbbf24;"></i>
                 </div>
                 <div style="flex: 1;">
-                  <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 12px; color: #a78bfa;">
-                    ✨ Похожая музыка
+                  <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 10px; color: #a78bfa;">
+                    💡 AI Анализ результатов
                   </div>
-                  <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                    ${tagsHTML}
+                  <div style="line-height: 1.6; color: #f8fafc; font-size: 0.95rem;">
+                    ${htmlText}
                   </div>
-                  <div style="font-size: 0.85rem; color: #94a3b8;">
-                    <i class="fa-solid fa-circle-info"></i> Кликните на тег чтобы найти похожую музыку
-                  </div>
+                  ${recsHTML}
+                  ${linksHTML}
+                  <button onclick="window.aiAnalyzer.retry()" style="
+                    margin-top: 12px;
+                    background: rgba(167, 139, 250, 0.2);
+                    border: 1px solid #a78bfa;
+                    color: #a78bfa;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                  ">
+                    <i class="fa-solid fa-rotate"></i> Обновить анализ
+                  </button>
                 </div>
               </div>
             `;
           }
-
-          // Старые методы displayAnalysis удаляем
 
           showError(message) {
             const container = document.getElementById('ai-analysis-container');

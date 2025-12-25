@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:image" content="https://raw.githubusercontent.com/christian-word/test/main/stream_AI/ico1.jpg">
     <title>Sacred Stream | Поиск Христианской Музыки</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -249,10 +250,10 @@
             background: var(--card-bg);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-dim);
-            padding: 8px 16px;
-            border-radius: 12px;
+            padding: 6px 14px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: all 0.3s;
             font-weight: 500;
         }
@@ -267,6 +268,8 @@
             background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
             color: white;
             font-weight: 600;
+            padding: 6px 14px;
+            font-size: 0.85rem;
         }
 
         .more-tags-btn:hover {
@@ -276,11 +279,77 @@
 
         .extra-tags {
             display: none;
+            width: 100%;
             animation: slideDown 0.3s ease;
         }
 
         .extra-tags.show {
-            display: contents;
+            display: block;
+        }
+
+        .tags-category {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+
+        .category-title {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag-btn-small {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .tag-btn-small:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .tag-btn-exclude {
+            background: rgba(248, 113, 113, 0.1);
+            border-color: rgba(248, 113, 113, 0.3);
+            color: #f87171;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .tag-btn-exclude:hover {
+            border-color: #f87171;
+            background: rgba(248, 113, 113, 0.2);
+        }
+
+        .tag-btn-exclude.active {
+            background: rgba(248, 113, 113, 0.25);
+            border-color: #f87171;
+            font-weight: 600;
+        }
+
+        .exclude-checkbox {
+            display: none;
         }
 
         @keyframes slideDown {
@@ -305,13 +374,13 @@
             background: var(--card-bg);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-dim);
-            padding: 10px 18px;
-            border-radius: 12px;
+            padding: 8px 14px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             transition: all 0.3s;
             font-weight: 500;
         }
@@ -567,7 +636,7 @@
 
     <div class="controls-section">
         <!-- Фильтры сайтов -->
-        <div class="filters-section">
+        <div class="filters-section" id="filtersSection" style="display: none;">
             <div class="filters-header">
                 <div class="filters-title">
                     <i class="fa-solid fa-filter"></i>
@@ -606,45 +675,102 @@
                 <i class="fa-solid fa-hands-praying"></i> Worship
             </button>
             <button class="tag-btn" onclick="quickSearch('минусовка')">
-                <i class="fa-solid fa-volume-xmark"></i> Минус
+                <i class="fa-solid fa-volume-xmark"></i> Минусовка
             </button>
-            <button class="tag-btn" onclick="quickSearch('хвала поклонение')">
-                <i class="fa-solid fa-dove"></i> Хвала
+            <button class="tag-btn" onclick="quickSearch('аккорды')">
+                <i class="fa-solid fa-guitar"></i> Аккорды
             </button>
-            <button class="tag-btn" onclick="quickSearch('gospel')">
-                <i class="fa-solid fa-cross"></i> Gospel
+            <button class="tag-btn" onclick="quickSearch('текст песни')">
+                <i class="fa-solid fa-file-lines"></i> Тексты
             </button>
-            
-            <div class="extra-tags" id="extraTags">
-                <button class="tag-btn" onclick="quickSearch('инструментальная')">
-                    <i class="fa-solid fa-music"></i> Инструментал
-                </button>
-                <button class="tag-btn" onclick="quickSearch('акапелла')">
-                    <i class="fa-solid fa-microphone"></i> Акапелла
-                </button>
-                <button class="tag-btn" onclick="quickSearch('детские песни')">
-                    <i class="fa-solid fa-child"></i> Детские
-                </button>
-                <button class="tag-btn" onclick="quickSearch('рождество')">
-                    <i class="fa-solid fa-star"></i> Рождество
-                </button>
-                <button class="tag-btn" onclick="quickSearch('трио')">
-                    <i class="fa-solid fa-users"></i> Трио
-                </button>
-                <button class="tag-btn" onclick="quickSearch('дуэт')">
-                    <i class="fa-solid fa-user-group"></i> Дуэт
-                </button>
-                <button class="tag-btn" onclick="quickSearch('хор')">
-                    <i class="fa-solid fa-people-group"></i> Хор
-                </button>
-            </div>
             
             <button class="tag-btn more-tags-btn" onclick="toggleExtraTags()">
                 <i class="fa-solid fa-angle-down" id="moreIcon"></i> Ещё
             </button>
         </div>
 
+        <div class="extra-tags" id="extraTags">
+            <!-- Жанры/Стили -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-music"></i> Жанры и стили
+                </div>
+                <div class="category-tags">
+                    <button class="tag-btn-small" onclick="quickSearch('gospel')">Gospel</button>
+                    <button class="tag-btn-small" onclick="quickSearch('хвала поклонение')">Хвала</button>
+                    <button class="tag-btn-small" onclick="quickSearch('детские песни')">Детские</button>
+                    <button class="tag-btn-small" onclick="quickSearch('рождество')">Рождество</button>
+                    <button class="tag-btn-small" onclick="quickSearch('электронная музыка')">Электронная</button>
+                </div>
+            </div>
+
+            <!-- Формат исполнения -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-users"></i> Формат исполнения
+                </div>
+                <div class="category-tags">
+                    <button class="tag-btn-small" onclick="quickSearch('инструментальная')">Инструментал</button>
+                    <button class="tag-btn-small" onclick="quickSearch('акапелла')">Акапелла</button>
+                    <button class="tag-btn-small" onclick="quickSearch('хор')">Хор</button>
+                    <button class="tag-btn-small" onclick="quickSearch('трио')">Трио</button>
+                    <button class="tag-btn-small" onclick="quickSearch('дуэт')">Дуэт</button>
+                    <button class="tag-btn-small" onclick="quickSearch('соло')">Соло</button>
+                </div>
+            </div>
+
+            <!-- Тип контента -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-box"></i> Тип контента
+                </div>
+                <div class="category-tags">
+                    <button class="tag-btn-small" onclick="quickSearch('фонограмма')">Фонограмма</button>
+                    <button class="tag-btn-small" onclick="quickSearch('табы')">Табы</button>
+                    <button class="tag-btn-small" onclick="quickSearch('ноты')">Ноты</button>
+                    <button class="tag-btn-small" onclick="quickSearch('караоке')">Караоке</button>
+                </div>
+            </div>
+
+            <!-- Исключить -->
+            <div class="tags-category">
+                <div class="category-title">
+                    <i class="fa-solid fa-ban"></i> Исключить из поиска (автоматически)
+                </div>
+                <div class="category-tags">
+                    <input type="checkbox" id="exclude-covers" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-covers'); saveExcludeFilters();">
+                    <label for="exclude-covers" class="tag-btn-small tag-btn-exclude" id="label-exclude-covers">
+                        <i class="fa-solid fa-xmark"></i> Каверы
+                    </label>
+
+                    <input type="checkbox" id="exclude-instrumental" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-instrumental'); saveExcludeFilters();">
+                    <label for="exclude-instrumental" class="tag-btn-small tag-btn-exclude" id="label-exclude-instrumental">
+                        <i class="fa-solid fa-xmark"></i> Инструментал
+                    </label>
+
+                    <input type="checkbox" id="exclude-rap" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-rap'); saveExcludeFilters();">
+                    <label for="exclude-rap" class="tag-btn-small tag-btn-exclude" id="label-exclude-rap">
+                        <i class="fa-solid fa-xmark"></i> Рэп
+                    </label>
+
+                    <input type="checkbox" id="exclude-rock" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-rock'); saveExcludeFilters();">
+                    <label for="exclude-rock" class="tag-btn-small tag-btn-exclude" id="label-exclude-rock">
+                        <i class="fa-solid fa-xmark"></i> Рок
+                    </label>
+
+                    <input type="checkbox" id="exclude-choir" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-choir'); saveExcludeFilters();">
+                    <label for="exclude-choir" class="tag-btn-small tag-btn-exclude" id="label-exclude-choir">
+                        <i class="fa-solid fa-xmark"></i> Хор
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div class="utility-bar">
+            <button class="utility-btn" onclick="toggleSitesFilter()">
+                <i class="fa-solid fa-globe"></i>
+                <span id="sitesButtonText">Сайты (3/3)</span>
+            </button>
             <button class="utility-btn" onclick="showAdvancedSearch()">
                 <i class="fa-solid fa-sliders"></i>
                 Расширенный поиск
@@ -778,6 +904,19 @@
                     >
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-compact-disc"></i>
+                        Альбом
+                    </label>
+                    <input 
+                        type="text" 
+                        id="adv-album" 
+                        class="form-input" 
+                        placeholder="Например: Сила Твоя, Zion"
+                    >
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">
@@ -880,6 +1019,7 @@
                 </div>
             `).join('');
             updateStats();
+            updateSitesButton();
         }
 
         // Переключение сайта
@@ -906,6 +1046,23 @@
             document.getElementById('activeCount').textContent = activeCount;
         }
 
+        // Обновление текста кнопки
+        function updateSitesButton() {
+            const activeCount = sites.filter(s => s.active).length;
+            const totalCount = sites.length;
+            document.getElementById('sitesButtonText').textContent = `Сайты (${activeCount}/${totalCount})`;
+        }
+
+        // Переключение видимости фильтров сайтов
+        function toggleSitesFilter() {
+            const section = document.getElementById('filtersSection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
         // Формирование поискового запроса
         function buildSearchQuery(userQuery) {
             const activeSites = sites.filter(s => s.active);
@@ -915,14 +1072,98 @@
                 return null;
             }
 
+            // Добавляем исключающие фильтры
+            const excludeFilters = getExcludeFilters();
+            let finalQuery = userQuery;
+            
+            if (excludeFilters) {
+                finalQuery = `${userQuery} ${excludeFilters}`;
+            }
+
             if (activeSites.length === sites.length) {
                 // Все сайты активны - ищем везде
-                return userQuery;
+                return finalQuery;
             }
 
             // Формируем запрос с site: операторами
             const siteQuery = activeSites.map(s => `site:${s.url}`).join(' OR ');
-            return `${userQuery} (${siteQuery})`;
+            return `${finalQuery} (${siteQuery})`;
+        }
+
+        // Переключение кнопок исключения
+        function toggleExcludeButton(checkboxId) {
+            const checkbox = document.getElementById(checkboxId);
+            const label = document.getElementById('label-' + checkboxId);
+            
+            if (checkbox.checked) {
+                label.classList.add('active');
+            } else {
+                label.classList.remove('active');
+            }
+        }
+
+        // Получить исключающие фильтры
+        function getExcludeFilters() {
+            const filters = [];
+            
+            if (document.getElementById('exclude-covers')?.checked) {
+                filters.push('-cover', '-кавер');
+            }
+            if (document.getElementById('exclude-instrumental')?.checked) {
+                filters.push('-instrumental', '-инструментал');
+            }
+            if (document.getElementById('exclude-rap')?.checked) {
+                filters.push('-rap', '-рэп');
+            }
+            if (document.getElementById('exclude-rock')?.checked) {
+                filters.push('-rock', '-рок');
+            }
+            if (document.getElementById('exclude-choir')?.checked) {
+                filters.push('-choir', '-хор');
+            }
+            
+            return filters.length > 0 ? filters.join(' ') : '';
+        }
+
+        // Сохранить состояние фильтров
+        function saveExcludeFilters() {
+            const state = {
+                covers: document.getElementById('exclude-covers')?.checked || false,
+                instrumental: document.getElementById('exclude-instrumental')?.checked || false,
+                rap: document.getElementById('exclude-rap')?.checked || false,
+                rock: document.getElementById('exclude-rock')?.checked || false,
+                choir: document.getElementById('exclude-choir')?.checked || false
+            };
+            localStorage.setItem('excludeFilters', JSON.stringify(state));
+        }
+
+        // Загрузить состояние фильтров
+        function loadExcludeFilters() {
+            const saved = localStorage.getItem('excludeFilters');
+            if (saved) {
+                const state = JSON.parse(saved);
+                
+                if (document.getElementById('exclude-covers')) {
+                    document.getElementById('exclude-covers').checked = state.covers;
+                    toggleExcludeButton('exclude-covers');
+                }
+                if (document.getElementById('exclude-instrumental')) {
+                    document.getElementById('exclude-instrumental').checked = state.instrumental;
+                    toggleExcludeButton('exclude-instrumental');
+                }
+                if (document.getElementById('exclude-rap')) {
+                    document.getElementById('exclude-rap').checked = state.rap;
+                    toggleExcludeButton('exclude-rap');
+                }
+                if (document.getElementById('exclude-rock')) {
+                    document.getElementById('exclude-rock').checked = state.rock;
+                    toggleExcludeButton('exclude-rock');
+                }
+                if (document.getElementById('exclude-choir')) {
+                    document.getElementById('exclude-choir').checked = state.choir;
+                    toggleExcludeButton('exclude-choir');
+                }
+            }
         }
 
         function handleSearch() {
@@ -1043,6 +1284,7 @@
 
             const artist = document.getElementById('adv-artist').value.trim();
             const song = document.getElementById('adv-song').value.trim();
+            const album = document.getElementById('adv-album').value.trim();
             const yearFrom = document.getElementById('adv-year-from').value.trim();
             const yearTo = document.getElementById('adv-year-to').value.trim();
 
@@ -1051,6 +1293,7 @@
             
             if (artist) queryParts.push(artist);
             if (song) queryParts.push(song);
+            if (album) queryParts.push(`альбом "${album}"`);
             
             if (yearFrom && yearTo) {
                 queryParts.push(`${yearFrom}..${yearTo}`);
@@ -1132,6 +1375,7 @@
         // Инициализация
         loadSitesState();
         renderSites();
+        loadExcludeFilters();
 
         // === AI МОДУЛЬ ===
         let aiAnalyzer = null;
@@ -1159,7 +1403,7 @@
         function initAI() {
             if (!aiAnalyzer) {
                 aiAnalyzer = new AIAnalyzer({
-                    apiKey: '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',
+                    apiKey: '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',
                     apiUrl: 'https://api.groq.com/openai/v1/chat/completions',
                     modelName: 'meta-llama/llama-4-maverick-17b-128e-instruct'
                 });
@@ -1185,7 +1429,7 @@
         class AIAnalyzer {
           constructor(config) {
             this.config = {
-              API_KEY: config.apiKey || '',
+              API_KEY: config.apiKey || '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',
               API_URL: config.apiUrl || 'https://api.groq.com/openai/v1/chat/completions',
               MODEL_NAME: config.modelName || 'meta-llama/llama-4-maverick-17b-128e-instruct'
             };
@@ -1397,5 +1641,66 @@
 
         window.AIAnalyzer = AIAnalyzer;
     </script>
+
+<script>
+// --- БЛОК ПЕРЕХВАТА MP3 (Дополнение к твоему поисковику) ---
+(function() {
+    // Создаем мини-панель для отображения найденных файлов
+    const snifferPanel = document.createElement('div');
+    snifferPanel.style.cssText = `
+        position: fixed; bottom: 20px; left: 20px; z-index: 10000;
+        background: #1e293b; border: 1px solid #38bdf8; border-radius: 12px;
+        padding: 15px; width: 300px; display: none; color: white;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-family: sans-serif;
+    `;
+    snifferPanel.innerHTML = `
+        <div style="font-weight:bold; color:#38bdf8; margin-bottom:10px; display:flex; justify-content:space-between;">
+            <span>🎵 Найдены треки (F12 Сеть):</span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" style="background:none; border:none; color:#94a3b8; cursor:pointer;">&times;</button>
+        </div>
+        <div id="sniffer-list" style="max-height:200px; overflow-y:auto;"></div>
+    `;
+    document.body.appendChild(snifferPanel);
+
+    const foundUrls = new Set();
+
+    function catchUrl(url) {
+        if (url.includes('.mp3') && !foundUrls.has(url)) {
+            foundUrls.add(url);
+            snifferPanel.style.display = 'block';
+            const list = document.getElementById('sniffer-list');
+            const fileName = url.split('/').pop().split('?')[0];
+            
+            const item = document.createElement('div');
+            item.style.cssText = "background:rgba(255,255,255,0.05); padding:8px; border-radius:6px; margin-bottom:5px; font-size:12px;";
+            item.innerHTML = `
+                <div style="margin-bottom:5px; overflow:hidden; text-overflow:ellipsis;">${decodeURIComponent(fileName)}</div>
+                <a href="${url}" target="_blank" style="color:#10b981; text-decoration:none; font-weight:bold;">СКАЧАТЬ</a>
+            `;
+            list.prepend(item);
+        }
+    }
+
+    // 1. Метод перехвата через лог ресурсов (самый стабильный)
+    setInterval(() => {
+        performance.getEntriesByType('resource').forEach(r => catchUrl(r.name));
+    }, 2000);
+
+    // 2. Метод перехвата через подмену Fetch (для современных сайтов)
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+        const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+        catchUrl(url);
+        return originalFetch(...args);
+    };
+
+    // 3. Метод перехвата через XHR (для старых плееров)
+    const originalOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(m, url) {
+        catchUrl(url);
+        return originalOpen.apply(this, arguments);
+    };
+})();
+</script>
 </body>
 </html>

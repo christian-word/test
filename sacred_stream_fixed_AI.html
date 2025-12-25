@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta property="og:image" content="https://raw.githubusercontent.com/christian-word/test/main/stream_AI/ico1.jpg">
-    <title>Sacred Stream | AI Music Search</title>
+    <title>Sacred Stream | Поиск Христианской Музыки</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -35,131 +35,89 @@
         }
 
         header { text-align: center; margin-bottom: 30px; }
-        h1 {
-            font-size: 2.8rem;
-            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
-        }
+        h1 { font-size: 2.8rem; margin-bottom: 12px; background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
+        .subtitle { color: var(--text-dim); font-size: 1.1rem; font-weight: 500; }
 
-        .search-container {
-            width: 100%;
-            max-width: 900px;
-            margin-bottom: 25px;
-        }
+        .controls-section { width: 100%; max-width: 900px; margin-bottom: 25px; }
 
         .search-bar-wrapper {
             background: var(--card-bg);
-            padding: 8px;
+            padding: 10px;
             border-radius: 20px;
             display: flex;
             gap: 10px;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
         }
 
-        .search-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text-main);
-            padding: 14px 20px;
-            font-size: 1.05rem;
-        }
+        .search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text-main); padding: 14px 20px; font-size: 1.05rem; }
 
         .main-search-btn {
             background: linear-gradient(135deg, #38bdf8, #3b82f6);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 14px;
-            font-weight: 700;
-            cursor: pointer;
+            color: white; border: none; padding: 12px 30px; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;
         }
 
-        /* AI Анализатор Стили */
+        /* Фильтры и утилиты */
+        .filters-section { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .sites-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+        .site-checkbox { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; cursor: pointer; }
+        .site-checkbox.active { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.1); }
+
+        /* AI Контейнер */
         #ai-analysis-container {
-            display: none;
-            width: 100%;
-            max-width: 900px;
-            background: rgba(167, 139, 250, 0.05);
-            border: 1px solid var(--accent-purple);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            animation: fadeIn 0.5s ease;
+            width: 100%; max-width: 900px; margin-bottom: 20px; display: none;
+            padding: 20px; background: rgba(167, 139, 250, 0.05); border: 1px solid var(--accent-purple); border-radius: 16px;
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .ai-card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid rgba(255,255,255,0.05);
+        /* Сниффер MP3 виджет */
+        #mp3-catcher-container { position: fixed; bottom: 20px; left: 20px; z-index: 10000; }
+        #mp3-panel {
+            display: none; background: var(--card-bg); border: 1px solid var(--accent-blue); border-radius: 12px;
+            padding: 15px; width: 300px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border-left: 5px solid var(--accent-blue);
         }
 
-        .ai-link {
-            background: var(--accent-green);
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-
-        #results-area {
-            width: 100%;
-            max-width: 900px;
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            min-height: 400px;
-        }
-
-        .utility-bar {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 15px;
-        }
-
-        .ai-status {
-            color: var(--accent-purple);
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        #results-area { width: 100%; max-width: 950px; background: white; border-radius: 20px; overflow: hidden; min-height: 400px; }
+        
+        /* Стили для кнопок и модалок из оригинала */
+        .utility-bar { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
+        .utility-btn { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+        .tag-btn { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--text-dim); padding: 6px 14px; border-radius: 10px; cursor: pointer; margin: 3px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--card-bg); border-radius: 20px; padding: 30px; max-width: 500px; width: 90%; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
     <header>
         <h1>Sacred Stream</h1>
-        <p style="color:var(--text-dim)">Интеллектуальный AI Поиск (Суммы 2025)</p>
+        <p class="subtitle">Христианская поисковая система (Sumy 2025)</p>
     </header>
 
-    <div class="search-container">
+    <div class="controls-section">
         <div class="search-bar-wrapper">
             <input type="text" id="userInput" class="search-input" placeholder="Введите название песни или исполнителя...">
-            <button class="main-search-btn" onclick="handleSearch()">
-                <i class="fa-solid fa-magnifying-glass"></i> Найти
-            </button>
+            <button class="main-search-btn" onclick="handleSearch()">Найти</button>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 15px;">
+            <button class="tag-btn" onclick="quickSearch('worship')">Worship</button>
+            <button class="tag-btn" onclick="quickSearch('минусовка')">Минусовка</button>
+            <button class="tag-btn" onclick="quickSearch('аккорды')">Аккорды</button>
         </div>
 
         <div class="utility-bar">
-            <label class="ai-status">
-                <input type="checkbox" id="ai-toggle" checked> AI Анализатор включен
+            <button class="utility-btn" onclick="toggleSitesFilter()"><i class="fa-solid fa-globe"></i> Сайты</button>
+            <button class="utility-btn" onclick="showHistory()"><i class="fa-solid fa-clock"></i> История</button>
+            <label class="utility-btn">
+                <input type="checkbox" id="ai-toggle" checked> <i class="fa-solid fa-robot"></i> AI Анализатор
             </label>
+        </div>
+
+        <div class="filters-section" id="filtersSection" style="display: none; margin-top: 15px;">
+            <div class="sites-grid" id="sitesGrid"></div>
         </div>
     </div>
 
@@ -169,103 +127,131 @@
         <div class="gcse-searchresults-only"></div>
     </div>
 
+    <div id="mp3-catcher-container">
+        <div id="mp3-panel" id="mp3Panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="color:var(--accent-blue); font-weight:700; font-size:12px;">🎵 ОБНАРУЖЕН ТРЕК</span>
+                <button onclick="document.getElementById('mp3-panel').style.display='none'" style="background:none; border:none; color:white; cursor:pointer;">&times;</button>
+            </div>
+            <div id="mp3-list-content"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="historyModal"><div class="modal-content"><h2 style="color:var(--accent-blue)">История</h2><div id="historyList"></div><button onclick="closeHistory()" class="tag-btn">Закрыть</button></div></div>
+
     <script>
-        // --- 1. ЛОГИКА ПОИСКА ---
+        // --- 1. ВАША ОРИГИНАЛЬНАЯ БАЗА САЙТОВ ---
+        const sites = [
+            { id: 'holychords', name: 'Holy Chords', url: 'holychords.pro', type: 'Аккорды', active: true },
+            { id: 'kgmusic', name: 'KG Music', url: 'kg-music.club', type: 'Музыка', active: true },
+            { id: 'fonki', name: 'Fonki', url: 'fonki.pro', type: 'Минусовки', active: true }
+        ];
+
+        // --- 2. ЛОГИКА ПЕРЕХВАТА MP3 (SNIFFER) ---
+        const caughtUrls = new Set();
+        function scanNetwork() {
+            const resources = window.performance.getEntriesByType('resource');
+            const list = document.getElementById('mp3-list-content');
+            const panel = document.getElementById('mp3-panel');
+
+            resources.forEach(r => {
+                if (r.name.toLowerCase().includes('.mp3') && !caughtUrls.has(r.name)) {
+                    caughtUrls.add(r.name);
+                    panel.style.display = 'block';
+                    const name = decodeURIComponent(r.name.split('/').pop().split('?')[0]);
+                    const div = document.createElement('div');
+                    div.style.cssText = "background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-top:5px; font-size:11px;";
+                    div.innerHTML = `
+                        <div style="margin-bottom:5px; color:var(--accent-blue); overflow:hidden;">${name}</div>
+                        <a href="${r.name}" target="_blank" style="color:var(--accent-green); font-weight:700; text-decoration:none;">СКАЧАТЬ MP3</a>
+                    `;
+                    list.prepend(div);
+                }
+            });
+        }
+
+        // Сканируем при возврате назад
+        window.addEventListener('pageshow', () => setTimeout(scanNetwork, 800));
+        setInterval(scanNetwork, 3000);
+
+        // --- 3. ЛОГИКА ПОИСКА (ВАША) ---
         function handleSearch() {
-            const query = document.getElementById('userInput').value.trim();
-            if (!query) return;
+            const val = document.getElementById('userInput').value.trim();
+            if (!val) return;
+            
+            const activeSites = sites.filter(s => s.active);
+            const siteQuery = activeSites.length === sites.length ? "" : ` (${activeSites.map(s => `site:${s.url}`).join(' OR ')})`;
+            const finalQuery = val + siteQuery;
 
-            // Выполнение поиска в Google
             try {
-                google.search.cse.element.getElement('results-only0').execute(query);
+                google.search.cse.element.getElement('results-only0').execute(finalQuery);
             } catch(e) {
-                window.location.hash = 'gsc.q=' + encodeURIComponent(query);
+                window.location.hash = 'gsc.q=' + encodeURIComponent(finalQuery);
             }
 
-            // Запуск AI Hunter
             if (document.getElementById('ai-toggle').checked) {
-                window.aiHunter.analyze(query);
+                startAIAnalysis(val);
             }
         }
 
-        // --- 2. КЛАСС AI HUNTER ---
-        class AIHunter {
-            constructor() {
-                this.apiKey = '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';
-                this.apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
-                this.container = document.getElementById('ai-analysis-container');
-            }
+        function quickSearch(t) { document.getElementById('userInput').value = t; handleSearch(); }
 
-            async analyze(query) {
-                this.container.style.display = 'block';
-                this.container.innerHTML = `<div style="color:var(--accent-purple)"><i class="fas fa-spinner fa-spin"></i> AI изучает результаты поиска...</div>`;
+        // --- 4. AI АНАЛИЗАТОР (ВАША СИСТЕМА) ---
+        async function startAIAnalysis(query) {
+            const container = document.getElementById('ai-analysis-container');
+            container.style.display = 'block';
+            container.innerHTML = "🤖 AI анализирует результаты...";
 
-                // Ждем загрузки результатов Google
-                await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 2500)); // Ждем Google
+            
+            const results = Array.from(document.querySelectorAll('.gsc-result')).slice(0, 3).map(el => ({
+                title: el.querySelector('.gs-title')?.innerText,
+                link: el.querySelector('.gs-title a')?.href
+            }));
 
-                const results = Array.from(document.querySelectorAll('.gsc-result')).slice(0, 5).map(el => ({
-                    title: el.querySelector('.gs-title')?.innerText || 'Без названия',
-                    link: el.querySelector('.gs-title a')?.href || '#',
-                    snippet: el.querySelector('.gs-snippet')?.innerText || ''
-                }));
+            if (results.length === 0) return;
 
-                if (results.length === 0) {
-                    this.container.innerHTML = "AI не смог прочитать результаты. Попробуйте нажать 'Найти' еще раз.";
-                    return;
-                }
-
-                try {
-                    const response = await fetch(this.apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
-                        body: JSON.stringify({
-                            model: "meta-llama/llama-3.1-8b-instant",
-                            messages: [{ 
-                                role: "system", 
-                                content: "Ты ассистент поисковика Sacred Stream. Найди среди результатов те, где вероятнее всего есть аудио или кнопка скачивания." 
-                            }, { 
-                                role: "user", 
-                                content: `Пользователь ищет: ${query}. Результаты: ${JSON.stringify(results)}` 
-                            }]
-                        })
-                    });
-                    const data = await response.json();
-                    this.render(data.choices[0].message.content, results);
-                } catch (e) {
-                    this.container.innerHTML = "Ошибка AI модуля. Поисковик работает в обычном режиме.";
-                }
-            }
-
-            render(aiText, results) {
-                let html = `<div style="font-weight:800; color:var(--accent-purple); margin-bottom:10px;"><i class="fa-solid fa-robot"></i> AI АНАЛИЗ:</div>`;
-                html += `<div style="font-size:0.9rem; margin-bottom:15px; color:var(--text-main)">${aiText}</div>`;
-                
-                results.forEach(res => {
-                    const isMusicSite = res.link.includes('fonki') || res.link.includes('kg-music') || res.link.includes('holychords');
-                    html += `
-                    <div class="ai-card">
-                        <div style="max-width:70%">
-                            <div style="color:var(--accent-blue); font-weight:700; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${res.title}</div>
-                            <div style="color:var(--text-dim); font-size:11px;">${new URL(res.link).hostname}</div>
-                        </div>
-                        <a href="${res.link}" target="_blank" class="ai-link">
-                            ${isMusicSite ? 'ОТКРЫТЬ ПЛЕЕР' : 'ПЕРЕЙТИ'}
-                        </a>
-                    </div>`;
+            try {
+                const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': 'Bearer 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' 
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.1-8b-instant",
+                        messages: [{ role: "user", content: `Кратко опиши результаты поиска по запросу "${query}": ${results.map(r => r.title).join(', ')}` }]
+                    })
                 });
-                this.container.innerHTML = html;
-            }
+                const d = await resp.json();
+                container.innerHTML = `<div style="color:var(--accent-purple); font-weight:700; margin-bottom:8px;">💡 AI Анализ:</div>
+                                      <div style="font-size:0.9rem;">${d.choices[0].message.content}</div>`;
+            } catch (e) { container.innerHTML = "AI временно недоступен."; }
         }
 
-        window.aiHunter = new AIHunter();
+        // --- 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (САЙТЫ, ИСТОРИЯ) ---
+        function renderSites() {
+            const grid = document.getElementById('sitesGrid');
+            grid.innerHTML = sites.map(site => `
+                <div class="site-checkbox ${site.active ? 'active' : ''}" onclick="toggleSite('${site.id}')">
+                    <span>${site.name}</span>
+                </div>
+            `).join('');
+        }
+        function toggleSite(id) { 
+            const s = sites.find(x => x.id === id); 
+            s.active = !s.active; 
+            renderSites(); 
+        }
+        function toggleSitesFilter() { const s = document.getElementById('filtersSection'); s.style.display = s.style.display === 'none' ? 'block' : 'none'; }
+        
+        function showHistory() { document.getElementById('historyModal').classList.add('show'); }
+        function closeHistory() { document.getElementById('historyModal').classList.remove('show'); }
 
-        // Поиск по нажатию Enter
-        document.getElementById('userInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSearch();
-        });
+        renderSites();
+        document.getElementById('userInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
     </script>
 
     <script async src="https://cse.google.com/cse.js?cx=8679d67189c4d4455"></script>
-
 </body>
 </html>

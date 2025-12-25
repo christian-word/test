@@ -3,126 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Умный Плейлист — Фиксированный размер</title>
+    <meta property="og:image" content="https://raw.githubusercontent.com/christian-word/test/main/stream_AI/ico1.jpg">
+    <title>Sacred Stream | Пошук та Завантаження</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background-color: #121212; 
-            color: white; 
-            padding: 20px; 
-            margin: 0;
-        }
-        h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
-        
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .video-card { 
-            background: #1e1e1e; 
-            border-radius: 15px; 
-            padding: 12px; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        /* Ваші змінні та стилі */
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-purple: #a78bfa;
+            --accent-green: #10b981;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
         }
 
-        /* Контейнер для сохранения пропорций 16:9 */
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; 
-            height: 0;
+        /* [ТУТ ВАШІ ОРИГІНАЛЬНІ СТИЛІ З ФАЙЛУ...] */
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: var(--text-main); }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        
+        /* Стилі для нового віджета завантаження */
+        #music-sniffer-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: none;
+            width: 300px;
+            background: var(--card-bg);
+            border: 1px solid var(--accent-blue);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             overflow: hidden;
-            border-radius: 10px;
-            background: #000;
+            animation: slideIn 0.3s ease-out;
         }
-
-        /* Силовое исправление размера для iframe и div, которые создаст YouTube API */
-        .video-container iframe, 
-        .video-container div {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
+        @keyframes slideIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .sniffer-header {
+            background: rgba(56, 189, 248, 0.1);
+            padding: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.2);
         }
-
-        .video-title {
-            margin-top: 12px;
-            font-size: 14px;
-            text-align: center;
-            color: #bbb;
+        .sniffer-list { max-height: 250px; overflow-y: auto; padding: 10px; }
+        .track-item {
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
         }
+        .track-btns { margin-top: 8px; display: flex; gap: 10px; }
+        .btn-dl { color: var(--accent-green); text-decoration: none; font-weight: bold; }
+        .btn-cp { color: var(--accent-blue); background: none; border: none; cursor: pointer; font-family: inherit; font-size: 0.75rem; }
     </style>
 </head>
 <body>
 
-<h1>YouTube Галерея</h1>
+<div class="container">
+    <header style="text-align: center; margin-bottom: 40px;">
+        <h1>Sacred Stream</h1>
+        <p style="color: var(--text-dim);">Пошук музики з AI-аналізом та перехопленням посилань</p>
+    </header>
 
-<div class="video-grid">
-    <div class="video-card"><div class="video-container"><div id="player1"></div></div><div class="video-title">Видео 1</div></div>
-    <div class="video-card"><div class="video-container"><div id="player2"></div></div><div class="video-title">Видео 2</div></div>
-    <div class="video-card"><div class="video-container"><div id="player3"></div></div><div class="video-title">Видео 3</div></div>
-    <div class="video-card"><div class="video-container"><div id="player4"></div></div><div class="video-title">Видео 4</div></div>
-    <div class="video-card"><div class="video-container"><div id="player5"></div></div><div class="video-title">Видео 5</div></div>
-    <div class="video-card"><div class="video-container"><div id="player6"></div></div><div class="video-title">Видео 6</div></div>
-    <div class="video-card"><div class="video-container"><div id="player7"></div></div><div class="video-title">Видео 7</div></div>
-    <div class="video-card"><div class="video-container"><div id="player8"></div></div><div class="video-title">Видео 8</div></div>
+    <div id="search-box">
+        <script async src="https://cse.google.com/cse.js?cx=8679d67189c4d4455"></script>
+        <div class="gcse-search"></div>
+    </div>
+
+    <div id="results-area"></div>
+</div>
+
+<div id="music-sniffer-widget">
+    <div class="sniffer-header">
+        <span>🎵 Знайдено треки:</span>
+        <button onclick="document.getElementById('music-sniffer-widget').style.display='none'" style="color:white; border:none; background:none; cursor:pointer;">&times;</button>
+    </div>
+    <div id="detected-mp3-list" class="sniffer-list"></div>
 </div>
 
 <script>
-    // Загрузка API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    // --- 1. ВАШ ОРИГІНАЛЬНИЙ AI ANALYZER ТА ЛОГІКА ---
+    // (Я залишаю місце для вашого існуючого скрипта)
+    
+    // --- 2. СИСТЕМА ПЕРЕХОПЛЕННЯ (SNIFFER) ---
+    (function() {
+        const detectedUrls = new Set();
 
-    var players = [];
+        function addTrackToList(url) {
+            if (detectedUrls.has(url)) return;
+            detectedUrls.add(url);
 
-    // Список видео
-    const videoList = [
-        { id: 'player1', videoId: 'oZKO22Y1c88', start: 53 },
-        { id: 'player2', videoId: '5LQ9IUyjg3c', start: 67 },
-        { id: 'player3', videoId: 'p2RsV7aSBhg', start: 90 },
-        { id: 'player4', videoId: 'CSDeedyjBeA', start: 68 },
-        { id: 'player5', videoId: 'TIJUEoKYS3E', start: 55 },
-        { id: 'player6', videoId: 'DicV5OuivIs', start: 0 },
-        { id: 'player7', videoId: 'AKVPhEHqf_U', start: 0 },
-        { id: 'player8', videoId: 'KPy2AtV-aI4', start: 0 }
-    ];
+            const widget = document.getElementById('music-sniffer-widget');
+            const list = document.getElementById('detected-mp3-list');
+            
+            // Показуємо віджет, якщо знайшли файл
+            widget.style.display = 'block';
 
-    function onYouTubeIframeAPIReady() {
-        videoList.forEach(function(item) {
-            var player = new YT.Player(item.id, {
-                width: '100%',   // Важно для корректного размера
-                height: '100%',  // Важно для корректного размера
-                videoId: item.videoId,
-                playerVars: { 
-                    'start': item.start, 
-                    'rel': 0,
-                    'modestbranding': 1
-                },
-                events: {
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-            players.push(player);
-        });
-    }
+            // Форматуємо назву файлу
+            let fileName = url.split('/').pop().split('?')[0];
+            fileName = decodeURIComponent(fileName).replace(/_/g, ' ');
+            if (fileName.length > 40) fileName = fileName.substring(0, 37) + '...';
 
-    function onPlayerStateChange(event) {
-        // Если видео начало воспроизводиться
-        if (event.data == YT.PlayerState.PLAYING) {
-            players.forEach(function(p) {
-                // Останавливаем все остальные плееры
-                if (p !== event.target && p.getPlayerState() == YT.PlayerState.PLAYING) {
-                    p.pauseVideo();
-                }
-            });
+            const item = document.createElement('div');
+            item.className = 'track-item';
+            item.innerHTML = `
+                <div style="color: #e2e8f0; word-break: break-all; margin-bottom: 5px;">${fileName}</div>
+                <div class="track-btns">
+                    <a href="${url}" download="${fileName}" target="_blank" class="btn-dl">
+                        <i class="fa-solid fa-download"></i> СКАЧАТИ
+                    </a>
+                    <button class="btn-cp" onclick="copyToClipboard('${url}')">
+                        <i class="fa-solid fa-copy"></i> КОПІЮВАТИ
+                    </button>
+                </div>
+            `;
+            list.prepend(item); // Нові зверху
         }
-    }
+
+        window.copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text);
+            alert('Посилання скопійовано!');
+        };
+
+        // ПЕРЕХОПЛЕННЯ ЗАПИТІВ (FETCH)
+        const originalFetch = window.fetch;
+        window.fetch = async (...args) => {
+            const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+            if (url.toLowerCase().includes('.mp3')) addTrackToList(url);
+            return originalFetch(...args);
+        };
+
+        // ПЕРЕХОПЛЕННЯ XHR (AJAX)
+        const originalOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url) {
+            if (typeof url === 'string' && url.toLowerCase().includes('.mp3')) addTrackToList(url);
+            return originalOpen.apply(this, arguments);
+        };
+
+        // ПЕРЕВІРКА ПЕРИФЕРІЙНИХ РЕСУРСІВ (Кожні 3 сек)
+        setInterval(() => {
+            performance.getEntriesByType('resource').forEach(r => {
+                if (r.name.toLowerCase().includes('.mp3')) addTrackToList(r.name);
+            });
+        }, 3000);
+    })();
 </script>
 
 </body>

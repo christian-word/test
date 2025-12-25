@@ -1643,62 +1643,73 @@
     </script>
 
 <script>
-// --- БЛОК ПЕРЕХВАТА MP3 (Дополнение к твоему поисковику) ---
 (function() {
-    // Создаем мини-панель для отображения найденных файлов
-    const snifferPanel = document.createElement('div');
-    snifferPanel.style.cssText = `
-        position: fixed; bottom: 20px; left: 20px; z-index: 10000;
-        background: #1e293b; border: 1px solid #38bdf8; border-radius: 12px;
-        padding: 15px; width: 300px; display: none; color: white;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-family: sans-serif;
+    // 1. Создаем стильный виджет в стиле твоего дизайна (Sacred Stream)
+    const panel = document.createElement('div');
+    panel.id = 'mp3-catcher';
+    panel.style.cssText = `
+        position: fixed; bottom: 30px; left: 30px; z-index: 99999;
+        background: #1e293b; border: 1px solid #38bdf8; border-radius: 16px;
+        padding: 20px; width: 320px; display: none; color: #f8fafc;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.7); font-family: 'Plus Jakarta Sans', sans-serif;
+        border-left: 5px solid #38bdf8;
     `;
-    snifferPanel.innerHTML = `
-        <div style="font-weight:bold; color:#38bdf8; margin-bottom:10px; display:flex; justify-content:space-between;">
-            <span>🎵 Найдены треки (F12 Сеть):</span>
-            <button onclick="this.parentElement.parentElement.style.display='none'" style="background:none; border:none; color:#94a3b8; cursor:pointer;">&times;</button>
+    panel.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <span style="font-weight:700; color:#38bdf8; font-size:14px; text-transform:uppercase; letter-spacing:1px;">
+                <i class="fa-solid fa-radio"></i> Перехвачен трек
+            </span>
+            <button onclick="this.parentElement.parentElement.style.display='none'" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:18px;">&times;</button>
         </div>
-        <div id="sniffer-list" style="max-height:200px; overflow-y:auto;"></div>
+        <div id="mp3-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px;"></div>
     `;
-    document.body.appendChild(snifferPanel);
+    document.body.appendChild(panel);
 
-    const foundUrls = new Set();
+    const caughtUrls = new Set();
 
-    function catchUrl(url) {
-        if (url.includes('.mp3') && !foundUrls.has(url)) {
-            foundUrls.add(url);
-            snifferPanel.style.display = 'block';
-            const list = document.getElementById('sniffer-list');
-            const fileName = url.split('/').pop().split('?')[0];
+    function updateWidget(url) {
+        if (url.includes('.mp3') && !caughtUrls.has(url)) {
+            caughtUrls.add(url);
+            panel.style.display = 'block';
             
-            const item = document.createElement('div');
-            item.style.cssText = "background:rgba(255,255,255,0.05); padding:8px; border-radius:6px; margin-bottom:5px; font-size:12px;";
-            item.innerHTML = `
-                <div style="margin-bottom:5px; overflow:hidden; text-overflow:ellipsis;">${decodeURIComponent(fileName)}</div>
-                <a href="${url}" target="_blank" style="color:#10b981; text-decoration:none; font-weight:bold;">СКАЧАТЬ</a>
+            const list = document.getElementById('mp3-list');
+            const name = decodeURIComponent(url.split('/').pop().split('?')[0]).replace(/_/g, ' ');
+            
+            const row = document.createElement('div');
+            row.style.cssText = "background:rgba(56,189,248,0.1); padding:10px; border-radius:8px; margin-bottom:8px; font-size:13px; border: 1px solid rgba(56,189,248,0.2);";
+            row.innerHTML = `
+                <div style="margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${name}">${name}</div>
+                <div style="display:flex; gap:10px;">
+                    <a href="${url}" target="_blank" style="background:#10b981; color:white; text-decoration:none; padding:5px 10px; border-radius:5px; font-weight:700; font-size:11px;">СКАЧАТЬ</a>
+                    <button onclick="navigator.clipboard.writeText('${url}'); alert('Ссылка скопирована')" style="background:#38bdf8; color:white; border:none; padding:5px 10px; border-radius:5px; font-weight:700; font-size:11px; cursor:pointer;">URL</button>
+                </div>
             `;
-            list.prepend(item);
+            list.prepend(row);
         }
     }
 
-    // 1. Метод перехвата через лог ресурсов (самый стабильный)
+    // ТЕХНОЛОГИЯ ПЕРЕХВАТА (мониторинг сети без F12)
+    
+    // А) Перехват через браузерный лог ресурсов (сработает, когда нажмешь Play)
     setInterval(() => {
-        performance.getEntriesByType('resource').forEach(r => catchUrl(r.name));
+        window.performance.getEntriesByType('resource').forEach(entry => {
+            updateWidget(entry.name);
+        });
     }, 2000);
 
-    // 2. Метод перехвата через подмену Fetch (для современных сайтов)
-    const originalFetch = window.fetch;
+    // Б) Перехват современных запросов Fetch
+    const rawFetch = window.fetch;
     window.fetch = async (...args) => {
         const url = typeof args[0] === 'string' ? args[0] : args[0].url;
-        catchUrl(url);
-        return originalFetch(...args);
+        updateWidget(url);
+        return rawFetch(...args);
     };
 
-    // 3. Метод перехвата через XHR (для старых плееров)
-    const originalOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(m, url) {
-        catchUrl(url);
-        return originalOpen.apply(this, arguments);
+    // В) Перехват классических запросов XMLHttpRequest
+    const rawOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url) {
+        updateWidget(url);
+        return rawOpen.apply(this, arguments);
     };
 })();
 </script>

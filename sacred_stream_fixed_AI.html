@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta property="og:image" content="https://raw.githubusercontent.com/christian-word/test/main/stream_AI/ico1.jpg">
-    <title>Sacred Stream | Поиск Христианской Музыки</title>
+    <title>Sacred Stream | AI Music Search</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,11 +20,7 @@
             --text-dim: #94a3b8;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -38,27 +34,16 @@
             padding: 40px 20px 50px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
+        header { text-align: center; margin-bottom: 30px; }
         h1 {
             font-size: 2.8rem;
-            margin-bottom: 12px;
             background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
         }
 
-        .subtitle {
-            color: var(--text-dim);
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        .controls-section {
+        .search-container {
             width: 100%;
             max-width: 900px;
             margin-bottom: 25px;
@@ -66,18 +51,12 @@
 
         .search-bar-wrapper {
             background: var(--card-bg);
-            padding: 10px;
+            padding: 8px;
             border-radius: 20px;
             display: flex;
             gap: 10px;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            transition: border-color 0.3s;
-            margin-bottom: 15px;
-        }
-
-        .search-bar-wrapper:focus-within {
-            border-color: var(--accent-blue);
         }
 
         .search-input {
@@ -88,11 +67,6 @@
             color: var(--text-main);
             padding: 14px 20px;
             font-size: 1.05rem;
-            font-family: inherit;
-        }
-
-        .search-input::placeholder {
-            color: var(--text-dim);
         }
 
         .main-search-btn {
@@ -102,588 +76,68 @@
             padding: 12px 30px;
             border-radius: 14px;
             font-weight: 700;
-            font-size: 1rem;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            white-space: nowrap;
         }
 
-        .main-search-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
-        }
-
-        /* Фильтры сайтов */
-        .filters-section {
-            background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
+        /* AI Анализатор Стили */
+        #ai-analysis-container {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: rgba(167, 139, 250, 0.05);
+            border: 1px solid var(--accent-purple);
+            border-radius: 20px;
             padding: 20px;
             margin-bottom: 20px;
+            animation: fadeIn 0.5s ease;
         }
 
-        .filters-header {
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .ai-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .filters-title {
-            font-weight: 600;
-            color: var(--accent-blue);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .toggle-all-btn {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid var(--accent-blue);
-            color: var(--accent-blue);
-            padding: 6px 12px;
+        .ai-link {
+            background: var(--accent-green);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .toggle-all-btn:hover {
-            background: var(--accent-blue);
-            color: var(--bg-dark);
-        }
-
-        .sites-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 12px;
-        }
-
-        .site-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .site-checkbox:hover {
-            background: rgba(56, 189, 248, 0.1);
-            border-color: var(--accent-blue);
-        }
-
-        .site-checkbox.active {
-            background: rgba(16, 185, 129, 0.15);
-            border-color: var(--accent-green);
-        }
-
-        .site-checkbox input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: var(--accent-green);
-        }
-
-        .site-info {
-            flex: 1;
-        }
-
-        .site-name {
-            font-weight: 600;
-            color: var(--text-main);
-            font-size: 0.95rem;
-        }
-
-        .site-url {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            font-family: monospace;
-        }
-
-        .site-badge {
-            background: var(--accent-purple);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        /* Статистика */
-        .stats-bar {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            padding: 12px;
-            background: rgba(56, 189, 248, 0.1);
-            border-radius: 12px;
-            margin-bottom: 15px;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-dim);
-            font-size: 0.9rem;
-        }
-
-        .stat-value {
-            color: var(--accent-blue);
             font-weight: 700;
-        }
-
-        .quick-tags {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 12px;
-        }
-
-        .tag-btn {
-            background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-dim);
-            padding: 6px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .tag-btn:hover {
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
-            transform: translateY(-2px);
-        }
-
-        .more-tags-btn {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            color: white;
-            font-weight: 600;
-            padding: 6px 14px;
-            font-size: 0.85rem;
-        }
-
-        .more-tags-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
-        }
-
-        .extra-tags {
-            display: none;
-            width: 100%;
-            animation: slideDown 0.3s ease;
-        }
-
-        .extra-tags.show {
-            display: block;
-        }
-
-        .tags-category {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 8px;
-        }
-
-        .category-title {
-            color: var(--accent-blue);
-            font-weight: 600;
-            font-size: 0.8rem;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .category-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-
-        .tag-btn-small {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-dim);
-            padding: 5px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .tag-btn-small:hover {
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
-            background: rgba(56, 189, 248, 0.1);
-        }
-
-        .tag-btn-exclude {
-            background: rgba(248, 113, 113, 0.1);
-            border-color: rgba(248, 113, 113, 0.3);
-            color: #f87171;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-        }
-
-        .tag-btn-exclude:hover {
-            border-color: #f87171;
-            background: rgba(248, 113, 113, 0.2);
-        }
-
-        .tag-btn-exclude.active {
-            background: rgba(248, 113, 113, 0.25);
-            border-color: #f87171;
-            font-weight: 600;
-        }
-
-        .exclude-checkbox {
-            display: none;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .utility-bar {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .utility-btn {
-            background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-dim);
-            padding: 8px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .utility-btn:hover {
-            background: rgba(56, 189, 248, 0.1);
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
-        }
-
-        /* Модальное окно справки */
-        .help-content {
-            line-height: 1.8;
-        }
-
-        .help-content h3 {
-            color: var(--accent-blue);
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        .help-content ul {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-
-        .help-content li {
-            margin-bottom: 8px;
-            color: var(--text-main);
-        }
-
-        .help-content strong {
-            color: var(--accent-green);
-        }
-
-        .help-content .feature-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            color: white;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-left: 5px;
-        }
-
-        /* Расширенный поиск */
-        .advanced-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-label {
-            color: var(--accent-blue);
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .form-input {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 12px 15px;
-            color: var(--text-main);
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: all 0.3s;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-            background: rgba(56, 189, 248, 0.1);
-        }
-
-        .form-input::placeholder {
-            color: var(--text-dim);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .search-btn-advanced {
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-
-        .search-btn-advanced:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
-        }
-
-        @media (max-width: 600px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
         }
 
         #results-area {
             width: 100%;
-            max-width: 950px;
+            max-width: 900px;
             background: white;
             border-radius: 20px;
             overflow: hidden;
-            min-height: 200px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            min-height: 400px;
         }
 
-        .gsc-control-cse { 
-            padding: 20px !important;
-            background: transparent !important;
-            border: none !important;
-        }
-
-        /* Модальное окно истории */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
+        .utility-bar {
+            display: flex;
+            gap: 15px;
             justify-content: center;
+            margin-top: 15px;
+        }
+
+        .ai-status {
+            color: var(--accent-purple);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
             align-items: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 70vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-blue);
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .history-item {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-item:hover {
-            background: rgba(56, 189, 248, 0.2);
-            transform: translateX(5px);
-        }
-
-        .history-query {
-            color: var(--text-main);
-            font-weight: 500;
-        }
-
-        .history-time {
-            color: var(--text-dim);
-            font-size: 0.85rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: var(--text-dim);
-            padding: 40px 20px;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-
-            .search-bar-wrapper {
-                flex-direction: column;
-            }
-
-            .main-search-btn {
-                width: 100%;
-            }
-
-            .sites-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filters-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-        }
-
-        /* --- СТИЛИ ДЛЯ СНИФФЕРА MP3 --- */
-        #mp3-catcher-container {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 9999;
-        }
-
-        #mp3-panel {
-            display: none;
-            background: var(--card-bg);
-            border: 1px solid var(--accent-blue);
-            border-radius: 12px;
-            padding: 15px;
-            width: 280px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-left: 4px solid var(--accent-blue);
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .mp3-item {
-            background: rgba(56, 189, 248, 0.1);
-            padding: 8px;
-            border-radius: 8px;
-            margin-top: 8px;
-            font-size: 0.8rem;
-            border: 1px solid rgba(56, 189, 248, 0.1);
-        }
-
-        .mp3-name {
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .mp3-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .mp3-link {
-            color: var(--accent-green);
-            text-decoration: none;
-            font-weight: 700;
-        }
-
-        .mp3-copy {
-            color: var(--accent-blue);
-            cursor: pointer;
-            font-weight: 700;
+            gap: 8px;
         }
     </style>
 </head>
@@ -691,525 +145,127 @@
 
     <header>
         <h1>Sacred Stream</h1>
-        <p class="subtitle">(Сумы 2025) Христианская поисковая система</p>
+        <p style="color:var(--text-dim)">Интеллектуальный AI Поиск (Суммы 2025)</p>
     </header>
 
-    <div class="controls-section">
-        <div class="filters-section" id="filtersSection" style="display: none;">
-            <div class="filters-header">
-                <div class="filters-title">
-                    <i class="fa-solid fa-filter"></i>
-                    Искать на сайтах:
-                </div>
-                <button class="toggle-all-btn" onclick="toggleAll()">
-                    <i class="fa-solid fa-list-check"></i> Все / Нет
-                </button>
-            </div>
-
-            <div class="stats-bar">
-                <div class="stat-item">
-                    <i class="fa-solid fa-globe"></i>
-                    Выбрано: <span class="stat-value" id="activeCount">3</span> из <span class="stat-value">3</span>
-                </div>
-            </div>
-
-            <div class="sites-grid" id="sitesGrid"></div>
-        </div>
-
+    <div class="search-container">
         <div class="search-bar-wrapper">
-            <input 
-                type="text" 
-                id="userInput" 
-                class="search-input" 
-                placeholder="Введите название песни, исполнителя или альбома..." 
-                autofocus
-            >
+            <input type="text" id="userInput" class="search-input" placeholder="Введите название песни или исполнителя...">
             <button class="main-search-btn" onclick="handleSearch()">
                 <i class="fa-solid fa-magnifying-glass"></i> Найти
             </button>
         </div>
-        
-        <div class="quick-tags">
-            <button class="tag-btn" onclick="quickSearch('worship')">
-                <i class="fa-solid fa-hands-praying"></i> Worship
-            </button>
-            <button class="tag-btn" onclick="quickSearch('минусовка')">
-                <i class="fa-solid fa-volume-xmark"></i> Минусовка
-            </button>
-            <button class="tag-btn" onclick="quickSearch('аккорды')">
-                <i class="fa-solid fa-guitar"></i> Аккорды
-            </button>
-            <button class="tag-btn" onclick="quickSearch('текст песни')">
-                <i class="fa-solid fa-file-lines"></i> Тексты
-            </button>
-            
-            <button class="tag-btn more-tags-btn" onclick="toggleExtraTags()">
-                <i class="fa-solid fa-angle-down" id="moreIcon"></i> Ещё
-            </button>
-        </div>
-
-        <div class="extra-tags" id="extraTags">
-            <div class="tags-category">
-                <div class="category-title">
-                    <i class="fa-solid fa-music"></i> Жанры и стили
-                </div>
-                <div class="category-tags">
-                    <button class="tag-btn-small" onclick="quickSearch('gospel')">Gospel</button>
-                    <button class="tag-btn-small" onclick="quickSearch('хвала поклонение')">Хвала</button>
-                    <button class="tag-btn-small" onclick="quickSearch('детские песни')">Детские</button>
-                    <button class="tag-btn-small" onclick="quickSearch('рождество')">Рождество</button>
-                    <button class="tag-btn-small" onclick="quickSearch('электронная музыка')">Электронная</button>
-                </div>
-            </div>
-
-            <div class="tags-category">
-                <div class="category-title">
-                    <i class="fa-solid fa-users"></i> Формат исполнения
-                </div>
-                <div class="category-tags">
-                    <button class="tag-btn-small" onclick="quickSearch('инструментальная')">Инструментал</button>
-                    <button class="tag-btn-small" onclick="quickSearch('акапелла')">Акапелла</button>
-                    <button class="tag-btn-small" onclick="quickSearch('хор')">Хор</button>
-                    <button class="tag-btn-small" onclick="quickSearch('трио')">Трио</button>
-                    <button class="tag-btn-small" onclick="quickSearch('дуэт')">Дуэт</button>
-                    <button class="tag-btn-small" onclick="quickSearch('соло')">Соло</button>
-                </div>
-            </div>
-
-            <div class="tags-category">
-                <div class="category-title">
-                    <i class="fa-solid fa-box"></i> Тип контента
-                </div>
-                <div class="category-tags">
-                    <button class="tag-btn-small" onclick="quickSearch('фонограмма')">Фонограмма</button>
-                    <button class="tag-btn-small" onclick="quickSearch('табы')">Табы</button>
-                    <button class="tag-btn-small" onclick="quickSearch('ноты')">Ноты</button>
-                    <button class="tag-btn-small" onclick="quickSearch('караоке')">Караоке</button>
-                </div>
-            </div>
-
-            <div class="tags-category">
-                <div class="category-title">
-                    <i class="fa-solid fa-ban"></i> Исключить из поиска (автоматически)
-                </div>
-                <div class="category-tags">
-                    <input type="checkbox" id="exclude-covers" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-covers'); saveExcludeFilters();">
-                    <label for="exclude-covers" class="tag-btn-small tag-btn-exclude" id="label-exclude-covers">
-                        <i class="fa-solid fa-xmark"></i> Каверы
-                    </label>
-
-                    <input type="checkbox" id="exclude-instrumental" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-instrumental'); saveExcludeFilters();">
-                    <label for="exclude-instrumental" class="tag-btn-small tag-btn-exclude" id="label-exclude-instrumental">
-                        <i class="fa-solid fa-xmark"></i> Инструментал
-                    </label>
-
-                    <input type="checkbox" id="exclude-rap" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-rap'); saveExcludeFilters();">
-                    <label for="exclude-rap" class="tag-btn-small tag-btn-exclude" id="label-exclude-rap">
-                        <i class="fa-solid fa-xmark"></i> Рэп
-                    </label>
-
-                    <input type="checkbox" id="exclude-rock" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-rock'); saveExcludeFilters();">
-                    <label for="exclude-rock" class="tag-btn-small tag-btn-exclude" id="label-exclude-rock">
-                        <i class="fa-solid fa-xmark"></i> Рок
-                    </label>
-
-                    <input type="checkbox" id="exclude-choir" class="exclude-checkbox" onchange="toggleExcludeButton('exclude-choir'); saveExcludeFilters();">
-                    <label for="exclude-choir" class="tag-btn-small tag-btn-exclude" id="label-exclude-choir">
-                        <i class="fa-solid fa-xmark"></i> Хор
-                    </label>
-                </div>
-            </div>
-        </div>
 
         <div class="utility-bar">
-            <button class="utility-btn" onclick="toggleSitesFilter()">
-                <i class="fa-solid fa-globe"></i>
-                <span id="sitesButtonText">Сайты (3/3)</span>
-            </button>
-            <button class="utility-btn" onclick="showAdvancedSearch()">
-                <i class="fa-solid fa-sliders"></i>
-                Расширенный поиск
-            </button>
-            <button class="utility-btn" onclick="showHistory()">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                История
-            </button>
-            <button class="utility-btn" onclick="clearSearch()">
-                <i class="fa-solid fa-broom"></i>
-                Очистить
-            </button>
-            <button class="utility-btn" onclick="showHelp()">
-                <i class="fa-solid fa-circle-question"></i>
-                Справка
-            </button>
-            <label class="utility-btn" style="cursor: pointer;">
-                <input type="checkbox" id="ai-toggle" onchange="toggleAI(this.checked)" style="margin-right: 8px; cursor: pointer;">
-                <i class="fa-solid fa-robot"></i>
-                AI Анализатор
+            <label class="ai-status">
+                <input type="checkbox" id="ai-toggle" checked> AI Анализатор включен
             </label>
         </div>
     </div>
+
+    <div id="ai-analysis-container"></div>
 
     <div id="results-area">
         <div class="gcse-searchresults-only"></div>
     </div>
 
-    <div id="mp3-catcher-container">
-        <div id="mp3-panel">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span style="color: var(--accent-blue); font-weight: 700; font-size: 11px; text-transform: uppercase;">🎵 Найден трек</span>
-                <button onclick="document.getElementById('mp3-panel').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:18px;">&times;</button>
-            </div>
-            <div id="mp3-list-content"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="historyModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">История поиска</h2>
-                <button class="close-btn" onclick="closeHistory()">&times;</button>
-            </div>
-            <div id="historyList"></div>
-        </div>
-    </div>
-
-    <div class="modal" id="helpModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">📖 Справка</h2>
-                <button class="close-btn" onclick="closeHelp()">&times;</button>
-            </div>
-            <div class="help-content">
-                <p style="font-size: 1.05rem; margin-bottom: 20px; color: var(--text-dim);">
-                    <strong style="color: var(--accent-blue);">Sacred Stream</strong> — христианский поисковик на базе трёх специализированных сайтов.
-                </p>
-                <h3><i class="fa-solid fa-radio"></i> Захват MP3</h3>
-                <p>Если вы открыли сайт и включили музыку, просто нажмите кнопку <strong>Назад</strong> — прямая ссылка появится в левом углу.</p>
-                
-                <h3><i class="fa-solid fa-database"></i> Источники</h3>
-                <ul>
-                    <li><strong>Fonki.pro</strong> — фонограммы и минусовки</li>
-                    <li><strong>KG-music.club</strong> — музыкальные треки и альбомы</li>
-                    <li><strong>Holy Chords</strong> — аккорды, тексты и переводы песен</li>
-                </ul>
-                </div>
-        </div>
-    </div>
-
-    <div class="modal" id="advancedModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">🔍 Расширенный поиск</h2>
-                <button class="close-btn" onclick="closeAdvancedSearch()">&times;</button>
-            </div>
-            <form class="advanced-form" onsubmit="performAdvancedSearch(event)">
-                <div class="form-group">
-                    <label class="form-label"><i class="fa-solid fa-microphone"></i> Исполнитель</label>
-                    <input type="text" id="adv-artist" class="form-input" placeholder="Например: Авана, Hillsong">
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><i class="fa-solid fa-music"></i> Название песни</label>
-                    <input type="text" id="adv-song" class="form-input" placeholder="Например: Благословенный Бог">
-                </div>
-                <button type="submit" class="search-btn-advanced">Найти</button>
-            </form>
-        </div>
-    </div>
-
     <script>
-        // --- СИСТЕМА ПЕРЕХВАТА MP3 (SNIFFER) ---
-        (function() {
-            const caughtUrls = new Set();
-
-            function scanResources() {
-                const resources = window.performance.getEntriesByType('resource');
-                const listContent = document.getElementById('mp3-list-content');
-                const panel = document.getElementById('mp3-panel');
-
-                resources.forEach(r => {
-                    const url = r.name;
-                    if (url.toLowerCase().includes('.mp3') && !caughtUrls.has(url)) {
-                        caughtUrls.add(url);
-                        panel.style.display = 'block';
-
-                        let name = decodeURIComponent(url.split('/').pop().split('?')[0]).replace(/_/g, ' ');
-                        const item = document.createElement('div');
-                        item.className = 'mp3-item';
-                        item.innerHTML = `
-                            <span class="mp3-name" title="${name}">${name}</span>
-                            <div class="mp3-actions">
-                                <a href="${url}" target="_blank" class="mp3-link">СКАЧАТЬ</a>
-                                <span class="mp3-copy" onclick="navigator.clipboard.writeText('${url}'); alert('Ссылка скопирована!')">URL</span>
-                            </div>
-                        `;
-                        listContent.prepend(item);
-                    }
-                });
-            }
-
-            // Сканирование при возврате на страницу
-            window.addEventListener('pageshow', (e) => {
-                setTimeout(scanResources, 600);
-            });
-            // Мониторинг во время работы
-            setInterval(scanResources, 3000);
-        })();
-
-        // База данных сайтов
-        const sites = [
-            { id: 'holychords', name: 'Holy Chords', url: 'holychords.pro', type: 'Аккорды', active: true },
-            { id: 'kgmusic', name: 'KG Music', url: 'kg-music.club', type: 'Музыка', active: true },
-            { id: 'fonki', name: 'Fonki', url: 'fonki.pro', type: 'Фонограммы', active: true }
-        ];
-
-        let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-
-        function loadSitesState() {
-            const saved = localStorage.getItem('sitesState');
-            if (saved) {
-                const state = JSON.parse(saved);
-                sites.forEach(site => {
-                    const savedSite = state.find(s => s.id === site.id);
-                    if (savedSite) site.active = savedSite.active;
-                });
-            }
-        }
-
-        function saveSitesState() {
-            localStorage.setItem('sitesState', JSON.stringify(sites.map(s => ({ id: s.id, active: s.active }))));
-        }
-
-        function renderSites() {
-            const grid = document.getElementById('sitesGrid');
-            grid.innerHTML = sites.map(site => `
-                <div class="site-checkbox ${site.active ? 'active' : ''}" onclick="toggleSite('${site.id}')">
-                    <input type="checkbox" ${site.active ? 'checked' : ''} onchange="toggleSite('${site.id}')" onclick="event.stopPropagation()">
-                    <div class="site-info">
-                        <div class="site-name">${site.name}</div>
-                        <div class="site-url">${site.url}</div>
-                    </div>
-                    <span class="site-badge">${site.type}</span>
-                </div>
-            `).join('');
-            updateStats();
-            updateSitesButton();
-        }
-
-        function toggleSite(id) {
-            const site = sites.find(s => s.id === id);
-            if (site) {
-                site.active = !site.active;
-                saveSitesState();
-                renderSites();
-            }
-        }
-
-        function toggleAll() {
-            const allActive = sites.every(s => s.active);
-            sites.forEach(s => s.active = !allActive);
-            saveSitesState();
-            renderSites();
-        }
-
-        function updateStats() {
-            document.getElementById('activeCount').textContent = sites.filter(s => s.active).length;
-        }
-
-        function updateSitesButton() {
-            document.getElementById('sitesButtonText').textContent = `Сайты (${sites.filter(s => s.active).length}/3)`;
-        }
-
-        function toggleSitesFilter() {
-            const section = document.getElementById('filtersSection');
-            section.style.display = section.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function buildSearchQuery(userQuery) {
-            const activeSites = sites.filter(s => s.active);
-            if (activeSites.length === 0) { alert('⚠️ Выберите сайты!'); return null; }
-            const excludeFilters = getExcludeFilters();
-            let finalQuery = excludeFilters ? `${userQuery} ${excludeFilters}` : userQuery;
-            if (activeSites.length === sites.length) return finalQuery;
-            return `${finalQuery} (${activeSites.map(s => `site:${s.url}`).join(' OR ')})`;
-        }
-
-        function toggleExcludeButton(id) {
-            const cb = document.getElementById(id);
-            document.getElementById('label-' + id).classList.toggle('active', cb.checked);
-        }
-
-        function getExcludeFilters() {
-            const filters = [];
-            if (document.getElementById('exclude-covers')?.checked) filters.push('-cover', '-кавер');
-            if (document.getElementById('exclude-instrumental')?.checked) filters.push('-instrumental', '-инструментал');
-            if (document.getElementById('exclude-rap')?.checked) filters.push('-rap', '-рэп');
-            if (document.getElementById('exclude-rock')?.checked) filters.push('-rock', '-рок');
-            if (document.getElementById('exclude-choir')?.checked) filters.push('-choir', '-хор');
-            return filters.join(' ');
-        }
-
-        function saveExcludeFilters() {
-            localStorage.setItem('excludeFilters', JSON.stringify({
-                covers: document.getElementById('exclude-covers')?.checked,
-                instrumental: document.getElementById('exclude-instrumental')?.checked,
-                rap: document.getElementById('exclude-rap')?.checked,
-                rock: document.getElementById('exclude-rock')?.checked,
-                choir: document.getElementById('exclude-choir')?.checked
-            }));
-        }
-
-        function loadExcludeFilters() {
-            const saved = JSON.parse(localStorage.getItem('excludeFilters') || '{}');
-            ['covers', 'instrumental', 'rap', 'rock', 'choir'].forEach(f => {
-                const el = document.getElementById('exclude-' + f);
-                if (el && saved[f]) { el.checked = true; toggleExcludeButton('exclude-' + f); }
-            });
-        }
-
+        // --- 1. ЛОГИКА ПОИСКА ---
         function handleSearch() {
-            const val = document.getElementById('userInput').value.trim();
-            if (!val) return;
-            const query = buildSearchQuery(val);
-            if (query) { executeGoogleSearch(query); saveToHistory(val, sites.filter(s => s.active).map(s => s.name)); }
-        }
+            const query = document.getElementById('userInput').value.trim();
+            if (!query) return;
 
-        function executeGoogleSearch(q) {
+            // Выполнение поиска в Google
             try {
-                google.search.cse.element.getElement('results-only0').execute(q);
-            } catch (e) {
-                window.location.hash = 'gsc.q=' + encodeURIComponent(q);
+                google.search.cse.element.getElement('results-only0').execute(query);
+            } catch(e) {
+                window.location.hash = 'gsc.q=' + encodeURIComponent(query);
             }
-            if (aiEnabled && aiAnalyzer) aiAnalyzer.analyzeSearchResults(q);
-        }
 
-        function quickSearch(tag) {
-            document.getElementById('userInput').value = tag;
-            handleSearch();
-        }
-
-        function saveToHistory(q, s) {
-            searchHistory = [{ query: q, sites: s, timestamp: new Date().toISOString() }, ...searchHistory.filter(i => i.query !== q)].slice(0, 20);
-            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-        }
-
-        function showHistory() {
-            const list = document.getElementById('historyList');
-            if (searchHistory.length === 0) {
-                list.innerHTML = '<div class="empty-state">История пуста</div>';
-            } else {
-                list.innerHTML = searchHistory.map(item => `
-                    <div class="history-item" onclick="searchFromHistory('${item.query.replace(/'/g, "\\'")}')">
-                        <span class="history-query">${item.query}</span>
-                        <span class="history-time">${new Date(item.timestamp).toLocaleTimeString()}</span>
-                    </div>
-                `).join('');
-            }
-            document.getElementById('historyModal').classList.add('show');
-        }
-
-        function closeHistory() { document.getElementById('historyModal').classList.remove('show'); }
-        function showHelp() { document.getElementById('helpModal').classList.add('show'); }
-        function closeHelp() { document.getElementById('helpModal').classList.remove('show'); }
-        function showAdvancedSearch() { document.getElementById('advancedModal').classList.add('show'); }
-        function closeAdvancedSearch() { document.getElementById('advancedModal').classList.remove('show'); }
-
-        function performAdvancedSearch(e) {
-            e.preventDefault();
-            const artist = document.getElementById('adv-artist').value.trim();
-            const song = document.getElementById('adv-song').value.trim();
-            if (artist || song) {
-                document.getElementById('userInput').value = `${artist} ${song}`.trim();
-                handleSearch();
-                closeAdvancedSearch();
+            // Запуск AI Hunter
+            if (document.getElementById('ai-toggle').checked) {
+                window.aiHunter.analyze(query);
             }
         }
 
-        function searchFromHistory(q) { document.getElementById('userInput').value = q; handleSearch(); closeHistory(); }
-        function clearSearch() { document.getElementById('userInput').value = ''; }
-        function toggleExtraTags() { document.getElementById('extraTags').classList.toggle('show'); }
+        // --- 2. КЛАСС AI HUNTER ---
+        class AIHunter {
+            constructor() {
+                this.apiKey = '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';
+                this.apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+                this.container = document.getElementById('ai-analysis-container');
+            }
 
-        document.getElementById('userInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
+            async analyze(query) {
+                this.container.style.display = 'block';
+                this.container.innerHTML = `<div style="color:var(--accent-purple)"><i class="fas fa-spinner fa-spin"></i> AI изучает результаты поиска...</div>`;
 
-        loadSitesState(); renderSites(); loadExcludeFilters();
+                // Ждем загрузки результатов Google
+                await new Promise(r => setTimeout(r, 2000));
 
-        // --- AI МОДУЛЬ ---
-        let aiAnalyzer = null;
-        let aiEnabled = localStorage.getItem('aiEnabled') === 'true';
-        if (aiEnabled) { document.getElementById('ai-toggle').checked = true; initAI(); }
+                const results = Array.from(document.querySelectorAll('.gsc-result')).slice(0, 5).map(el => ({
+                    title: el.querySelector('.gs-title')?.innerText || 'Без названия',
+                    link: el.querySelector('.gs-title a')?.href || '#',
+                    snippet: el.querySelector('.gs-snippet')?.innerText || ''
+                }));
 
-        function toggleAI(e) {
-            aiEnabled = e;
-            localStorage.setItem('aiEnabled', e);
-            if (e) initAI(); else { aiAnalyzer = null; const c = document.getElementById('ai-analysis-container'); if (c) c.remove(); }
+                if (results.length === 0) {
+                    this.container.innerHTML = "AI не смог прочитать результаты. Попробуйте нажать 'Найти' еще раз.";
+                    return;
+                }
+
+                try {
+                    const response = await fetch(this.apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.apiKey}` },
+                        body: JSON.stringify({
+                            model: "meta-llama/llama-3.1-8b-instant",
+                            messages: [{ 
+                                role: "system", 
+                                content: "Ты ассистент поисковика Sacred Stream. Найди среди результатов те, где вероятнее всего есть аудио или кнопка скачивания." 
+                            }, { 
+                                role: "user", 
+                                content: `Пользователь ищет: ${query}. Результаты: ${JSON.stringify(results)}` 
+                            }]
+                        })
+                    });
+                    const data = await response.json();
+                    this.render(data.choices[0].message.content, results);
+                } catch (e) {
+                    this.container.innerHTML = "Ошибка AI модуля. Поисковик работает в обычном режиме.";
+                }
+            }
+
+            render(aiText, results) {
+                let html = `<div style="font-weight:800; color:var(--accent-purple); margin-bottom:10px;"><i class="fa-solid fa-robot"></i> AI АНАЛИЗ:</div>`;
+                html += `<div style="font-size:0.9rem; margin-bottom:15px; color:var(--text-main)">${aiText}</div>`;
+                
+                results.forEach(res => {
+                    const isMusicSite = res.link.includes('fonki') || res.link.includes('kg-music') || res.link.includes('holychords');
+                    html += `
+                    <div class="ai-card">
+                        <div style="max-width:70%">
+                            <div style="color:var(--accent-blue); font-weight:700; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${res.title}</div>
+                            <div style="color:var(--text-dim); font-size:11px;">${new URL(res.link).hostname}</div>
+                        </div>
+                        <a href="${res.link}" target="_blank" class="ai-link">
+                            ${isMusicSite ? 'ОТКРЫТЬ ПЛЕЕР' : 'ПЕРЕЙТИ'}
+                        </a>
+                    </div>`;
+                });
+                this.container.innerHTML = html;
+            }
         }
 
-        function initAI() {
-            if (!aiAnalyzer) aiAnalyzer = new AIAnalyzer({
-                apiKey: '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',
-                apiUrl: 'https://api.groq.com/openai/v1/chat/completions',
-                modelName: 'meta-llama/llama-4-maverick-17b-128e-instruct'
-            });
-        }
+        window.aiHunter = new AIHunter();
+
+        // Поиск по нажатию Enter
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
+        });
     </script>
 
-    <script async src="https://cse.google.com/cse.js?cx=d454e3c095f214e80"></script>
-    
-    <script>
-        class AIAnalyzer {
-          constructor(config) {
-            this.config = config;
-            this.isAnalyzing = false;
-            console.log('✅ AI Analyzer Active');
-          }
-          async analyzeSearchResults(query) {
-            if (this.isAnalyzing) return;
-            this.isAnalyzing = true;
-            this.showLoading();
-            await new Promise(r => setTimeout(r, 1500));
-            const results = this.parseResults();
-            if (results.length === 0) { this.showError('Нет данных'); this.isAnalyzing = false; return; }
-            try {
-              const data = await this.fetchAI(query, results);
-              this.display(data, results);
-            } catch(e) { this.showError('Ошибка API'); }
-            this.isAnalyzing = false;
-          }
-          parseResults() {
-            return Array.from(document.querySelectorAll('.gsc-result')).slice(0, 5).map(item => ({
-              title: item.querySelector('.gs-title')?.innerText || '',
-              snippet: item.querySelector('.gs-snippet')?.innerText || '',
-              link: item.querySelector('.gs-title a')?.href || ''
-            }));
-          }
-          async fetchAI(q, res) {
-            const prompt = `Пользователь искал: "${q}". Результаты: ${res.map(r => r.title).join(', ')}. Дай сводку в 2 предложениях.`;
-            const response = await fetch(this.config.apiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.config.apiKey}` },
-              body: JSON.stringify({
-                model: this.config.modelName,
-                messages: [{ role: 'system', content: 'Ты эксперт по музыке.' }, { role: 'user', content: prompt }],
-                max_tokens: 100
-              })
-            });
-            const d = await response.json();
-            return d.choices[0].message.content;
-          }
-          showLoading() {
-            let c = document.getElementById('ai-analysis-container');
-            if (!c) { c = document.createElement('div'); c.id = 'ai-analysis-container'; document.getElementById('results-area').parentNode.insertBefore(c, document.getElementById('results-area')); }
-            c.style.cssText = 'padding: 15px; background: rgba(167, 139, 250, 0.1); border-radius: 12px; margin: 10px 0; border: 1px solid #a78bfa;';
-            c.innerHTML = '🤖 AI анализирует...';
-          }
-          display(text, res) {
-            const c = document.getElementById('ai-analysis-container');
-            let links = res.map((r, i) => `<div style="margin-top:5px;"><a href="${r.link}" target="_blank" style="color:#38bdf8; text-decoration:none;">${i+1}. ${r.title}</a></div>`).join('');
-            c.innerHTML = `<div style="font-weight:700; color:#a78bfa; margin-bottom:10px;">💡 AI Анализ:</div><div style="font-size:0.9rem;">${text}</div><div style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">${links}</div>`;
-          }
-          showError(m) { const c = document.getElementById('ai-analysis-container'); if (c) c.innerHTML = `⚠️ ${m}`; }
-        }
-        window.AIAnalyzer = AIAnalyzer;
-    </script>
+    <script async src="https://cse.google.com/cse.js?cx=8679d67189c4d4455"></script>
+
 </body>
 </html>

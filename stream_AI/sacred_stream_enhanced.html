@@ -108,21 +108,19 @@
         }
 
         .btn {
-            padding: 15px 30px;
+            padding: 12px 24px;
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background 0.2s;
         }
 
         .btn:hover {
             background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
         }
 
         .quick-tags {
@@ -332,9 +330,9 @@
             background: var(--primary);
             color: white;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 0.9rem;
-            transition: all 0.3s;
+            transition: background 0.2s;
         }
 
         .result-link:hover {
@@ -661,91 +659,60 @@
 
             // Show loading
             const resultsSection = document.getElementById('resultsSection');
-            resultsSection.innerHTML = '<div class="loading">🔍 Поиск...</div>';
+            resultsSection.innerHTML = '<div class="loading">🔍 Идёт поиск на сайтах...</div>';
 
-            // Simulate search results (in real implementation, this would call actual APIs)
-            setTimeout(() => {
-                displayResults(generateMockResults(query));
-            }, 1000);
-        }
-
-        function generateMockResults(query) {
-            const sources = ['Fonki.pro', 'KG-music.club', 'Holy Chords'];
-            const results = [];
-
-            for (let i = 0; i < 12; i++) {
-                const source = sources[Math.floor(Math.random() * sources.length)];
-                
-                // Skip if source is disabled
-                const sourceKey = source === 'Fonki.pro' ? 'fonki' : 
-                                 source === 'KG-music.club' ? 'kgmusic' : 'holychords';
-                if (!activeSources[sourceKey]) continue;
-
-                const title = `${query} - Вариант ${i + 1}`;
-                
-                // Apply smart filters
-                if (smartFiltersEnabled && (title.toLowerCase().includes('cover') || 
-                    title.toLowerCase().includes('remix'))) {
-                    continue;
-                }
-
-                results.push({
-                    id: Date.now() + i,
-                    title: title,
-                    source: source,
-                    url: `https://example.com/result${i}`
+            // Build search URLs for each enabled source
+            const searchUrls = [];
+            
+            if (activeSources.fonki) {
+                searchUrls.push({
+                    name: 'Fonki.pro',
+                    url: `https://fonki.pro/search?q=${encodeURIComponent(query)}`
+                });
+            }
+            
+            if (activeSources.kgmusic) {
+                searchUrls.push({
+                    name: 'KG-music.club',
+                    url: `https://kg-music.club/search?q=${encodeURIComponent(query)}`
+                });
+            }
+            
+            if (activeSources.holychords) {
+                searchUrls.push({
+                    name: 'Holy Chords',
+                    url: `https://holychords.com/search?q=${encodeURIComponent(query)}`
                 });
             }
 
-            return results;
-        }
-
-        function displayResults(results) {
-            const resultsSection = document.getElementById('resultsSection');
-            
-            if (results.length === 0) {
-                resultsSection.innerHTML = '<div class="loading">😔 Ничего не найдено</div>';
+            if (searchUrls.length === 0) {
+                resultsSection.innerHTML = '<div class="loading">⚠️ Выберите хотя бы один источник для поиска</div>';
                 return;
             }
 
-            resultsSection.innerHTML = results.map(result => `
+            // Display search links
+            displaySearchLinks(searchUrls, query);
+        }
+
+        function displaySearchLinks(searchUrls, query) {
+            const resultsSection = document.getElementById('resultsSection');
+            
+            resultsSection.innerHTML = `
+                <div style="grid-column: 1/-1; background: var(--bg-light); padding: 20px; border-radius: 12px; text-align: center;">
+                    <h2 style="margin-bottom: 20px;">🔍 Результаты поиска: "${query}"</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">Откройте ссылки ниже для поиска на выбранных сайтах</p>
+                </div>
+            ` + searchUrls.map((item, index) => `
                 <div class="result-card">
                     <div class="result-header">
                         <div>
-                            <div class="result-title">${result.title}</div>
-                            <span class="result-source">${result.source}</span>
+                            <div class="result-title">Поиск на ${item.name}</div>
+                            <span class="result-source">${item.name}</span>
                         </div>
-                        <button class="favorite-btn ${isFavorite(result.id) ? 'active' : ''}" 
-                                onclick="toggleFavorite(${result.id}, '${result.title}', '${result.source}', '${result.url}')">
-                            ${isFavorite(result.id) ? '❤️' : '🤍'}
-                        </button>
                     </div>
-                    <a href="${result.url}" target="_blank" class="result-link">Открыть →</a>
+                    <a href="${item.url}" target="_blank" class="result-link">Открыть поиск →</a>
                 </div>
             `).join('');
-        }
-
-        function isFavorite(id) {
-            return favorites.some(fav => fav.id === id);
-        }
-
-        function toggleFavorite(id, title, source, url) {
-            const index = favorites.findIndex(fav => fav.id === id);
-            
-            if (index === -1) {
-                favorites.push({id, title, source, url});
-            } else {
-                favorites.splice(index, 1);
-            }
-            
-            saveData();
-            updateFavCount();
-            
-            // Refresh current view if showing results
-            const query = document.getElementById('searchInput').value.trim();
-            if (query) {
-                displayResults(generateMockResults(query));
-            }
         }
 
         function showFavorites() {

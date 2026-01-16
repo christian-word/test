@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>✟ YouTube Стрім-24/7 | Дім Євангелія</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta property="og:image" content="https://raw.githubusercontent.com/christian-word/hristian-media/main/ico/strim.png"> 
+<style>
+    :root{
+      --primary-gold: #D4AF37;
+      --primary-green: #2D6A4F;
+      --primary-blue: #457B9D;
+      --text-dark: #2B2D42;
+      --text-gray: #6B7280;
+      --bg-cream: #FAF9F6;
+      --white: #FFFFFF;
+      --shadow: 0 4px 6px rgba(0,0,0,0.1);
+      --radius: 16px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+    }
+    
+    /* Світла тема */
+    body.light{
+      --primary-gold: #D4AF37;
+      --primary-green: #2D6A4F;
+      --bg-cream: #F0F2F5;
+      --white: #FFFFFF;
+      --text-dark: #1F2937;
+      --text-gray: #6B7280;
+    }
+    
+    *{
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body{
+      font-family: var(--font);
+      background: var(--bg-cream);
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px 60px;
+      transition: background 0.5s ease, color 0.5s ease;
+    }
+    
+    body.dark{
+      --bg-cream: #0E0E10;
+      --white: #18181B;
+      --text-dark: #EFEFEF;
+      --text-gray: #A0A0A0;
+    }
+    
+    /* Шапка */
+    header{
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+    
+    .logo i {
+      font-size: 2.5rem;
+      color: var(--primary-gold);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .logo-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .logo-text p {
+      font-size: 0.85rem;
+      color: var(--text-gray);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    #themeToggleBtn{
+      padding: 10px 20px;
+      border-radius: 50px;
+      background: var(--white);
+      border: 2px solid var(--primary-gold);
+      color: var(--text-dark);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+      box-shadow: var(--shadow);
+    }
+    
+    #themeToggleBtn:hover{
+      background: var(--primary-gold);
+      color: var(--text-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+    }
+
+    .btn-back {
+      padding: 10px 20px;
+      border-radius: 50px;
+      background: transparent;
+      border: 2px solid var(--primary-green);
+      color: var(--primary-green);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-back:hover {
+      background: var(--primary-green);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(45, 106, 79, 0.3);
+    }
+
+    /* Плеєр контейнер */
+    #player-container{
+      width: 100%;
+      max-width: 1400px;
+      background: var(--white);
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    
+    #player-wrapper{
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-bottom: 56.25%;
+    }
+    
+    #player{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Блокування кліків по плеєру до початку трансляції */
+    #playerOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(45, 106, 79, 0.95), rgba(69, 123, 157, 0.95));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      cursor: default;
+      transition: opacity 0.5s ease;
+    }
+
+    #playerOverlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .overlay-content {
+      text-align: center;
+      color: white;
+      padding: 40px;
+    }
+
+    .overlay-icon {
+      font-size: 5rem;
+      color: var(--primary-gold);
+      margin-bottom: 24px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .overlay-content h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin-bottom: 16px;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .overlay-content p {
+      font-size: 1.2rem;
+      opacity: 0.95;
+      margin-bottom: 32px;
+    }
+
+    .overlay-button {
+      background: var(--primary-gold);
+      color: var(--text-dark);
+      border: none;
+      padding: 18px 48px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .overlay-button:hover {
+      background: #C19B2F;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(212, 175, 55, 0.6);
+    }
+
+    .overlay-button i {
+      font-size: 1.3rem;
+    }
+
+    /* Мобільна адаптація оверлея */
+    @media (max-width: 768px) {
+      .overlay-content {
+        padding: 20px;
+        transform: translateY(-15%);
+      }
+
+      .overlay-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+      }
+
+      .overlay-content h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+      }
+
+      .overlay-content p {
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+      }
+
+      .overlay-button {
+        padding: 12px 28px;
+        font-size: 0.95rem;
+        gap: 8px;
+      }
+
+      .overlay-button i {
+        font-size: 1rem;
+      }
+    }
+    
+    #live-indicator{
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239, 68, 68, 0.95);
+      padding: 10px 18px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 10;
+      color: white;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+    
+    #live-indicator span{
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse{
+      0%, 100%{
+        opacity: 1;
+      }
+      50%{
+        opacity: 0.3;
+      }
+    }
+
+    /* LIVE індикатор на мобільних */
+    @media (max-width: 768px) {
+      #live-indicator {
+        top: 12px;
+        left: 12px;
+        padding: 6px 12px;
+        font-size: 10px;
+        gap: 6px;
+        background: rgba(239, 68, 68, 0.7);
+        backdrop-filter: blur(4px);
+      }
+
+      #live-indicator span {
+        width: 7px;
+        height: 7px;
+      }
+    }
+
+    /* Індикатор завантаження */
+    #loadingIndicator{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      z-index: 100;
+    }
+    
+    #loadingIndicator.show{
+      display: flex;
+    }
+    
+    .spinner{
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(212, 175, 55, 0.2);
+      border-top: 5px solid var(--primary-gold);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin{
+      0%{transform: rotate(0deg)}
+      100%{transform: rotate(360deg)}
+    }
+    
+    #loadingIndicator span{
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* Прогрес-бар */
+    #progressBarContainer{
+      height: 6px;
+      background: rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+    
+    #progressBar{
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-gold), var(--primary-green));
+      width: 0;
+      transition: width 0.1s linear;
+    }
+
+    /* Контроли */
+    #controls{
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 28px;
+      background: var(--white);
+    }
+    
+    .controls-row{
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .controls-row button{
+      flex: 1;
+    }
+    
+    @media (max-width: 768px) {
+      #controls {
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px 16px;
+      }
+      
+      .controls-row {
+        width: 100%;
+      }
+      
+      .controls-row button {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+      
+      #timezoneSelector,
+      #qualitySelector {
+        width: 100%;
+        padding: 12px 16px;
+      }
+    }
+    
+    button{
+      background: var(--primary-gold);
+      color: var(--text-dark);
+      border: none;
+      padding: 14px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+    
+    button:hover{
+      background: #C19B2F;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+    }
+    
+    button:disabled{
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    select{
+      background: var(--bg-cream);
+      color: var(--text-dark);
+      border: 2px solid rgba(0,0,0,0.1);
+      padding: 14px 18px;
+      border-radius: 50px;
+      font-size: 14px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 150px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary-gold);
+      box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
+    }
+
+    /* Статус */
+    .status-container {
+      width: 100%;
+      max-width: 1400px;
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .status-card {
+      background: var(--white);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .status-card i {
+      font-size: 2rem;
+      color: var(--primary-gold);
+    }
+
+    .status-info h4 {
+      font-size: 0.85rem;
+      color: var(--text-gray);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .status-info p {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* Тост */
+    #toast{
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--white);
+      color: var(--text-dark);
+      padding: 16px 32px;
+      border-radius: 50px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 10000;
+      max-width: 90%;
+      text-align: center;
+      border: 2px solid var(--primary-gold);
+      font-weight: 600;
+    }
+    
+    #toast.show{
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Розклад */
+    #programScheduleDisplay{
+      width: 100%;
+      max-width: 1400px;
+      margin-top: 48px;
+    }
+    
+    .schedule-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .schedule-header h2{
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary-green);
+      margin: 0;
+    }
+    
+    #scrollToCurrentBtn{
+      padding: 12px 24px;
+      font-size: 14px;
+      white-space: nowrap;
+      border-radius: 50px;
+      background: var(--primary-green);
+      color: white;
+    }
+
+    #scrollToCurrentBtn:hover {
+      background: var(--primary-blue);
+    }
+    
+    #scheduleList{
+      list-style: none;
+      display: grid;
+      gap: 16px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 8px;
+      scroll-behavior: smooth;
+    }
+    
+    #scheduleList::-webkit-scrollbar{
+      width: 10px;
+    }
+    
+    #scheduleList::-webkit-scrollbar-track{
+      background: var(--bg-cream);
+      border-radius: 5px;
+    }
+    
+    #scheduleList::-webkit-scrollbar-thumb{
+      background: var(--primary-gold);
+      border-radius: 5px;
+    }
+    
+    #scheduleList::-webkit-scrollbar-thumb:hover{
+      background: #C19B2F;
+    }
+    
+    .schedule-item{
+      background: var(--white);
+      padding: 20px 24px;
+      border-radius: var(--radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    
+    .schedule-item.current{
+      border-color: var(--primary-gold);
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(45, 106, 79, 0.15));
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+    }
+    
+    .schedule-item.upcoming{
+      opacity: 1;
+    }
+    
+    .schedule-item.played{
+      opacity: 0.4;
+    }
+    
+    .schedule-item.watched{
+      position: relative;
+    }
+    
+    .schedule-item.watched::before{
+      content: '✓';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary-green);
+      font-weight: bold;
+      font-size: 20px;
+    }
+    
+    .schedule-item.watched .schedule-item-left{
+      padding-left: 28px;
+    }
+    
+    .schedule-item-left{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-grow: 1;
+    }
+    
+    .schedule-item-right{
+      text-align: right;
+      flex-shrink: 0;
+      margin-left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .schedule-item strong,
+    .schedule-item small{
+      font-weight: 400;
+      font-size: 14px;
+      color: var(--text-dark);
+      line-height: 1.4;
+    }
+    
+    .time-remaining{
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--primary-gold);
+      margin-top: 2px;
+    }
+
+    /* Повноекранна кнопка */
+    #exitFullscreenBtn{
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    .virtual-fullscreen #exitFullscreenBtn{
+      opacity: 0.8;
+      pointer-events: auto;
+    }
+    
+    .virtual-fullscreen #exitFullscreenBtn:hover{
+      opacity: 1;
+      background: rgba(0,0,0,0.9);
+      transform: scale(1.1);
+    }
+    
+    .virtual-fullscreen #player-container{
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%) rotate(90deg);
+      width: 100vh;
+      height: 100vw;
+      max-width: none;
+      z-index: 9999;
+    }
+    
+    .virtual-fullscreen #controls,
+    .virtual-fullscreen header,
+    .virtual-fullscreen #programScheduleDisplay,
+    .virtual-fullscreen .status-container{
+      display: none;
+    }
+    
+    #fullscreenToggleBtn{
+      display: inline-flex;
+    }
+    
+    /* Адаптація */
+    @media (max-width: 768px){
+      body{
+        padding: 16px 12px 60px;
+      }
+      
+      header {
+        margin-bottom: 24px;
+      }
+
+      .logo-text h1{
+        font-size: 1.2rem;
+      }
+      
+      .logo-text p{
+        font-size: 0.75rem;
+      }
+
+      /* Компактні статус-карточки на мобільних */
+      .status-container {
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .status-card {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+
+      .status-card i {
+        font-size: 1.3rem;
+      }
+
+      .status-info h4 {
+        font-size: 0.7rem;
+        margin-bottom: 2px;
+      }
+
+      .status-info p {
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      
+      .schedule-header{
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .schedule-header h2 {
+        font-size: 1.5rem;
+      }
+      
+      #scrollToCurrentBtn{
+        width: 100%;
+      }
+
+      .schedule-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .schedule-item-right {
+        margin-left: 0;
+        text-align: left;
+      }
+    }
+
+    /* Карточки на плеєрі */
+    #logoSplash{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(45, 106, 79, 0.95), rgba(69, 123, 157, 0.95));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    
+    #logoSplash.show{
+      display: flex;
+      opacity: 1;
+    }
+    
+    #logoSplash.hidden{
+      opacity: 0;
+    }
+    
+    .logoImage{
+      position: absolute;
+      max-width: 280px;
+      max-height: 280px;
+      width: 50%;
+      height: auto;
+      filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.6));
+      opacity: 0;
+      border-radius: 20px;
+    }
+    
+    .logoImage.card1{
+      animation: cardSpin1 3.5s ease-in-out;
+    }
+    
+    @keyframes cardSpin1{
+      0%{transform: scale(0.5) rotate(0deg); opacity: 0}
+      20%{transform: scale(1.1) rotate(360deg); opacity: 1}
+      25%{transform: scale(1) rotate(360deg); opacity: 1}
+      85%{transform: scale(1) rotate(360deg); opacity: 1}
+      100%{transform: scale(1) rotate(360deg); opacity: 0}
+    }
+    
+    .logoImage.card2{
+      animation: cardSpin2 3.5s ease-in-out;
+    }
+    
+    @keyframes cardSpin2{
+      0%, 20%{transform: scale(0.5) rotate(0deg); opacity: 0}
+      40%{transform: scale(1.1) rotate(360deg); opacity: 1}
+      45%{transform: scale(1) rotate(360deg); opacity: 1}
+      85%{transform: scale(1) rotate(360deg); opacity: 1}
+      100%{transform: scale(1) rotate(360deg); opacity: 0}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo">
+      <i class="fas fa-church"></i>
+      <div class="logo-text">
+        <h1>✟ Дім Євангелія</h1>
+        <p>Трансляція 24/7</p>
+      </div>
+    </a>
+
+    <div class="header-actions">
+      <a href="index.html" class="btn-back">
+        <i class="fas fa-home"></i> На головну
+      </a>
+      <button id="themeToggleBtn" title="Змінити тему">
+        <i class="fas fa-moon"></i> Тема
+      </button>
+    </div>
+  </header>
+
+  <div id="player-container">
+    <div id="player-wrapper">
+      <div id="player"></div>
+      <button id="exitFullscreenBtn">✕</button>
+      <div id="live-indicator"><span></span>LIVE</div>
+      
+      <!-- Оверлей що блокує клік по плеєру -->
+      <div id="playerOverlay">
+        <div class="overlay-content">
+          <div class="overlay-icon">
+            <i class="fas fa-play-circle"></i>
+          </div>
+          <h3>Готові дивитися?</h3>
+          <p>Натисніть кнопку "Дивитися" нижче, щоб розпочати трансляцію</p>
+          <button class="overlay-button" onclick="document.getElementById('playButton').click()">
+            <i class="fas fa-play"></i>
+            Розпочати перегляд
+          </button>
+        </div>
+      </div>
+      
+      <div id="loadingIndicator">
+        <div class="spinner"></div>
+        <span>Завантаження...</span>
+      </div>
+      
+      <div id="logoSplash">
+        <img class="logoImage card1" src="https://raw.githubusercontent.com/christian-word/GospelVoice/main/ICO/strim1.jpg" alt="Card 1">
+        <img class="logoImage card2" src="https://raw.githubusercontent.com/christian-word/GospelVoice/main/ICO/strim2.jpg" alt="Card 2">
+      </div>
+    </div>
+    <div id="progressBarContainer"><div id="progressBar"></div></div>
+
+    <div id="controls">
+      <div class="controls-row">
+        <button id="playButton">
+          <i class="fas fa-play"></i> Дивитися
+        </button>
+        <button id="fullscreenToggleBtn">
+          <i class="fas fa-expand"></i> Повний екран
+        </button>
+      </div>
+      
+      <div class="controls-row">
+        <select id="qualitySelector" disabled>
+          <option value="default">🎬 Авто якість</option>
+          <option value="small">📱 360p</option>
+          <option value="medium">📺 480p</option>
+          <option value="large">🖥️ 720p</option>
+          <option value="hd1080">⚡ 1080p</option>
+        </select>
+        
+        <select id="timezoneSelector" disabled>
+          <option value="0" selected>⏰ Поточний час</option>
+          <option value="3600">⏩ +1 година</option>
+          <option value="7200">⏩ +2 години</option>
+          <option value="10800">⏩ +3 години</option>
+          <option value="-3600">⏪ -1 година</option>
+          <option value="-7200">⏪ -2 години</option>
+          <option value="-10800">⏪ -3 години</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-container">
+    <div class="status-card">
+      <i class="fas fa-info-circle"></i>
+      <div class="status-info">
+        <h4>Статус</h4>
+        <p id="status">Завантаження...</p>
+      </div>
+    </div>
+    <div class="status-card">
+      <i class="fas fa-clock"></i>
+      <div class="status-info">
+        <h4>Час трансляції</h4>
+        <p id="localTimeStatus">--:--:--</p>
+      </div>
+    </div>
+    <div class="status-card">
+      <i class="fas fa-calendar-day"></i>
+      <div class="status-info">
+        <h4>Поточний час</h4>
+        <p id="realTimeStatus">--:--:--</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div id="programScheduleDisplay">
+    <div class="schedule-header">
+      <h2><i class="fas fa-list-ul"></i> Розклад трансляції</h2>
+      <button id="scrollToCurrentBtn" style="display:none;">
+        <i class="fas fa-crosshairs"></i> До поточного
+      </button>
+    </div>
+    <ul id="scheduleList"></ul>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+    /* ---------- 1. Тема ---------- */
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = themeBtn.querySelector('i');
+    
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      
+      if (isDark) {
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+        localStorage.setItem('theme', 'light');
+      }
+    });
+    
+    if(localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+      themeIcon.classList.replace('fa-moon', 'fa-sun');
+    }
+
+    /* ---------- 2. YouTube ---------- */
+    let player,
+        playButton = document.getElementById('playButton'),
+        timezoneSelector = document.getElementById('timezoneSelector'),
+        qualitySelector = document.getElementById('qualitySelector'),
+        fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn'),
+        exitFullscreenBtn = document.getElementById('exitFullscreenBtn'),
+        statusDiv = document.getElementById('status'),
+        localTimeStatusDiv = document.getElementById('localTimeStatus'),
+        realTimeStatusDiv = document.getElementById('realTimeStatus'),
+        progressBar = document.getElementById('progressBar'),
+        scheduleList = document.getElementById('scheduleList'),
+        liveIndicator = document.getElementById('live-indicator'),
+        loadingIndicator = document.getElementById('loadingIndicator'),
+        toast = document.getElementById('toast'),
+        scrollToCurrentBtn = document.getElementById('scrollToCurrentBtn');
+    
+    let currentVideoIndex = 0,
+        syncTimer = null,
+        progressTimer = null,
+        remainingTimer = null,
+        watchedVideos = JSON.parse(localStorage.getItem('watchedVideos') || '[]');
+
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '100%',
+        width: '100%',
+        playerVars: {
+          'playsinline': 1,
+          'rel': 0,
+          'modestbranding': 1
+        },
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady() {
+      fetchPlaylist();
+      playButton.addEventListener('click', startBroadcast);
+      timezoneSelector.addEventListener('change', startBroadcast);
+      qualitySelector.addEventListener('change', changeQuality);
+    }
+
+    /* ---------- 3. Плейлист ---------- */
+    const PLAYLIST_URL = 'https://raw.githubusercontent.com/christian-word/hristian-media/main/json/livestream_daily.json';
+    let broadcastProgram = null;
+
+    async function fetchPlaylist() {
+      try {
+        const r = await fetch(PLAYLIST_URL);
+        if(!r.ok) throw new Error('Не вдалося завантажити плейлист');
+        const data = await r.json();
+        let t = 0;
+        data.programSchedule.forEach(v => {
+          v.startTime = t;
+          t += v.duration;
+        });
+        broadcastProgram = data;
+        statusDiv.textContent = 'Готовий';
+        playButton.disabled = false;
+        timezoneSelector.disabled = false;
+        qualitySelector.disabled = false;
+        fullscreenToggleBtn.disabled = false;
+        renderSchedule();
+      } catch(e) {
+        statusDiv.textContent = 'Помилка';
+      }
+    }
+
+    /* ---------- 4. Трансляція ---------- */
+    function startBroadcast() {
+      if(!broadcastProgram) return;
+      
+      // Ховаємо оверлей
+      const playerOverlay = document.getElementById('playerOverlay');
+      if(playerOverlay) {
+        playerOverlay.classList.add('hidden');
+        setTimeout(() => {
+          playerOverlay.style.display = 'none';
+        }, 500);
+      }
+      
+      const logoSplash = document.getElementById('logoSplash');
+      const cards = document.querySelectorAll('.logoImage');
+      logoSplash.classList.add('show');
+      logoSplash.classList.remove('hidden');
+      
+      cards.forEach(card => {
+        card.style.animation = 'none';
+        setTimeout(() => { card.style.animation = ''; }, 10);
+      });
+      
+      setTimeout(() => {
+        logoSplash.classList.add('hidden');
+        setTimeout(() => { logoSplash.classList.remove('show'); }, 800);
+      }, 3500);
+      
+      if(syncTimer) clearInterval(syncTimer);
+      if(progressTimer) clearInterval(progressTimer);
+      if(remainingTimer) clearInterval(remainingTimer);
+      
+      statusDiv.textContent = 'Синхронізація...';
+      liveIndicator.style.display = 'flex';
+      scrollToCurrentBtn.style.display = 'inline-block';
+      
+      const offset = parseInt(timezoneSelector.value, 10);
+      const real = Date.now() / 1000;
+      const start = new Date(broadcastProgram.broadcastStartTime).getTime() / 1000;
+      let elapsed = real - start + offset;
+      let vid = null, sec = 0, idx = 0;
+      
+      if(elapsed < 0) {
+        vid = broadcastProgram.programSchedule[0];
+        sec = 0;
+        idx = 0;
+      } else {
+        for(let i = 0; i < broadcastProgram.programSchedule.length; i++) {
+          const v = broadcastProgram.programSchedule[i];
+          if(elapsed >= v.startTime && elapsed < v.startTime + v.duration) {
+            vid = v;
+            sec = elapsed - v.startTime;
+            idx = i;
+            break;
+          }
+        }
+      }
+      
+      if(vid) {
+        const quality = qualitySelector.value;
+        player.loadVideoById({
+          videoId: vid.videoId,
+          startSeconds: Math.max(0, sec),
+          suggestedQuality: quality
+        });
+        currentVideoIndex = idx;
+      }
+      
+      startSyncTimer(start);
+      highlightCurrentVideo(currentVideoIndex);
+      startProgressTimer();
+      startRemainingTimer();
+    }
+
+    function onPlayerStateChange(e) {
+      if(e.data === YT.PlayerState.BUFFERING) {
+        loadingIndicator.classList.add('show');
+      } else {
+        loadingIndicator.classList.remove('show');
+      }
+      
+      if(e.data === YT.PlayerState.ENDED) {
+        const vid = broadcastProgram.programSchedule[currentVideoIndex];
+        if(vid && !watchedVideos.includes(vid.videoId)) {
+          watchedVideos.push(vid.videoId);
+          localStorage.setItem('watchedVideos', JSON.stringify(watchedVideos));
+        }
+        
+        currentVideoIndex++;
+        if(currentVideoIndex < broadcastProgram.programSchedule.length) {
+          const v = broadcastProgram.programSchedule[currentVideoIndex];
+          const quality = qualitySelector.value;
+          player.loadVideoById({
+            videoId: v.videoId,
+            startSeconds: 0,
+            suggestedQuality: quality
+          });
+          showToast('▶️ Наступне відео: ' + parseVideoInfo(v.title, currentVideoIndex).shortTitle);
+        } else {
+          statusDiv.textContent = 'Завершено';
+          liveIndicator.style.display = 'none';
+        }
+      } else if(e.data === YT.PlayerState.PLAYING) {
+        liveIndicator.style.display = 'flex';
+        loadingIndicator.classList.remove('show');
+      } else {
+        liveIndicator.style.display = 'none';
+      }
+    }
+
+    /* ---------- 5. Синхронізація ---------- */
+    function startSyncTimer(broadcastStartTimeInSeconds) {
+      syncTimer = setInterval(() => {
+        const now = Date.now() / 1000;
+        const offset = parseInt(timezoneSelector.value, 10);
+        const elapsedTime = now - broadcastStartTimeInSeconds + offset;
+        
+        const display = new Date((broadcastStartTimeInSeconds + elapsedTime) * 1000);
+        localTimeStatusDiv.textContent = display.toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+        
+        let idx = -1, sec = 0;
+        if(elapsedTime < 0) {
+          idx = 0;
+          sec = 0;
+        } else {
+          for(let i = 0; i < broadcastProgram.programSchedule.length; i++) {
+            const v = broadcastProgram.programSchedule[i];
+            if(elapsedTime >= v.startTime && elapsedTime < v.startTime + v.duration) {
+              idx = i;
+              sec = elapsedTime - v.startTime;
+              break;
+            }
+          }
+        }
+        
+        if(idx === -1) return;
+        
+        if(idx !== currentVideoIndex) {
+          currentVideoIndex = idx;
+          const quality = qualitySelector.value;
+          player.loadVideoById({
+            videoId: broadcastProgram.programSchedule[currentVideoIndex].videoId,
+            startSeconds: Math.max(0, sec),
+            suggestedQuality: quality
+          });
+          statusDiv.textContent = 'Зміна відео';
+          highlightCurrentVideo(currentVideoIndex);
+          
+          const vid = broadcastProgram.programSchedule[currentVideoIndex];
+          showToast('🎬 Зараз: ' + parseVideoInfo(vid.title, currentVideoIndex).shortTitle);
+          return;
+        }
+        
+        const drift = player.getCurrentTime() - sec;
+        if(Math.abs(drift) > 1) {
+          player.setPlaybackRate(drift > 0 ? 0.9 : 1.1);
+          statusDiv.textContent = 'Корекція';
+        } else {
+          player.setPlaybackRate(1);
+          statusDiv.textContent = 'Синхронізовано';
+        }
+      }, 1000);
+    }
+
+    function startProgressTimer() {
+      if(progressTimer) clearInterval(progressTimer);
+      progressTimer = setInterval(() => {
+        if(player && player.getDuration) {
+          const cur = player.getCurrentTime();
+          const dur = player.getDuration();
+          if(dur > 0) progressBar.style.width = (cur / dur * 100) + '%';
+        }
+      }, 500);
+    }
+
+    function startRemainingTimer() {
+      if(remainingTimer) clearInterval(remainingTimer);
+      remainingTimer = setInterval(() => {
+        updateRemainingTime();
+      }, 1000);
+    }
+
+    function updateRemainingTime() {
+      if(!player || !player.getDuration || currentVideoIndex < 0) return;
+      
+      const cur = player.getCurrentTime();
+      const dur = player.getDuration();
+      const remaining = Math.max(0, dur - cur);
+      
+      const minutes = Math.floor(remaining / 60);
+      const seconds = Math.floor(remaining % 60);
+      
+      const element = document.querySelector(`.schedule-item[data-index="${currentVideoIndex}"] .time-remaining`);
+      if(element) {
+        element.textContent = `⏱ ${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+    }
+
+    /* ---------- 6. Розклад ---------- */
+    function parseVideoInfo(title, index) {
+      if(!title) {
+        return {
+          shortTitle: `Відео №${index + 1}`,
+          speakerAndDate: ''
+        };
+      }
+      
+      const parts = title.split(', ');
+      let speakerAndDate = '';
+      let shortTitle = '';
+
+      if(parts.length >= 2) {
+        const date = parts.pop();
+        const speaker = parts.pop();
+        speakerAndDate = `${speaker}, ${date}`;
+        shortTitle = parts.join(', ');
+      } else {
+        shortTitle = title;
+      }
+
+      if(shortTitle.length > 50) {
+        shortTitle = shortTitle.substring(0, 50) + '...';
+      }
+
+      return { shortTitle, speakerAndDate };
+    }
+    
+    function renderSchedule() {
+      if(!broadcastProgram) return;
+      scheduleList.innerHTML = '';
+      const start = new Date(broadcastProgram.broadcastStartTime).getTime() / 1000;
+      
+      broadcastProgram.programSchedule.forEach((v, i) => {
+        const li = document.createElement('li');
+        li.className = 'schedule-item';
+        li.dataset.index = i;
+        
+        const videoStartTime = new Date((start + v.startTime) * 1000);
+        const videoEndTime = new Date((start + v.startTime + v.duration) * 1000);
+        const { shortTitle, speakerAndDate } = parseVideoInfo(v.title, i);
+        
+        const isWatched = watchedVideos.includes(v.videoId);
+        if(isWatched) li.classList.add('watched');
+        
+        li.innerHTML = `
+          <div class="schedule-item-left">
+            <strong>${shortTitle}</strong>
+            <small>${speakerAndDate}</small>
+          </div>
+          <div class="schedule-item-right">
+            <small>
+                ${videoStartTime.getHours().toString().padStart(2, '0')}:${videoStartTime.getMinutes().toString().padStart(2, '0')} — 
+                ${videoEndTime.getHours().toString().padStart(2, '0')}:${videoEndTime.getMinutes().toString().padStart(2, '0')}
+            </small>
+            <span class="time-remaining"></span>
+          </div>
+        `;
+        scheduleList.appendChild(li);
+      });
+    }
+    
+    function highlightCurrentVideo(index) {
+      document.querySelectorAll('.schedule-item').forEach((item, i) => {
+        item.classList.remove('current', 'upcoming', 'played');
+        if(i < index) {
+          item.classList.add('played');
+        } else if(i === index) {
+          item.classList.add('current');
+        } else {
+          item.classList.add('upcoming');
+        }
+      });
+      
+      const cur = document.querySelector(`.schedule-item[data-index="${index}"]`);
+      if(cur) {
+        const list = document.getElementById('scheduleList');
+        
+        // Прокручуємо ТІЛЬКИ список, не весь документ
+        const itemTop = cur.offsetTop - list.offsetTop;
+        
+        list.scrollTo({
+          top: itemTop,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    /* ---------- 7. Якість відео ---------- */
+    function changeQuality() {
+      if(!player || !player.setPlaybackQuality) return;
+      const quality = qualitySelector.value;
+      player.setPlaybackQuality(quality);
+      showToast('🎬 Якість змінено: ' + getQualityName(quality));
+    }
+
+    function getQualityName(quality) {
+      const names = {
+        'small': '360p',
+        'medium': '480p',
+        'large': '720p',
+        'hd1080': '1080p',
+        'default': 'Авто'
+      };
+      return names[quality] || quality;
+    }
+
+    /* ---------- 8. Тост ---------- */
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    /* ---------- 9. Кнопка "До поточного" ---------- */
+    scrollToCurrentBtn.addEventListener('click', () => {
+      highlightCurrentVideo(currentVideoIndex);
+    });
+
+    scheduleList.addEventListener('scroll', () => {
+      if(currentVideoIndex >= 0) {
+        scrollToCurrentBtn.style.display = 'inline-block';
+      }
+    });
+
+    /* ---------- 10. Повний екран ---------- */
+    function isMobile() {
+      return window.innerWidth <= 768;
+    }
+    
+    fullscreenToggleBtn.addEventListener('click', () => {
+      if(isMobile()) {
+        document.body.classList.add('virtual-fullscreen');
+        setTimeout(() => player.setSize('100%', '100%'), 500);
+      } else {
+        const container = document.getElementById('player-container');
+        if(container.requestFullscreen) {
+          container.requestFullscreen();
+        } else if(container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        } else if(container.mozRequestFullScreen) {
+          container.mozRequestFullScreen();
+        } else if(container.msRequestFullscreen) {
+          container.msRequestFullscreen();
+        }
+      }
+    });
+    
+    exitFullscreenBtn.addEventListener('click', () => {
+      document.body.classList.remove('virtual-fullscreen');
+      setTimeout(() => player.setSize('100%', '100%'), 500);
+    });
+    
+    document.addEventListener('fullscreenchange', () => {
+      if(!document.fullscreenElement) {
+        player.setSize('100%', '100%');
+      }
+    });
+    
+    document.addEventListener('webkitfullscreenchange', () => {
+      if(!document.webkitFullscreenElement) {
+        player.setSize('100%', '100%');
+      }
+    });
+
+    /* ---------- 11. Годинник ---------- */
+    setInterval(() => {
+      realTimeStatusDiv.textContent = new Date().toLocaleTimeString('uk-UA', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+    }, 1000);
+  </script>
+</body>
+</html>

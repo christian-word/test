@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Open Hermeneutics - Fix 1</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 40px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .controls { display: flex; gap: 15px; margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; align-items: center; }
+        .controls label { font-size: 12px; font-weight: bold; color: #666; }
+        input { width: 70px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        button { padding: 10px 25px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button:hover { background: #0056b3; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .card { padding: 20px; border: 1px solid #eaeaea; border-radius: 10px; background: #fff; position: relative; }
+        .card h3 { margin-top: 0; font-size: 11px; color: #007bff; letter-spacing: 1px; }
+        .verse-text { font-size: 18px; line-height: 1.6; color: #2c3e50; }
+        .error { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 6px; margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="margin-top:0">Исследователь Писания</h2>
+    
+    <div class="controls">
+        <div>
+            <label>КНИГА ID</label><br>
+            <input id="book" type="number" value="1">
+        </div>
+        <div>
+            <label>ГЛАВА</label><br>
+            <input id="chap" type="number" value="1">
+        </div>
+        <div>
+            <label>СТИХ</label><br>
+            <input id="vers" type="number" value="1">
+        </div>
+        <button onclick="loadData()" style="margin-top: 15px;">Сравнить тексты</button>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>СИНОДАЛЬНЫЙ</h3>
+            <div id="out1" class="verse-text">...</div>
+        </div>
+        <div class="card" style="background: #fdfbff;">
+            <h3>СОВРЕМЕННЫЙ (BTI)</h3>
+            <div id="out2" class="verse-text">...</div>
+        </div>
+    </div>
+    
+    <div id="errorMessage" class="error"></div>
+</div>
+
+<script>
+    async function loadData() {
+        const b = document.getElementById('book').value;
+        const c = document.getElementById('chap').value;
+        const v = document.getElementById('vers').value;
+        const errDiv = document.getElementById('errorMessage');
+        
+        errDiv.style.display = "none";
+        document.getElementById('out1').innerText = "Загрузка...";
+        document.getElementById('out2').innerText = "Загрузка...";
+
+        // Важно: пробуем эндпоинт без финального слэша, 
+        // так как некоторые серверы воспринимают его как попытку зайти в директорию
+        const url1 = `https://bolls.life/get-verse/1/${b}/${c}/${v}`;
+        const url2 = `https://bolls.life/get-verse/48/${b}/${c}/${v}`;
+
+        try {
+            const fetchOptions = {
+                method: 'GET',
+                mode: 'cors', // Пытаемся явно указать CORS
+                headers: { 'Accept': 'application/json' }
+            };
+
+            const res1 = await fetch(url1, fetchOptions);
+            const res2 = await fetch(url2, fetchOptions);
+
+            if (!res1.ok || !res2.ok) {
+                throw new Error(`Ошибка сервера: ${res1.status}. Возможно, такого стиха нет.`);
+            }
+
+            const data1 = await res1.json();
+            const data2 = await res2.json();
+
+            document.getElementById('out1').innerText = data1.text;
+            document.getElementById('out2').innerText = data2.text;
+
+        } catch (err) {
+            errDiv.style.display = "block";
+            errDiv.innerText = "Внимание: " + err.message + ". Если вы запускаете файл локально, браузер может блокировать запрос (CORS).";
+            document.getElementById('out1').innerText = "---";
+            document.getElementById('out2').innerText = "---";
+            console.error("Full error:", err);
+        }
+    }
+</script>
+
+</body>
+</html>

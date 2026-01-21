@@ -1,102 +1,301 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Open Hermeneutics - Fix 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Исследователь Писания</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 40px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .controls { display: flex; gap: 15px; margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px; align-items: center; }
-        .controls label { font-size: 12px; font-weight: bold; color: #666; }
-        input { width: 70px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
-        button { padding: 10px 25px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        button:hover { background: #0056b3; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
-        .card { padding: 20px; border: 1px solid #eaeaea; border-radius: 10px; background: #fff; position: relative; }
-        .card h3 { margin-top: 0; font-size: 11px; color: #007bff; letter-spacing: 1px; }
-        .verse-text { font-size: 18px; line-height: 1.6; color: #2c3e50; }
-        .error { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 6px; margin-top: 20px; display: none; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 35px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2); 
+        }
+        h2 { 
+            margin-top: 0; 
+            color: #667eea; 
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 30px; 
+            padding: 25px; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px; 
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .controls label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: #555; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input { 
+            width: 80px; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        button { 
+            padding: 12px 30px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card { 
+            padding: 25px; 
+            border: 2px solid #eaeaea; 
+            border-radius: 12px; 
+            background: #fff;
+            min-height: 150px;
+            transition: box-shadow 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        .card h3 { 
+            margin: 0 0 15px 0; 
+            font-size: 12px; 
+            color: #667eea; 
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+        .verse-text { 
+            font-size: 17px; 
+            line-height: 1.8; 
+            color: #2c3e50;
+        }
+        .loading {
+            color: #999;
+            font-style: italic;
+        }
+        .error { 
+            color: #dc3545; 
+            background: #ffe6e6; 
+            padding: 15px 20px; 
+            border-radius: 8px; 
+            margin-top: 20px; 
+            display: none;
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #2196F3;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .reference {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="margin-top:0">Исследователь Писания</h2>
+    <h2>📖 Исследователь Писания</h2>
     
     <div class="controls">
-        <div>
-            <label>КНИГА ID</label><br>
-            <input id="book" type="number" value="1">
+        <div class="control-group">
+            <label>Книга ID</label>
+            <input id="book" type="number" value="1" min="1" max="66">
         </div>
-        <div>
-            <label>ГЛАВА</label><br>
-            <input id="chap" type="number" value="1">
+        <div class="control-group">
+            <label>Глава</label>
+            <input id="chap" type="number" value="1" min="1">
         </div>
-        <div>
-            <label>СТИХ</label><br>
-            <input id="vers" type="number" value="1">
+        <div class="control-group">
+            <label>Стих</label>
+            <input id="vers" type="number" value="1" min="1">
         </div>
-        <button onclick="loadData()" style="margin-top: 15px;">Сравнить тексты</button>
+        <button id="loadBtn" onclick="loadData()">Загрузить тексты</button>
     </div>
+
+    <div id="reference" class="reference"></div>
 
     <div class="grid">
         <div class="card">
-            <h3>СИНОДАЛЬНЫЙ</h3>
-            <div id="out1" class="verse-text">...</div>
+            <h3>СИНОДАЛЬНЫЙ ПЕРЕВОД</h3>
+            <div id="out1" class="verse-text loading">Введите данные и нажмите кнопку загрузки</div>
         </div>
-        <div class="card" style="background: #fdfbff;">
-            <h3>СОВРЕМЕННЫЙ (BTI)</h3>
-            <div id="out2" class="verse-text">...</div>
+        <div class="card">
+            <h3>СОВРЕМЕННЫЙ ПЕРЕВОД (BTI)</h3>
+            <div id="out2" class="verse-text loading">Введите данные и нажмите кнопку загрузки</div>
         </div>
     </div>
     
     <div id="errorMessage" class="error"></div>
+    
+    <div class="info">
+        <strong>💡 Подсказка:</strong> Используйте ID книг Библии (1-66). Например: Бытие = 1, Псалтирь = 19, Евангелие от Матфея = 40.<br>
+        <strong>🔧 Проблема с API?</strong> Bolls Bible API может быть недоступен или блокировать запросы. Попробуйте открыть файл через веб-сервер вместо локального просмотра.
+    </div>
 </div>
 
 <script>
+    const bookNames = {
+        1: "Бытие", 2: "Исход", 3: "Левит", 19: "Псалтирь", 
+        40: "Евангелие от Матфея", 41: "Евангелие от Марка", 
+        42: "Евангелие от Луки", 43: "Евангелие от Иоанна"
+    };
+
     async function loadData() {
         const b = document.getElementById('book').value;
         const c = document.getElementById('chap').value;
         const v = document.getElementById('vers').value;
         const errDiv = document.getElementById('errorMessage');
+        const refDiv = document.getElementById('reference');
+        const loadBtn = document.getElementById('loadBtn');
         
-        errDiv.style.display = "none";
-        document.getElementById('out1').innerText = "Загрузка...";
-        document.getElementById('out2').innerText = "Загрузка...";
+        if (!b || !c || !v) {
+            showError("Пожалуйста, заполните все поля");
+            return;
+        }
 
-        // Важно: пробуем эндпоинт без финального слэша, 
-        // так как некоторые серверы воспринимают его как попытку зайти в директорию
-        const url1 = `https://bolls.life/get-verse/1/${b}/${c}/${v}`;
-        const url2 = `https://bolls.life/get-verse/48/${b}/${c}/${v}`;
+        errDiv.style.display = "none";
+        loadBtn.disabled = true;
+        document.getElementById('out1').innerHTML = '<span class="loading">⏳ Загрузка...</span>';
+        document.getElementById('out2').innerHTML = '<span class="loading">⏳ Загрузка...</span>';
+        
+        const bookName = bookNames[b] || `Книга ${b}`;
+        refDiv.textContent = `${bookName} ${c}:${v}`;
 
         try {
-            const fetchOptions = {
-                method: 'GET',
-                mode: 'cors', // Пытаемся явно указать CORS
-                headers: { 'Accept': 'application/json' }
-            };
+            // Пробуем разные варианты URL
+            const urls = [
+                {
+                    name: "Синодальный",
+                    url: `https://bolls.life/get-verse/1/${b}/${c}/${v}/`
+                },
+                {
+                    name: "BTI",
+                    url: `https://bolls.life/get-verse/48/${b}/${c}/${v}/`
+                }
+            ];
 
-            const res1 = await fetch(url1, fetchOptions);
-            const res2 = await fetch(url2, fetchOptions);
+            const results = await Promise.allSettled(
+                urls.map(({url}) => 
+                    fetch(url, {
+                        method: 'GET',
+                        headers: { 
+                            'Accept': 'application/json',
+                        }
+                    }).then(res => {
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}`);
+                        }
+                        return res.json();
+                    })
+                )
+            );
 
-            if (!res1.ok || !res2.ok) {
-                throw new Error(`Ошибка сервера: ${res1.status}. Возможно, такого стиха нет.`);
+            // Обработка результатов
+            if (results[0].status === 'fulfilled') {
+                const text = results[0].value.text || results[0].value;
+                document.getElementById('out1').textContent = text;
+            } else {
+                document.getElementById('out1').innerHTML = '<span style="color:#dc3545">❌ Не удалось загрузить</span>';
             }
 
-            const data1 = await res1.json();
-            const data2 = await res2.json();
+            if (results[1].status === 'fulfilled') {
+                const text = results[1].value.text || results[1].value;
+                document.getElementById('out2').textContent = text;
+            } else {
+                document.getElementById('out2').innerHTML = '<span style="color:#dc3545">❌ Не удалось загрузить</span>';
+            }
 
-            document.getElementById('out1').innerText = data1.text;
-            document.getElementById('out2').innerText = data2.text;
+            // Если оба запроса провалились
+            if (results[0].status === 'rejected' && results[1].status === 'rejected') {
+                throw new Error('Не удалось загрузить данные из API');
+            }
 
         } catch (err) {
-            errDiv.style.display = "block";
-            errDiv.innerText = "Внимание: " + err.message + ". Если вы запускаете файл локально, браузер может блокировать запрос (CORS).";
-            document.getElementById('out1').innerText = "---";
-            document.getElementById('out2').innerText = "---";
-            console.error("Full error:", err);
+            showError(`Ошибка загрузки: ${err.message}. 
+                Возможные причины: 
+                • API временно недоступен
+                • Неверные параметры (книга/глава/стих)
+                • CORS блокировка (откройте через веб-сервер)
+                • Нет подключения к интернету`);
+            
+            document.getElementById('out1').innerHTML = '<span style="color:#999">—</span>';
+            document.getElementById('out2').innerHTML = '<span style="color:#999">—</span>';
+            
+            console.error("Детали ошибки:", err);
+        } finally {
+            loadBtn.disabled = false;
         }
     }
+
+    function showError(message) {
+        const errDiv = document.getElementById('errorMessage');
+        errDiv.innerHTML = `<strong>⚠️ Внимание:</strong> ${message}`;
+        errDiv.style.display = "block";
+    }
+
+    // Загрузка по Enter
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadData();
+        });
+    });
 </script>
 
 </body>

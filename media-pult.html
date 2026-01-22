@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Church Flow v3.2 - High Visibility</title>
+    <style>
+        :root { 
+            --accent: #3498db; --audio: #e67e22; --video: #9b59b6; --bg: #f0f2f5; 
+            --live: #2ecc71; --live-text: #27ae60; --selected: #ebf5fb; --sidebar-bg: #2c3e50; 
+            --alert: #e74c3c;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* ЛЕВАЯ ПАНЕЛЬ */
+        #sidebar-left { width: 280px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; }
+        #sidebar-left h2 { font-size: 0.9rem; padding: 15px; margin: 0; background: rgba(0,0,0,0.2); text-align: center; border-bottom: 1px solid #3e4f5f; }
+        #nav-list { flex-grow: 1; overflow-y: auto; padding: 0; list-style: none; margin: 0; }
+        .nav-item { padding: 12px 15px; cursor: pointer; border-left: 4px solid transparent; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+        .nav-item.active { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
+        .nav-item.playing { background: rgba(46, 204, 113, 0.2) !important; color: #2ecc71; font-weight: bold; }
+        .nav-dot { width: 8px; height: 8px; background: var(--live); border-radius: 50%; display: none; box-shadow: 0 0 8px var(--live); }
+        .nav-item.playing .nav-dot { display: block; animation: pulse 1s infinite; }
+
+        /* ЦЕНТР */
+        #main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        #timeline { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 160px; }
+        .container { max-width: 700px; margin: 0 auto; }
+
+        /* ПРАВАЯ ПАНЕЛЬ */
+        #sidebar-right { width: 240px; background: #fff; border-left: 1px solid #ddd; display: flex; flex-direction: column; padding: 15px; }
+        .widget { background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; border: 1px solid #eee; }
+        #clock { font-size: 1.8rem; font-weight: bold; color: #2c3e50; }
+        #timer-display { font-size: 1.8rem; font-family: monospace; color: var(--alert); }
+        #notes-area { width: 100%; flex-grow: 1; border: 1px solid #eee; border-radius: 6px; padding: 10px; font-size: 0.9rem; resize: none; outline: none; background: #fffdf0; }
+
+        /* БЛОКИ С ЦВЕТОВОЙ ИНДИКАЦИЕЙ */
+        .block { 
+            background: white; border-radius: 10px; padding: 18px; margin-bottom: 15px; 
+            border: 2px solid #ddd; border-left-width: 10px; position: relative; 
+            transition: background 0.3s, border-color 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
+        
+        /* Состояние: ВЫБРАН */
+        .block.selected { background: var(--selected); border-color: var(--accent); }
+        
+        /* Состояние: ИГРАЕТ (LIVE) - Высший приоритет */
+        .block.is-playing { 
+            background: #e8f8f5 !important; 
+            border-color: var(--live) !important; 
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.2);
+        }
+
+        .block.text { border-left-color: var(--accent); }
+        .block.audio { border-left-color: var(--audio); }
+        .block.video { border-left-color: var(--video); }
+        
+        .live-label { 
+            display: none; position: absolute; top: 10px; right: 70px; 
+            background: var(--alert); color: white; font-size: 10px; 
+            font-weight: bold; padding: 2px 8px; border-radius: 4px; z-index: 5;
+        }
+        .block.is-playing .live-label { display: block; animation: pulse 1s infinite; }
+
+        .title-field { font-size: 1.2rem; font-weight: bold; outline: none; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 12px; padding: 2px 0; width: 80%; }
+        .nav-controls { position: absolute; right: 10px; top: 10px; display: flex; gap: 5px; }
+        .nav-controls button { cursor: pointer; border: none; background: #eee; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
+
+        /* МЕДИА */
+        .media-box { background: rgba(255,255,255,0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); margin-top: 5px; }
+        iframe, video { width: 100%; height: 180px; background: #000; border-radius: 6px; margin-top: 8px; display: block; border: none; }
+        
+        .custom-controls { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+        .btn-play { background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-stop { background: #c0392b; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .progress-bar { flex-grow: 1; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; display: none; }
+        .block.audio .progress-bar, .block.video:not(.is-yt) .progress-bar { display: block; }
+        .progress-fill { width: 0%; height: 100%; background: #3498db; transition: width 0.1s linear; }
+
+        /* ПАНЕЛЬ ВСТАВКИ */
+        .add-panel { position: absolute; bottom: 0; width: 100%; background: white; padding: 15px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 100; }
+        .add-btn { padding: 10px 20px; border: none; border-radius: 20px; color: white; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .paste-zone { width: 400px; }
+        .paste-label-input { width: 100%; padding: 8px; border: 2px dashed #ccc; border-radius: 10px; text-align: center; outline: none; font-weight: bold; color: #888; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+<div id="sidebar-left">
+    <h2>ПЛАН СЛУЖЕНИЯ</h2>
+    <ul id="nav-list"></ul>
+</div>
+
+<div id="main-content">
+    <div id="timeline">
+        <div class="container" id="blocks-container"></div>
+    </div>
+    <div class="add-panel">
+        <div style="display:flex; gap:12px;">
+            <button class="add-btn" style="background:var(--accent)" onclick="createNewBlock('text')">+ ТЕКСТ</button>
+            <button class="add-btn" style="background:var(--audio)" onclick="createNewBlock('audio')">+ АУДИО</button>
+            <button class="add-btn" style="background:var(--video)" onclick="createNewBlock('video')">+ ВИДЕО</button>
+        </div>
+        <div class="paste-zone">
+            <input type="text" id="direct-paste" class="paste-label-input" placeholder="ВСТАВИТЬ ССЫЛКУ ИЛИ ТЕКСТ (CTRL+V)">
+        </div>
+    </div>
+</div>
+
+<div id="sidebar-right">
+    <div class="widget">
+        <h3>ВРЕМЯ</h3>
+        <div id="clock">00:00:00</div>
+    </div>
+    <div class="widget">
+        <h3>ТАЙМЕР БЛОКА</h3>
+        <div id="timer-display">00:00</div>
+        <button onclick="resetTimer()" style="font-size:10px; margin-top:5px; cursor:pointer;">СБРОСИТЬ</button>
+    </div>
+    <textarea id="notes-area" placeholder="Заметки по ходу служения..."></textarea>
+</div>
+
+<script>
+    // АВТОСОХРАНЕНИЕ И ЗАГРУЗКА
+    function saveToStorage() {
+        const blocks = [];
+        document.querySelectorAll('.block').forEach(block => {
+            const data = {
+                id: block.id,
+                type: block.classList.contains('audio') ? 'audio' : block.classList.contains('video') ? 'video' : 'text',
+                title: block.querySelector('.title-field').innerText,
+                mediaData: null,
+                mediaType: null,
+                isYouTube: false,
+                youtubeId: null
+            };
+            
+            // Сохраняем медиа
+            const media = document.getElementById(`media-${block.id}`);
+            if(media && media.src && !media.src.includes('blob:')) {
+                data.mediaData = media.src;
+                data.mediaType = media.tagName.toLowerCase();
+            }
+            
+            // Проверяем YouTube
+            const ytFrame = document.getElementById(`yt-frame-${block.id}`);
+            if(ytFrame && ytFrame.src) {
+                const match = ytFrame.src.match(/embed\/([^?]+)/);
+                if(match) {
+                    data.isYouTube = true;
+                    data.youtubeId = match[1];
+                }
+            }
+            
+            blocks.push(data);
+        });
+        
+        localStorage.setItem('churchFlowBlocks', JSON.stringify(blocks));
+        localStorage.setItem('churchFlowNotes', document.getElementById('notes-area').value);
+    }
+
+    function loadFromStorage() {
+        const saved = localStorage.getItem('churchFlowBlocks');
+        const notes = localStorage.getItem('churchFlowNotes');
+        
+        if(notes) document.getElementById('notes-area').value = notes;
+        
+        if(saved) {
+            const blocks = JSON.parse(saved);
+            blocks.forEach(data => {
+                const id = createNewBlock(data.type);
+                const block = document.getElementById(id);
+                
+                // Восстанавливаем заголовок
+                block.querySelector('.title-field').innerText = data.title;
+                
+                // Восстанавливаем медиа
+                if(data.isYouTube && data.youtubeId) {
+                    applyYT(id, `https://www.youtube.com/watch?v=${data.youtubeId}`);
+                } else if(data.mediaData) {
+                    const media = document.getElementById(`media-${id}`);
+                    if(media) {
+                        if(document.getElementById(`yt-setup-${id}`)) document.getElementById(`yt-setup-${id}`).style.display = 'none';
+                        if(document.getElementById(`audio-setup-${id}`)) document.getElementById(`audio-setup-${id}`).style.display = 'none';
+                        media.src = data.mediaData;
+                        if(media.tagName === 'VIDEO') media.style.display = 'block';
+                        document.getElementById(`controls-${id}`).style.display = 'flex';
+                        
+                        // Добавляем обработчик прогресс-бара
+                        media.ontimeupdate = () => {
+                            const percent = (media.currentTime / media.duration) * 100;
+                            const prg = document.getElementById(`progress-${id}`);
+                            if(prg) prg.style.width = percent + '%';
+                            if (media.ended) stopMedia(id);
+                        };
+                    }
+                }
+            });
+            updateNavigator();
+        }
+    }
+
+    // Автосохранение каждые 2 секунды
+    setInterval(saveToStorage, 2000);
+
+    // Загрузка при старте
+    window.addEventListener('load', loadFromStorage);
+
+    // ТАЙМЕР
+    let timerInterval;
+    let seconds = 0;
+    function startTimer() {
+        clearInterval(timerInterval); seconds = 0;
+        document.getElementById('timer-display').innerText = '00:00';
+        timerInterval = setInterval(() => {
+            seconds++;
+            const m = Math.floor(seconds/60).toString().padStart(2,'0');
+            const s = (seconds%60).toString().padStart(2,'0');
+            document.getElementById('timer-display').innerText = `${m}:${s}`;
+        }, 1000);
+    }
+    function stopTimer() { clearInterval(timerInterval); }
+    function resetTimer() { stopTimer(); seconds=0; document.getElementById('timer-display').innerText = '00:00'; }
+
+    // ЧАСЫ
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+
+    const pasteInput = document.getElementById('direct-paste');
+    const navList = document.getElementById('nav-list');
+
+    function updateNavigator() {
+        navList.innerHTML = '';
+        document.querySelectorAll('.block').forEach(block => {
+            const title = block.querySelector('.title-field').innerText || 'Без названия';
+            const li = document.createElement('li');
+            li.className = `nav-item ${block.classList.contains('selected') ? 'active' : ''} ${block.classList.contains('is-playing') ? 'playing' : ''}`;
+            li.innerHTML = `<span>${title}</span><div class="nav-dot"></div>`;
+            li.onclick = () => selectBlock(block.id);
+            navList.appendChild(li);
+        });
+    }
+
+    pasteInput.addEventListener('input', (e) => {
+        if (e.target.value.trim()) { processInput(e.target.value.trim()); e.target.value = ''; }
+    });
+
+    function processInput(value) {
+        const ytId = getYTId(value);
+        if(ytId) { applyYT(createNewBlock('video'), value); }
+        else { document.querySelector(`#${createNewBlock('text')} .title-field`).innerText = value; }
+        updateNavigator();
+    }
+
+    function createNewBlock(type) {
+        const id = 'b' + Date.now();
+        const div = document.createElement('div');
+        div.className = `block ${type}`;
+        div.id = id;
+        div.onclick = () => selectBlock(id);
+
+        let mediaHtml = '';
+        if (type !== 'text') {
+            mediaHtml = `<div class="media-box" onclick="event.stopPropagation()">
+                ${type === 'video' ? `<div id="yt-setup-${id}"><input type="text" id="yt-inp-${id}" placeholder="Вставить ссылку YouTube..." style="width:70%; padding:4px;"> <button onclick="applyYT('${id}', document.getElementById('yt-inp-${id}').value)">OK</button></div>` : ''}
+                ${type === 'audio' ? `<div id="audio-setup-${id}"><input type="text" id="audio-inp-${id}" placeholder="Вставить ссылку на аудио (MP3, WAV...)..." style="width:70%; padding:4px;"> <button onclick="applyAudioURL('${id}', document.getElementById('audio-inp-${id}').value)">OK</button></div>` : ''}
+                <input type="file" accept="${type}/*" onchange="loadFile(event, '${id}')" style="font-size:11px; margin: 8px 0;">
+                <div id="media-content-${id}">
+                    ${type === 'video' ? `<video id="media-${id}" style="display:none"></video>` : `<audio id="media-${id}"></audio>`}
+                </div>
+                <div id="controls-${id}" style="display:none" class="custom-controls">
+                    <button class="btn-play" id="btn-play-${id}" onclick="toggleMedia('${id}')">▶ PLAY</button>
+                    <button class="btn-stop" onclick="stopMedia('${id}')">■ STOP</button>
+                    <div class="progress-bar"><div id="progress-${id}" class="progress-fill"></div></div>
+                </div>
+            </div>`;
+        }
+
+        div.innerHTML = `
+            <div class="live-label">LIVE</div>
+            <div class="nav-controls">
+                <button onclick="moveUp('${id}', event)">↑</button>
+                <button onclick="moveDown('${id}', event)">↓</button>
+                <button onclick="removeBlock('${id}', event)">✕</button>
+            </div>
+            <div class="title-field" contenteditable="true" oninput="updateNavigator()" onclick="event.stopPropagation()">Новый этап...</div>
+            ${mediaHtml}`;
+        document.getElementById('blocks-container').appendChild(div);
+        selectBlock(id);
+        return id;
+    }
+
+    function applyYT(id, url) {
+        const ytId = getYTId(url);
+        if(ytId) {
+            const setup = document.getElementById(`yt-setup-${id}`);
+            if(setup) setup.style.display = 'none';
+            document.getElementById(`media-content-${id}`).innerHTML = `
+                <iframe id="yt-frame-${id}" src="https://www.youtube.com/embed/${ytId}?enablejsapi=1" allow="autoplay"></iframe>
+                <div class="custom-controls">
+                    <button class="btn-play" onclick="playYT('${id}')">▶ PLAY</button>
+                    <button class="btn-stop" onclick="stopYT('${id}')">■ STOP</button>
+                </div>`;
+        }
+    }
+
+    function applyAudioURL(id, url) {
+        if(url.trim()) {
+            const setup = document.getElementById(`audio-setup-${id}`);
+            if(setup) setup.style.display = 'none';
+            const audio = document.getElementById(`media-${id}`);
+            audio.src = url;
+            document.getElementById(`controls-${id}`).style.display = 'flex';
+            
+            // Прогресс-бар для URL аудио
+            audio.ontimeupdate = () => {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                const prg = document.getElementById(`progress-${id}`);
+                if(prg) prg.style.width = percent + '%';
+                if (audio.ended) stopMedia(id);
+            };
+        }
+    }
+
+    function playYT(id) { 
+        globalStopAll(); 
+        document.getElementById(`yt-frame-${id}`).contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        document.getElementById(id).classList.add('is-playing'); 
+        startTimer();
+        updateNavigator(); 
+    }
+    
+    function stopYT(id) { 
+        const f = document.getElementById(`yt-frame-${id}`); if(f) f.src = f.src;
+        document.getElementById(id).classList.remove('is-playing'); 
+        stopTimer();
+        updateNavigator(); 
+    }
+
+    function toggleMedia(id) {
+        const m = document.getElementById(`media-${id}`);
+        const b = document.getElementById(id);
+        const btn = document.getElementById(`btn-play-${id}`);
+        if (m.paused) { 
+            globalStopAll(); 
+            m.play(); 
+            b.classList.add('is-playing'); 
+            startTimer();
+            if(btn) btn.innerText = "|| PAUSE";
+        }
+        else { 
+            m.pause(); 
+            b.classList.remove('is-playing'); 
+            stopTimer();
+            if(btn) btn.innerText = "▶ PLAY";
+        }
+        updateNavigator();
+    }
+
+    function stopMedia(id) {
+        const m = document.getElementById(`media-${id}`); 
+        if(m) { m.pause(); m.currentTime = 0; }
+        document.getElementById(id).classList.remove('is-playing'); 
+        stopTimer(); 
+        updateNavigator();
+        const btn = document.getElementById(`btn-play-${id}`);
+        if(btn) btn.innerText = "▶ PLAY";
+        const prg = document.getElementById(`progress-${id}`);
+        if(prg) prg.style.width = '0%';
+    }
+
+    function globalStopAll() {
+        document.querySelectorAll('audio, video').forEach(m => { 
+            m.pause(); 
+            m.currentTime = 0;
+            const bId = m.id.replace('media-', '');
+            const btn = document.getElementById(`btn-play-${bId}`);
+            if(btn) btn.innerText = "▶ PLAY";
+            const prg = document.getElementById(`progress-${bId}`);
+            if(prg) prg.style.width = '0%';
+        });
+        document.querySelectorAll('iframe').forEach(f => f.src = f.src);
+        document.querySelectorAll('.block').forEach(b => b.classList.remove('is-playing'));
+        stopTimer();
+        updateNavigator();
+    }
+
+    function loadFile(event, id) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const m = document.getElementById(`media-${id}`);
+            if(document.getElementById(`yt-setup-${id}`)) document.getElementById(`yt-setup-${id}`).style.display = 'none';
+            if(document.getElementById(`audio-setup-${id}`)) document.getElementById(`audio-setup-${id}`).style.display = 'none';
+            m.src = e.target.result;
+            if(m.tagName === 'VIDEO') m.style.display = 'block';
+            document.getElementById(`controls-${id}`).style.display = 'flex';
+            
+            // Прогресс-бар обновление
+            m.ontimeupdate = () => {
+                const percent = (m.currentTime / m.duration) * 100;
+                const prg = document.getElementById(`progress-${id}`);
+                if(prg) prg.style.width = percent + '%';
+                if (m.ended) stopMedia(id);
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function selectBlock(id) {
+        document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
+        const el = document.getElementById(id);
+        if(el) { el.classList.add('selected'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        updateNavigator();
+    }
+
+    function getYTId(url) {
+        const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+        return (m && m[2].length === 11) ? m[2] : null;
+    }
+
+    function removeBlock(id, e) { e.stopPropagation(); if(confirm('Удалить?')) { document.getElementById(id).remove(); updateNavigator(); saveToStorage(); } }
+    function moveUp(id, e) { e.stopPropagation(); const el = document.getElementById(id); if (el.previousElementSibling) { el.parentNode.insertBefore(el, el.previousElementSibling); updateNavigator(); saveToStorage(); } }
+    function moveDown(id, e) { e.stopPropagation(); const el = document.getElementById(id); if (el.nextElementSibling) { el.parentNode.insertBefore(el.nextElementSibling, el); updateNavigator(); saveToStorage(); } }
+</script>
+</body>
+</html>

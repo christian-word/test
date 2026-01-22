@@ -138,9 +138,12 @@
             
             // Сохраняем медиа
             const media = document.getElementById(`media-${block.id}`);
-            if(media && media.src && !media.src.includes('blob:')) {
-                data.mediaData = media.src;
-                data.mediaType = media.tagName.toLowerCase();
+            if(media && media.src) {
+                // Сохраняем все src, кроме blob и пустых
+                if(!media.src.includes('blob:') && media.src !== window.location.href) {
+                    data.mediaData = media.src;
+                    data.mediaType = media.tagName.toLowerCase();
+                }
             }
             
             // Проверяем YouTube
@@ -319,6 +322,9 @@
                 if(prg) prg.style.width = percent + '%';
                 if (audio.ended) stopMedia(id);
             };
+            
+            // Принудительное сохранение
+            setTimeout(() => saveToStorage(), 100);
         }
     }
 
@@ -403,6 +409,9 @@
                 if(prg) prg.style.width = percent + '%';
                 if (m.ended) stopMedia(id);
             };
+            
+            // Принудительное сохранение сразу после загрузки
+            setTimeout(() => saveToStorage(), 100);
         };
         reader.readAsDataURL(file);
     }

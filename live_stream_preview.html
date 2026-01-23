@@ -158,6 +158,22 @@
       visibility: hidden !important;
     }
 
+    /* Блокуючий шар над плеєром */
+    #playerBlocker {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: auto;
+      background: transparent;
+    }
+
+    #playerBlocker.hidden {
+      display: none;
+    }
+
     /* Блокуючий оверлей */
     #playerOverlay {
       position: absolute;
@@ -381,22 +397,31 @@
     /* Контроли */
     #controls {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 16px;
-      padding: 24px 28px;
+      gap: 12px;
+      padding: 16px 24px;
       background: var(--white);
+      flex-wrap: wrap;
     }
 
-    .controls-row {
+    #playButton, #stopButton {
+      padding: 12px 24px;
+      flex-shrink: 0;
+    }
+
+    #stopButton {
+      background: #6b7280;
+    }
+
+    #stopButton:hover {
+      background: #4b5563;
+    }
+
+    .controls-selects {
       display: flex;
       gap: 12px;
       flex: 1;
-      min-width: 200px;
-    }
-
-    .controls-row button {
-      flex: 1;
+      min-width: 300px;
     }
 
     button {
@@ -432,12 +457,12 @@
       background: var(--bg-cream);
       color: var(--text-dark);
       border: 2px solid rgba(0,0,0,0.1);
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-radius: 50px;
       font-size: 14px;
       cursor: pointer;
       flex: 1;
-      min-width: 150px;
+      min-width: 140px;
       font-weight: 500;
       transition: all 0.3s;
     }
@@ -448,40 +473,44 @@
       box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
     }
 
-    /* Статус */
+    /* Статус - компактна версія */
     .status-container {
       width: 100%;
       max-width: 1400px;
-      margin-top: 24px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-    }
-
-    .status-card {
+      margin-top: 16px;
       background: var(--white);
-      padding: 20px;
+      padding: 16px 24px;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 16px;
+      gap: 24px;
+      flex-wrap: wrap;
     }
 
-    .status-card i {
-      font-size: 2rem;
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-item i {
+      font-size: 1.5rem;
       color: var(--primary-gold);
     }
 
     .status-info h4 {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       color: var(--text-gray);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .status-info p {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
       color: var(--text-dark);
     }
@@ -787,18 +816,20 @@
       }
 
       #controls {
-        flex-direction: column;
-        gap: 12px;
-        padding: 20px 16px;
+        padding: 12px 16px;
+        gap: 8px;
       }
 
-      .controls-row {
+      #playButton, #stopButton {
         width: 100%;
-      }
-
-      .controls-row button {
         padding: 12px 16px;
         font-size: 14px;
+      }
+
+      .controls-selects {
+        width: 100%;
+        flex-direction: column;
+        min-width: unset;
       }
 
       #timezoneSelector,
@@ -808,27 +839,26 @@
       }
 
       .status-container {
-        gap: 10px;
-        margin-top: 16px;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 16px;
       }
 
-      .status-card {
-        padding: 12px 14px;
-        gap: 10px;
+      .status-item {
+        width: 100%;
+        justify-content: space-between;
       }
 
-      .status-card i {
-        font-size: 1.3rem;
+      .status-item i {
+        font-size: 1.2rem;
       }
 
       .status-info h4 {
         font-size: 0.7rem;
-        margin-bottom: 2px;
       }
 
       .status-info p {
-        font-size: 0.85rem;
-        font-weight: 600;
+        font-size: 0.9rem;
       }
 
       .schedule-header {
@@ -928,6 +958,8 @@
   <div id="player-container">
     <div id="player-wrapper">
       <div id="player"></div>
+      <!-- Блокуючий шар -->
+      <div id="playerBlocker"></div>
       <div id="live-indicator"><span></span>LIVE</div>
 
       <!-- Оверлей що блокує клік по плеєру -->
@@ -964,13 +996,14 @@
     <div id="progressBarContainer"><div id="progressBar"></div></div>
 
     <div id="controls">
-      <div class="controls-row">
-        <button id="playButton">
-          <i class="fas fa-play"></i> Дивитися
-        </button>
-      </div>
+      <button id="playButton">
+        <i class="fas fa-play"></i> Дивитися
+      </button>
+      <button id="stopButton" style="display: none;">
+        <i class="fas fa-stop"></i> Стоп
+      </button>
 
-      <div class="controls-row">
+      <div class="controls-selects">
         <select id="qualitySelector" disabled>
           <option value="default">🎬 Авто якість</option>
           <option value="small">📱 360p</option>
@@ -993,21 +1026,21 @@
   </div>
 
   <div class="status-container">
-    <div class="status-card">
+    <div class="status-item">
       <i class="fas fa-info-circle"></i>
       <div class="status-info">
         <h4>Статус</h4>
         <p id="status">Завантаження...</p>
       </div>
     </div>
-    <div class="status-card">
+    <div class="status-item">
       <i class="fas fa-clock"></i>
       <div class="status-info">
         <h4>Час трансляції</h4>
         <p id="localTimeStatus">--:--:--</p>
       </div>
     </div>
-    <div class="status-card">
+    <div class="status-item">
       <i class="fas fa-calendar-day"></i>
       <div class="status-info">
         <h4>Поточний час</h4>
@@ -1070,6 +1103,7 @@
     /* ---------- 3. YouTube ---------- */
     let player,
         playButton = document.getElementById('playButton'),
+        stopButton = document.getElementById('stopButton'),
         timezoneSelector = document.getElementById('timezoneSelector'),
         qualitySelector = document.getElementById('qualitySelector'),
         statusDiv = document.getElementById('status'),
@@ -1083,7 +1117,8 @@
         scrollToCurrentBtn = document.getElementById('scrollToCurrentBtn'),
         volumeControl = document.getElementById('volumeControl'),
         volumeIcon = document.getElementById('volumeIcon'),
-        volumeSlider = document.getElementById('volumeSlider');
+        volumeSlider = document.getElementById('volumeSlider'),
+        playerBlocker = document.getElementById('playerBlocker');
 
     let currentVideoIndex = 0,
         syncTimer = null,
@@ -1114,6 +1149,7 @@
     function onPlayerReady() {
       fetchPlaylist();
       playButton.addEventListener('click', startBroadcast);
+      stopButton.addEventListener('click', stopBroadcast);
       timezoneSelector.addEventListener('change', startBroadcast);
       qualitySelector.addEventListener('change', changeQuality);
     }
@@ -1215,8 +1251,13 @@
         }, 500);
       }
 
-      // Показуємо гучність
+      // Ховаємо блокувальник і показуємо гучність
+      playerBlocker.classList.add('hidden');
       volumeControl.classList.add('show');
+
+      // Показуємо кнопку СТОП
+      playButton.style.display = 'none';
+      stopButton.style.display = 'inline-flex';
 
       const logoSplash = document.getElementById('logoSplash');
       const cards = document.querySelectorAll('.logoImage');
@@ -1277,6 +1318,33 @@
       highlightCurrentVideo(currentVideoIndex);
       startProgressTimer();
       startRemainingTimer();
+    }
+
+    function stopBroadcast() {
+      if (player && player.stopVideo) {
+        player.stopVideo();
+      }
+
+      // Зупиняємо таймери
+      if (syncTimer) clearInterval(syncTimer);
+      if (progressTimer) clearInterval(progressTimer);
+      if (remainingTimer) clearInterval(remainingTimer);
+
+      // Показуємо блокувальник і ховаємо гучність
+      playerBlocker.classList.remove('hidden');
+      volumeControl.classList.remove('show');
+
+      // Перемикаємо кнопки
+      stopButton.style.display = 'none';
+      playButton.style.display = 'inline-flex';
+
+      // Ховаємо LIVE
+      liveIndicator.style.display = 'none';
+
+      statusDiv.textContent = 'Зупинено';
+      progressBar.style.width = '0%';
+
+      showToast('⏹ Трансляцію зупинено');
     }
 
     function onPlayerStateChange(e) {

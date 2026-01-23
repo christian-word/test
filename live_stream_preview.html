@@ -158,7 +158,7 @@
       visibility: hidden !important;
     }
 
-    /* Блокуючий шар над плеєром */
+    /* Повний блокуючий шар поверх плеєра */
     #playerBlocker {
       position: absolute;
       top: 0;
@@ -397,31 +397,22 @@
     /* Контроли */
     #controls {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px 24px;
-      background: var(--white);
       flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 28px;
+      background: var(--white);
     }
 
-    #playButton, #stopButton {
-      padding: 12px 24px;
-      flex-shrink: 0;
-    }
-
-    #stopButton {
-      background: #6b7280;
-    }
-
-    #stopButton:hover {
-      background: #4b5563;
-    }
-
-    .controls-selects {
+    .controls-row {
       display: flex;
       gap: 12px;
       flex: 1;
-      min-width: 300px;
+      min-width: 200px;
+    }
+
+    .controls-row button {
+      flex: 1;
     }
 
     button {
@@ -457,12 +448,12 @@
       background: var(--bg-cream);
       color: var(--text-dark);
       border: 2px solid rgba(0,0,0,0.1);
-      padding: 12px 16px;
+      padding: 14px 18px;
       border-radius: 50px;
       font-size: 14px;
       cursor: pointer;
       flex: 1;
-      min-width: 140px;
+      min-width: 150px;
       font-weight: 500;
       transition: all 0.3s;
     }
@@ -473,14 +464,14 @@
       box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
     }
 
-    /* Статус - компактна версія */
+    /* Статус - НОВА компактна панель */
     .status-container {
       width: 100%;
       max-width: 1400px;
-      margin-top: 16px;
+      margin-top: 24px;
       background: var(--white);
-      padding: 16px 24px;
       border-radius: var(--radius);
+      padding: 16px 24px;
       box-shadow: var(--shadow);
       display: flex;
       justify-content: space-between;
@@ -493,6 +484,8 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex: 1;
+      min-width: 180px;
     }
 
     .status-item i {
@@ -816,20 +809,18 @@
       }
 
       #controls {
-        padding: 12px 16px;
-        gap: 8px;
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px 16px;
       }
 
-      #playButton, #stopButton {
+      .controls-row {
         width: 100%;
+      }
+
+      .controls-row button {
         padding: 12px 16px;
         font-size: 14px;
-      }
-
-      .controls-selects {
-        width: 100%;
-        flex-direction: column;
-        min-width: unset;
       }
 
       #timezoneSelector,
@@ -839,14 +830,12 @@
       }
 
       .status-container {
-        flex-direction: column;
-        gap: 12px;
+        gap: 16px;
         padding: 12px 16px;
       }
 
       .status-item {
-        width: 100%;
-        justify-content: space-between;
+        min-width: 140px;
       }
 
       .status-item i {
@@ -854,7 +843,7 @@
       }
 
       .status-info h4 {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
       }
 
       .status-info p {
@@ -958,8 +947,10 @@
   <div id="player-container">
     <div id="player-wrapper">
       <div id="player"></div>
-      <!-- Блокуючий шар -->
+      
+      <!-- Блокуючий шар поверх плеєра -->
       <div id="playerBlocker"></div>
+      
       <div id="live-indicator"><span></span>LIVE</div>
 
       <!-- Оверлей що блокує клік по плеєру -->
@@ -996,14 +987,16 @@
     <div id="progressBarContainer"><div id="progressBar"></div></div>
 
     <div id="controls">
-      <button id="playButton">
-        <i class="fas fa-play"></i> Дивитися
-      </button>
-      <button id="stopButton" style="display: none;">
-        <i class="fas fa-stop"></i> Стоп
-      </button>
+      <div class="controls-row">
+        <button id="playButton">
+          <i class="fas fa-play"></i> Дивитися
+        </button>
+        <button id="stopButton" style="display: none;">
+          <i class="fas fa-stop"></i> Стоп
+        </button>
+      </div>
 
-      <div class="controls-selects">
+      <div class="controls-row">
         <select id="qualitySelector" disabled>
           <option value="default">🎬 Авто якість</option>
           <option value="small">📱 360p</option>
@@ -1025,6 +1018,7 @@
     </div>
   </div>
 
+  <!-- НОВА компактна панель статусу -->
   <div class="status-container">
     <div class="status-item">
       <i class="fas fa-info-circle"></i>
@@ -1099,6 +1093,7 @@
 
     /* ---------- 2. НОВА: Змінна для режиму відображення ---------- */
     let showPreview = false;
+    let isPlaying = false;
 
     /* ---------- 3. YouTube ---------- */
     let player,
@@ -1242,6 +1237,13 @@
     function startBroadcast() {
       if (!broadcastProgram) return;
 
+      isPlaying = true;
+      playButton.style.display = 'none';
+      stopButton.style.display = 'inline-flex';
+
+      // Ховаємо блокер
+      playerBlocker.classList.add('hidden');
+
       // Ховаємо оверлей
       const playerOverlay = document.getElementById('playerOverlay');
       if (playerOverlay) {
@@ -1251,13 +1253,8 @@
         }, 500);
       }
 
-      // Ховаємо блокувальник і показуємо гучність
-      playerBlocker.classList.add('hidden');
+      // Показуємо гучність
       volumeControl.classList.add('show');
-
-      // Показуємо кнопку СТОП
-      playButton.style.display = 'none';
-      stopButton.style.display = 'inline-flex';
 
       const logoSplash = document.getElementById('logoSplash');
       const cards = document.querySelectorAll('.logoImage');
@@ -1321,27 +1318,27 @@
     }
 
     function stopBroadcast() {
-      if (player && player.stopVideo) {
-        player.stopVideo();
-      }
+      if (!player) return;
+
+      isPlaying = false;
+      player.stopVideo();
+
+      playButton.style.display = 'inline-flex';
+      stopButton.style.display = 'none';
+
+      // Показуємо блокер
+      playerBlocker.classList.remove('hidden');
+
+      // Ховаємо гучність
+      volumeControl.classList.remove('show');
 
       // Зупиняємо таймери
       if (syncTimer) clearInterval(syncTimer);
       if (progressTimer) clearInterval(progressTimer);
       if (remainingTimer) clearInterval(remainingTimer);
 
-      // Показуємо блокувальник і ховаємо гучність
-      playerBlocker.classList.remove('hidden');
-      volumeControl.classList.remove('show');
-
-      // Перемикаємо кнопки
-      stopButton.style.display = 'none';
-      playButton.style.display = 'inline-flex';
-
-      // Ховаємо LIVE
-      liveIndicator.style.display = 'none';
-
       statusDiv.textContent = 'Зупинено';
+      liveIndicator.style.display = 'none';
       progressBar.style.width = '0%';
 
       showToast('⏹ Трансляцію зупинено');

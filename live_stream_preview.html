@@ -166,12 +166,14 @@
       width: 100%;
       height: 100%;
       z-index: 5;
-      pointer-events: auto;
+      pointer-events: auto !important;
       background: transparent;
+      cursor: default;
     }
 
+    /* Блокер НІКОЛИ не ховається, він завжди блокує кліки */
     #playerBlocker.hidden {
-      display: none;
+      display: none; /* Тільки до початку відтворення */
     }
 
     /* Блокуючий оверлей */
@@ -279,6 +281,7 @@
       cursor: pointer;
       user-select: none;
       color: white;
+      pointer-events: auto !important;
     }
 
     #volumeSlider {
@@ -289,6 +292,7 @@
       outline: none;
       -webkit-appearance: none;
       cursor: pointer;
+      pointer-events: auto !important;
     }
 
     #volumeSlider::-webkit-slider-thumb {
@@ -1241,8 +1245,9 @@
       playButton.style.display = 'none';
       stopButton.style.display = 'inline-flex';
 
-      // Ховаємо блокер
-      playerBlocker.classList.add('hidden');
+      // Блокер залишається, просто змінюємо його z-index щоб бути вище за все, крім контролів
+      playerBlocker.style.display = 'block';
+      playerBlocker.classList.remove('hidden');
 
       // Ховаємо оверлей
       const playerOverlay = document.getElementById('playerOverlay');
@@ -1326,8 +1331,8 @@
       playButton.style.display = 'inline-flex';
       stopButton.style.display = 'none';
 
-      // Показуємо блокер
-      playerBlocker.classList.remove('hidden');
+      // Блокер залишається на місці
+      playerBlocker.style.display = 'block';
 
       // Ховаємо гучність
       volumeControl.classList.remove('show');

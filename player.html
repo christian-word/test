@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Cloud Audio Player</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 500px; width: 100%; background: #1e1e1e; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: #1DB954; }
+        
+        /* Стили плеера */
+        audio { width: 100%; margin: 20px 0; outline: none; }
+        
+        /* Список песен */
+        #playlist { list-style: none; padding: 0; max-height: 300px; overflow-y: auto; }
+        .track { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; }
+        .track:hover { background: #333; }
+        .track.active { color: #1DB954; font-weight: bold; }
+
+        /* Загрузчик */
+        .upload-section { border-top: 1px solid #333; padding-top: 20px; margin-top: 20px; }
+        input[type="file"] { display: none; }
+        .label-file { background: #333; padding: 10px; display: block; text-align: center; border-radius: 5px; cursor: pointer; }
+        button { width: 100%; margin-top: 10px; padding: 10px; background: #1DB954; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; }
+        button:disabled { background: #555; }
+        #status { font-size: 12px; margin-top: 5px; text-align: center; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>My Cloud Music</h2>
+    
+    <audio id="audioPlayer" controls></audio>
+    <div id="currentTitle" style="text-align: center; margin-bottom: 10px; font-size: 14px;">Выберите трек</div>
+
+    <ul id="playlist">
+        <li style="text-align: center; padding: 20px;">Загрузка плейлиста...</li>
+    </ul>
+
+    <div class="upload-section">
+        <label class="label-file" for="audioFile">Выбрать MP3 для загрузки</label>
+        <input type="file" id="audioFile" accept="audio/mpeg">
+        <button id="uploadBtn" onclick="uploadFile()">Загрузить в облако</button>
+        <p id="status"></p>
+    </div>
+</div>
+
+<script>
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwC0HhNqfVR843xu6x0T-CCX6X1iY4kub6LrX5RY5ph2QsbKuxaEgAGuLq2rlt43F5QSg/exec"; // ТВОЙ URL ТУТ
+    const audioPlayer = document.getElementById('audioPlayer');
+    const playlistElem = document.getElementById('playlist');
+    const status = document.getElementById('status');
+    const currentTitle = document.getElementById('currentTitle');
+
+    // 1. Загрузка списка песен при старте
+async function loadPlaylist() {
+    const playlistElem = document.getElementById('playlist');
+    try {
+        // Добавляем параметр follow redirects вручную через режим корс
+        const response = await fetch(scriptUrl, {
+            method: 'GET',
+            redirect: 'follow' // Это заставит браузер идти по цепочке перенаправлений Google
+        });
+
+        if (!response.ok) throw new Error('Ошибка сети');
+
+        const tracks = await response.json();
+        renderPlaylist(tracks);
+    } catch (e) {
+        console.error('Детали ошибки:', e);
+        playlistElem.innerHTML = `<li style="color:red">Ошибка CORS или связи. Проверьте консоль (F12)</li>`;
+    }
+}
+
+    function renderPlaylist(tracks) {
+        playlistElem.innerHTML = "";
+        if (tracks.length === 0) {
+            playlistElem.innerHTML = "Папка пуста";
+            return;
+        }
+        tracks.forEach(track => {
+            const li = document.createElement('li');
+            li.className = 'track';
+            li.innerHTML = `<span>${track.name}</span>`;
+            li.onclick = () => playTrack(track.url, track.name, li);
+            playlistElem.appendChild(li);
+        });
+    }
+
+    function playTrack(url, name, element) {
+        document.querySelectorAll('.track').forEach(t => t.classList.remove('active'));
+        element.classList.add('active');
+        currentTitle.innerText = name;
+        audioPlayer.src = url;
+        audioPlayer.play();
+    }
+
+    // 2. Функция загрузки (твоя рабочая логика)
+    async function uploadFile() {
+        const fileInput = document.getElementById('audioFile');
+        if (!fileInput.files[0]) return alert("Файл не выбран");
+        
+        const btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        status.innerText = "Отправка...";
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64String = reader.result.split(',')[1];
+            try {
+                await fetch(scriptUrl, {
+                    method: "POST",
+                    body: JSON.stringify({ file: base64String, name: file.name })
+                });
+                status.innerText = "Готово! Обновляю список...";
+                await loadPlaylist(); // Перезагружаем список после загрузки
+            } catch (err) {
+                status.innerText = "Ошибка загрузки";
+            } finally {
+                btn.disabled = false;
+            }
+        };
+    }
+
+    loadPlaylist(); // Запуск при открытии страницы
+</script>
+
+</body>
+</html>

@@ -94,13 +94,38 @@ async function loadPlaylist() {
         });
     }
 
-    function playTrack(url, name, element) {
-        document.querySelectorAll('.track').forEach(t => t.classList.remove('active'));
-        element.classList.add('active');
-        currentTitle.innerText = name;
-        audioPlayer.src = url;
+async function playTrack(url, name, element) {
+    // 1. Подсветка активного трека
+    document.querySelectorAll('.track').forEach(t => t.classList.remove('active'));
+    element.classList.add('active');
+    
+    const statusText = document.getElementById('currentTitle');
+    statusText.innerText = "⏳ Загрузка: " + name;
+
+    try {
+        // 2. Запрашиваем файл как Blob (набор байтов)
+        const response = await fetch(url);
+        
+        if (!response.ok) throw new Error("Файл не найден (404)");
+
+        const blob = await response.blob();
+        
+        // 3. Создаем временную ссылку на скачанные байты
+        const blobUrl = URL.createObjectURL(blob);
+        
+        // 4. Передаем это в плеер
+        const audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.src = blobUrl;
+        
+        statusText.innerText = "▶️ Играет: " + name;
         audioPlayer.play();
+
+    } catch (e) {
+        console.error('Ошибка:', e);
+        statusText.innerText = "❌ Ошибка доступа к файлу";
+        alert("Google Диск отклонил запрос. Убедитесь, что файл открыт для всех по ссылке.");
     }
+}
 
     // 2. Функция загрузки (твоя рабочая логика)
     async function uploadFile() {

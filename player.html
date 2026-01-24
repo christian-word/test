@@ -57,19 +57,25 @@
 async function loadPlaylist() {
     const playlistElem = document.getElementById('playlist');
     try {
-        // Добавляем параметр follow redirects вручную через режим корс
+        // Добавляем режим follow, чтобы браузер шел по цепочке редиректов Google
         const response = await fetch(scriptUrl, {
             method: 'GET',
-            redirect: 'follow' // Это заставит браузер идти по цепочке перенаправлений Google
+            mode: 'cors', // Просим корс
+            redirect: 'follow' // Идем за редиректом
         });
 
-        if (!response.ok) throw new Error('Ошибка сети');
+        if (!response.ok) throw new Error('Скрипт вернул ошибку');
 
         const tracks = await response.json();
         renderPlaylist(tracks);
     } catch (e) {
-        console.error('Детали ошибки:', e);
-        playlistElem.innerHTML = `<li style="color:red">Ошибка CORS или связи. Проверьте консоль (F12)</li>`;
+        console.error('Детали:', e);
+        // Если все равно ошибка, пробуем альтернативный метод (JSONP или просто вывод ссылки)
+        playlistElem.innerHTML = `<li style="color:red; padding:10px;">
+            Ошибка доступа. <br>
+            <a href="${scriptUrl}" target="_blank" style="color:white">Нажми сюда один раз</a>, 
+            чтобы разрешить доступ в браузере, и обнови страницу.
+        </li>`;
     }
 }
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -538,10 +538,13 @@
             </h3>
             <div class="playlist-stats" id="playlistStats">0 видео</div>
             <div class="input-group">
-                <input type="text" id="video-url" placeholder="Вставьте YouTube ссылку...">
-                <button onclick="addVideoToList()" id="addBtn">
-                    <span id="btnText">Добавить видео</span>
+                <input type="text" id="video-url" placeholder="YouTube ссылка (видео или плейлист)...">
+                <button onclick="addVideoOrPlaylist()" id="addBtn">
+                    <span id="btnText">Добавить</span>
                 </button>
+            </div>
+            <div style="text-align: center; margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary);">
+                Поддержка видео и целых плейлистов
             </div>
         </div>
         <div class="playlist-items" id="playlist"></div>
@@ -584,10 +587,9 @@
         
         // Видео по умолчанию - будут загружены с полной информацией через API
         const DEFAULT_VIDEO_IDS = [
-            'uiWQLovogoU',
-            '66swFsH6bcM', 
-            'L-Wvm_yGEzg',
-            'A9G8M3UY32o'
+            'LMTftEixYUY',
+            'tgXiHhwftEs', 
+            'EatV5u6aUXw'
         ];
 
         function onYouTubeIframeAPIReady() {
@@ -728,6 +730,106 @@
             } catch (error) {
                 console.error('Error loading default videos:', error);
                 showToast('⚠️ Ошибка загрузки видео');
+            }
+        }
+        
+        async function addVideoOrPlaylist() {
+            const input = document.getElementById('video-url');
+            const url = input.value.trim();
+            
+            if (!url) {
+                showToast('❌ Введите ссылку');
+                return;
+            }
+            
+            // Check if it's a playlist
+            const playlistId = extractPlaylistID(url);
+            if (playlistId) {
+                await addPlaylistToList(playlistId);
+            } else {
+                await addVideoToList();
+            }
+        }
+        
+        async function addPlaylistToList(playlistId) {
+            const btn = document.getElementById('addBtn');
+            const btnText = document.getElementById('btnText');
+            const input = document.getElementById('video-url');
+            
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading"></span> Загрузка плейлиста...';
+            
+            try {
+                let allVideos = [];
+                let nextPageToken = '';
+                let pageCount = 0;
+                const maxPages = 10; // Ограничение на 500 видео (50 на страницу)
+                
+                showToast('📥 Загрузка плейлиста...');
+                
+                do {
+                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&pageToken=${nextPageToken}&key=${API_KEY}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    if (data.error) {
+                        throw new Error(data.error.message);
+                    }
+                    
+                    if (!data.items || data.items.length === 0) {
+                        if (pageCount === 0) {
+                            showToast('❌ Плейлист пуст или не найден');
+                            return;
+                        }
+                        break;
+                    }
+                    
+                    // Фильтруем удаленные видео и дубликаты
+                    const validVideos = data.items
+                        .filter(item => item.snippet.title !== 'Deleted video' && item.snippet.title !== 'Private video')
+                        .map(item => ({
+                            id: item.snippet.resourceId.videoId,
+                            title: item.snippet.title,
+                            thumb: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url,
+                            description: item.snippet.description || ''
+                        }))
+                        .filter(video => !myVideos.some(v => v.id === video.id)); // Исключаем уже добавленные
+                    
+                    allVideos = allVideos.concat(validVideos);
+                    
+                    nextPageToken = data.nextPageToken || '';
+                    pageCount++;
+                    
+                    // Показываем прогресс
+                    btnText.textContent = `Загружено ${allVideos.length} видео...`;
+                    
+                } while (nextPageToken && pageCount < maxPages);
+                
+                if (allVideos.length === 0) {
+                    showToast('⚠️ Все видео из плейлиста уже добавлены');
+                    input.value = '';
+                    return;
+                }
+                
+                // Добавляем все видео
+                myVideos = myVideos.concat(allVideos);
+                savePlaylist();
+                input.value = '';
+                renderPlaylist();
+                
+                showToast(`✅ Добавлено ${allVideos.length} видео из плейлиста`);
+                
+                // Если это первые видео, начинаем воспроизведение
+                if (currentVideoIndex === -1 && myVideos.length > 0) {
+                    loadVideo(0);
+                }
+                
+            } catch (error) {
+                showToast(`❌ Ошибка: ${error.message}`);
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Добавить';
             }
         }
         
@@ -1009,6 +1111,11 @@
             return (match && match[1].length === 11) ? match[1] : false;
         }
         
+        function extractPlaylistID(url) {
+            const match = url.match(/[?&]list=([^#\&\?]+)/);
+            return match ? match[1] : false;
+        }
+        
         // Mobile menu functions
         function toggleMobileMenu() {
             const sidebar = document.getElementById('sidebar');
@@ -1090,7 +1197,7 @@
         // Handle Enter key in input
         document.getElementById('video-url').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                addVideoToList();
+                addVideoOrPlaylist();
             }
         });
         

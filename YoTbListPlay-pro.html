@@ -36,6 +36,8 @@
         .video-item img { width: 120px; height: 68px; border-radius: 6px; object-fit: cover; }
         .video-item-content { flex: 1; overflow: hidden; }
         .video-item-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .video-item-meta { font-size: 11px; color: var(--text-secondary); }
+        .chapters-badge { background: var(--success); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 6px; }
         .video-item-actions { display: none; position: absolute; right: 10px; top: 10px; }
         .video-item:hover .video-item-actions { display: block; }
 
@@ -47,16 +49,24 @@
 
         .chapters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
         .chapter-btn { background: var(--panel); border: 1px solid var(--border); padding: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-        .chapter-btn:hover { background: var(--panel-hover); }
+        .chapter-btn:hover { background: var(--panel-hover); border-color: var(--accent); }
+        .chapter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .chapter-btn.active .chapter-time { color: white; }
         .chapter-time { color: var(--accent); font-weight: bold; font-size: 12px; }
 
         .toast { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: white; padding: 12px 24px; border-radius: 4px; transform: translateY(100px); transition: 0.3s; z-index: 2000; }
         .toast.show { transform: translateY(0); }
         
+        .mobile-menu-btn { display: none; position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1500; cursor: pointer; }
+        .mobile-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 998; }
+        .mobile-overlay.active { display: block; }
+        
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
+            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+            .chapters-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -90,6 +100,8 @@
     </div>
 
     <div id="toast" class="toast"></div>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">📋</button>
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
@@ -99,6 +111,8 @@
         let player;
         let myVideos = [];
         let currentVideoIndex = -1;
+        let currentChapters = [];
+        let currentChapterIndex = -1;
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('player', { 
@@ -167,28 +181,34 @@
 
         async function addVideo() {
             const id = extractID(document.getElementById('video-url').value.trim());
-            if (!id || myVideos.some(v => v.id === id)) return showToast('Ошибка или дубликат');
+            if (!id) return showToast('❌ Неверная ссылка');
+            if (myVideos.some(v => v.id === id)) return showToast('⚠️ Уже в плейлисте');
             try {
                 const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${id}&key=${API_KEY}`);
                 const data = await res.json();
                 const v = data.items[0];
                 myVideos.push({ id, title: v.snippet.title, thumb: v.snippet.thumbnails.medium.url, description: v.snippet.description });
                 renderPlaylist(); savePlaylist();
-            } catch (e) { showToast('Ошибка YouTube API'); }
+                showToast('✅ Видео добавлено');
+            } catch (e) { showToast('❌ Ошибка YouTube API'); }
         }
 
         async function addPlaylist(playlistId) {
+            showToast('📥 Загрузка плейлиста...');
             try {
                 const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}`);
                 const data = await res.json();
+                let added = 0;
                 data.items.forEach(item => {
                     const id = item.snippet.resourceId.videoId;
                     if (!myVideos.some(v => v.id === id)) {
                         myVideos.push({ id, title: item.snippet.title, thumb: item.snippet.thumbnails.medium.url, description: item.snippet.description });
+                        added++;
                     }
                 });
                 renderPlaylist(); savePlaylist();
-            } catch (e) { showToast('Ошибка плейлиста'); }
+                showToast(`✅ Добавлено ${added} видео`);
+            } catch (e) { showToast('❌ Ошибка плейлиста'); }
         }
 
         function deleteVideo(index, e) {
@@ -215,15 +235,26 @@
             document.getElementById('current-description').textContent = video.description;
             renderChapters(parseDescription(video.description));
             renderPlaylist();
+            
+            // Close mobile menu if open
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
         }
 
         function renderPlaylist() {
             const container = document.getElementById('playlist');
             container.innerHTML = myVideos.length ? '' : '<div style="padding:20px;color:#666">Плейлист пуст</div>';
             myVideos.forEach((v, i) => {
+                const chapterCount = v.description ? parseDescription(v.description).length : 0;
+                const chapterBadge = chapterCount > 0 ? `<span class="chapters-badge">${chapterCount} глав</span>` : '';
+                
                 const div = document.createElement('div');
                 div.className = `video-item ${i === currentVideoIndex ? 'active' : ''}`;
-                div.innerHTML = `<img src="${v.thumb}"><div class="video-item-content"><div class="video-item-title">${v.title}</div></div>
+                div.innerHTML = `<img src="${v.thumb}"><div class="video-item-content">
+                    <div class="video-item-title">${v.title}</div>
+                    <div class="video-item-meta">${v.id}${chapterBadge}</div>
+                </div>
                 <div class="video-item-actions"><button class="btn" onclick="deleteVideo(${i}, event)">🗑️</button></div>`;
                 div.onclick = (e) => { if (!e.target.closest('.video-item-actions')) loadVideo(i); };
                 container.appendChild(div);
@@ -244,14 +275,60 @@
         function renderChapters(chapters) {
             const list = document.getElementById('chapters-list');
             const sec = document.getElementById('chaptersSection');
+            currentChapters = chapters;
+            
             if (!chapters.length) { sec.style.display = 'none'; return; }
             sec.style.display = 'block'; list.innerHTML = '';
-            chapters.forEach(c => {
-                const b = document.createElement('div'); b.className = 'chapter-btn';
+            
+            chapters.forEach((c, idx) => {
+                const b = document.createElement('div'); 
+                b.className = 'chapter-btn';
+                b.id = `chapter-${idx}`;
                 b.innerHTML = `<div class="chapter-time">${formatTime(c.time)}</div><div class="chapter-label">${c.label}</div>`;
-                b.onclick = () => player.seekTo(c.time, true);
+                b.onclick = () => {
+                    player.seekTo(c.time, true);
+                    updateActiveChapter(idx);
+                };
                 list.appendChild(b);
             });
+            
+            // Start tracking chapter updates
+            if (player && player.getCurrentTime) {
+                startChapterTracking();
+            }
+        }
+        
+        function updateActiveChapter(index) {
+            // Remove active class from all chapters
+            document.querySelectorAll('.chapter-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to current chapter
+            const activeBtn = document.getElementById(`chapter-${index}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                currentChapterIndex = index;
+            }
+        }
+        
+        let chapterTracker;
+        function startChapterTracking() {
+            if (chapterTracker) clearInterval(chapterTracker);
+            
+            chapterTracker = setInterval(() => {
+                if (!player || !player.getCurrentTime || currentChapters.length === 0) return;
+                
+                const currentTime = player.getCurrentTime();
+                
+                // Find which chapter we're in
+                for (let i = currentChapters.length - 1; i >= 0; i--) {
+                    if (currentTime >= currentChapters[i].time) {
+                        if (currentChapterIndex !== i) {
+                            updateActiveChapter(i);
+                        }
+                        break;
+                    }
+                }
+            }, 1000); // Check every second
         }
 
         // --- УТИЛИТЫ ---
@@ -268,6 +345,16 @@
         function extractPlaylistID(u) { const m = u.match(/[?&]list=([^#\&\?]+)/); return m?.[1] || false; }
         function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
         function resetPlaylist() { if (confirm('Удалить всё?')) { myVideos = []; renderPlaylist(); savePlaylist(); } }
+        
+        function toggleMobileMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('mobileOverlay').classList.toggle('active');
+        }
+        
+        function closeMobileMenu() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('mobileOverlay').classList.remove('active');
+        }
 
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && !e.target.matches('input')) { e.preventDefault(); player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }

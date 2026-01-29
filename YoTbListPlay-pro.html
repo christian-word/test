@@ -65,6 +65,8 @@
             body { flex-direction: column; }
             .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; transform: translateX(-100%); }
             .sidebar.active { transform: translateX(0); }
+            /* Show sidebar on first load on mobile */
+            .sidebar.first-load { transform: translateX(0); }
             .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
             .chapters-grid { grid-template-columns: 1fr; }
         }
@@ -73,6 +75,21 @@
 <body>
 
     <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>📺 My YT Studio</h2>
+            <div class="input-group">
+                <input type="text" id="video-url" placeholder="Ссылка на видео...">
+                <button class="btn" onclick="addVideoOrPlaylist()" id="addBtn">✚</button>
+            </div>
+            <button class="btn" style="width: 100%; background: #333;" onclick="resetPlaylist()">Очистить плейлист</button>
+        </div>
+        <div class="playlist-stats" id="playlistStats">
+            <span id="video-count">0 видео</span> | <span id="sync-status">⏳ Инициализация...</span>
+        </div>
+        <div class="playlist-container" id="playlist"></div>
+    </div>
+
+    <div class="main-content">
         <div class="sidebar-header">
             <h2>📺 My YT Studio</h2>
             <div class="input-group">
@@ -144,6 +161,14 @@
             }
             renderPlaylist();
             if (myVideos.length > 0) loadVideo(0);
+            
+            // Show sidebar on mobile on first load
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobileOverlay');
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+            }
         }
 
         async function savePlaylist() {

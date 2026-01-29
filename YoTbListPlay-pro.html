@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal YT Studio (Cloud Edition)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0f0f0f; --bg-secondary: #181818; --panel: #212121; 
+            --panel-hover: #2a2a2a; --accent: #ff0000; --accent-hover: #cc0000;
+            --text: #f1f1f1; --text-secondary: #aaaaaa; --border: #3a3a3a; --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 380px; background: var(--bg-secondary); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: transform 0.3s ease; z-index: 1000; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { font-size: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        
+        .input-group { display: flex; gap: 8px; margin-bottom: 10px; }
+        input { flex: 1; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px 15px; border-radius: 4px; font-size: 14px; }
+        input:focus { outline: none; border-color: var(--accent); }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: 500; transition: 0.2s; }
+        .btn:hover { background: var(--accent-hover); }
+
+        .playlist-container { flex: 1; overflow-y: auto; padding: 10px; }
+        .playlist-stats { padding: 10px 20px; font-size: 12px; color: var(--text-secondary); border-bottom: 1px solid var(--border); background: #111; }
+        #sync-status { font-weight: bold; }
+
+        .video-item { display: flex; gap: 12px; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; margin-bottom: 4px; border: 1px solid transparent; }
+        .video-item:hover { background: var(--panel-hover); }
+        .video-item.active { background: var(--panel); border-color: var(--border); }
+        .video-item img { width: 120px; height: 68px; border-radius: 6px; object-fit: cover; }
+        .video-item-content { flex: 1; overflow: hidden; }
+        .video-item-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .video-item-actions { display: none; position: absolute; right: 10px; top: 10px; }
+        .video-item:hover .video-item-actions { display: block; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg); overflow-y: auto; }
+        .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; position: sticky; top: 0; z-index: 100; }
+        #player { width: 100%; height: 100%; }
+        .video-info { padding: 24px; }
+        .video-description { color: var(--text-secondary); font-size: 14px; line-height: 1.6; white-space: pre-wrap; background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-top: 15px; }
+
+        .chapters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+        .chapter-btn { background: var(--panel); border: 1px solid var(--border); padding: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .chapter-btn:hover { background: var(--panel-hover); }
+        .chapter-time { color: var(--accent); font-weight: bold; font-size: 12px; }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: white; padding: 12px 24px; border-radius: 4px; transform: translateY(100px); transition: 0.3s; z-index: 2000; }
+        .toast.show { transform: translateY(0); }
+        
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>📺 My YT Studio</h2>
+            <div class="input-group">
+                <input type="text" id="video-url" placeholder="Ссылка на видео...">
+                <button class="btn" onclick="addVideoOrPlaylist()" id="addBtn">✚</button>
+            </div>
+            <button class="btn" style="width: 100%; background: #333;" onclick="resetPlaylist()">Очистить плейлист</button>
+        </div>
+        <div class="playlist-stats" id="playlistStats">
+            <span id="video-count">0 видео</span> | <span id="sync-status">⏳ Инициализация...</span>
+        </div>
+        <div class="playlist-container" id="playlist"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="video-wrapper"><div id="player"></div></div>
+        <div class="video-info">
+            <h1 id="current-title">Выберите видео</h1>
+            <div id="chaptersSection" style="display: none; margin-top: 20px;">
+                <h3>Навигация</h3>
+                <div class="chapters-grid" id="chapters-list"></div>
+            </div>
+            <div class="video-description" id="current-description">Таймкоды и описание...</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const API_KEY = 'AIzaSyB79LenCkfDqTFbrVMRVoAqRp5Wpzy_2Dg';
+        const CLOUD_BRIDGE_URL = 'https://script.google.com/macros/s/AKfycbxo_bApK3lrzQyb-FA95jcHNDh6cr5R2eqWM9TILEyuxM5sb7slxunj9yEn-i7c9ldZ/exec'; // <--- ВСТАВИТЬ ОБЯЗАТЕЛЬНО
+
+        let player;
+        let myVideos = [];
+        let currentVideoIndex = -1;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', { 
+                videoId: '', 
+                events: { 'onReady': () => initPlaylist(), 'onStateChange': onPlayerStateChange }
+            });
+        }
+
+        function onPlayerStateChange(e) {
+            if (e.data === YT.PlayerState.ENDED && currentVideoIndex < myVideos.length - 1) loadVideo(currentVideoIndex + 1);
+        }
+
+        // --- ЛОГИКА СИНХРОНИЗАЦИИ ---
+
+        async function initPlaylist() {
+            updateStatus('syncing', 'Синхронизация...');
+            try {
+                const response = await fetch(CLOUD_BRIDGE_URL + '?t=' + Date.now());
+                const cloudData = await response.json();
+                if (Array.isArray(cloudData)) {
+                    myVideos = cloudData;
+                    localStorage.setItem('my_yt_playlist', JSON.stringify(myVideos));
+                    updateStatus('success', 'Облако активно');
+                } else { throw new Error(); }
+            } catch (e) {
+                const saved = localStorage.getItem('my_yt_playlist');
+                myVideos = saved ? JSON.parse(saved) : [];
+                updateStatus('offline', 'Локальный режим');
+            }
+            renderPlaylist();
+            if (myVideos.length > 0) loadVideo(0);
+        }
+
+        async function savePlaylist() {
+            localStorage.setItem('my_yt_playlist', JSON.stringify(myVideos));
+            updateStatus('syncing', 'Сохранение...');
+            
+            const cleanData = myVideos.map(v => ({ id: v.id, title: v.title, thumb: v.thumb }));
+
+            try {
+                await fetch(CLOUD_BRIDGE_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(cleanData)
+                });
+                setTimeout(() => updateStatus('success', 'Синхронизировано'), 800);
+            } catch (e) { updateStatus('error', 'Ошибка связи'); }
+        }
+
+        function updateStatus(state, text) {
+            const el = document.getElementById('sync-status');
+            const icons = { syncing: '⏳', success: '🟢', offline: '🟡', error: '🔴' };
+            el.innerHTML = `${icons[state] || ''} ${text}`;
+            document.getElementById('video-count').textContent = `${myVideos.length} видео`;
+        }
+
+        // --- УПРАВЛЕНИЕ ---
+
+        async function addVideoOrPlaylist() {
+            const url = document.getElementById('video-url').value.trim();
+            if (!url) return;
+            const pId = extractPlaylistID(url);
+            pId ? await addPlaylist(pId) : await addVideo();
+            document.getElementById('video-url').value = '';
+        }
+
+        async function addVideo() {
+            const id = extractID(document.getElementById('video-url').value.trim());
+            if (!id || myVideos.some(v => v.id === id)) return showToast('Ошибка или дубликат');
+            try {
+                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${id}&key=${API_KEY}`);
+                const data = await res.json();
+                const v = data.items[0];
+                myVideos.push({ id, title: v.snippet.title, thumb: v.snippet.thumbnails.medium.url, description: v.snippet.description });
+                renderPlaylist(); savePlaylist();
+            } catch (e) { showToast('Ошибка YouTube API'); }
+        }
+
+        async function addPlaylist(playlistId) {
+            try {
+                const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}`);
+                const data = await res.json();
+                data.items.forEach(item => {
+                    const id = item.snippet.resourceId.videoId;
+                    if (!myVideos.some(v => v.id === id)) {
+                        myVideos.push({ id, title: item.snippet.title, thumb: item.snippet.thumbnails.medium.url, description: item.snippet.description });
+                    }
+                });
+                renderPlaylist(); savePlaylist();
+            } catch (e) { showToast('Ошибка плейлиста'); }
+        }
+
+        function deleteVideo(index, e) {
+            e.stopPropagation();
+            if (confirm('Удалить видео из облака?')) {
+                myVideos.splice(index, 1);
+                renderPlaylist();
+                savePlaylist();
+            }
+        }
+
+        async function loadVideo(index) {
+            currentVideoIndex = index;
+            const video = myVideos[index];
+            player.loadVideoById(video.id);
+            document.getElementById('current-title').textContent = video.title;
+
+            if (!video.description) {
+                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${video.id}&key=${API_KEY}`);
+                const data = await res.json();
+                video.description = data.items[0]?.snippet.description || "";
+            }
+
+            document.getElementById('current-description').textContent = video.description;
+            renderChapters(parseDescription(video.description));
+            renderPlaylist();
+        }
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlist');
+            container.innerHTML = myVideos.length ? '' : '<div style="padding:20px;color:#666">Плейлист пуст</div>';
+            myVideos.forEach((v, i) => {
+                const div = document.createElement('div');
+                div.className = `video-item ${i === currentVideoIndex ? 'active' : ''}`;
+                div.innerHTML = `<img src="${v.thumb}"><div class="video-item-content"><div class="video-item-title">${v.title}</div></div>
+                <div class="video-item-actions"><button class="btn" onclick="deleteVideo(${i}, event)">🗑️</button></div>`;
+                div.onclick = (e) => { if (!e.target.closest('.video-item-actions')) loadVideo(i); };
+                container.appendChild(div);
+            });
+            document.getElementById('video-count').textContent = `${myVideos.length} видео`;
+        }
+
+        // --- ПАРСИНГ ---
+        function parseDescription(text) {
+            const ch = []; if (!text) return ch;
+            text.split('\n').forEach(line => {
+                const m = line.match(/(\d{1,2}:)?(\d{1,2}):(\d{2})/);
+                if (m) ch.push({ time: timeToSeconds(m[0]), label: line.replace(m[0], '').trim().replace(/^[-–—]\s*/, '') });
+            });
+            return ch;
+        }
+
+        function renderChapters(chapters) {
+            const list = document.getElementById('chapters-list');
+            const sec = document.getElementById('chaptersSection');
+            if (!chapters.length) { sec.style.display = 'none'; return; }
+            sec.style.display = 'block'; list.innerHTML = '';
+            chapters.forEach(c => {
+                const b = document.createElement('div'); b.className = 'chapter-btn';
+                b.innerHTML = `<div class="chapter-time">${formatTime(c.time)}</div><div class="chapter-label">${c.label}</div>`;
+                b.onclick = () => player.seekTo(c.time, true);
+                list.appendChild(b);
+            });
+        }
+
+        // --- УТИЛИТЫ ---
+        function timeToSeconds(s) {
+            const p = s.split(':'); let r = 0, m = 1;
+            while (p.length > 0) { r += m * parseInt(p.pop(), 10); m *= 60; }
+            return r;
+        }
+        function formatTime(s) {
+            const h = Math.floor(s / 3600); const m = Math.floor((s % 3600) / 60); const sec = s % 60;
+            return h > 0 ? `${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}` : `${m}:${sec.toString().padStart(2,'0')}`;
+        }
+        function extractID(u) { const m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:v\/|u\/\w\/|embed\/|watch\?v=))([^#\&\?]*)/); return m?.[1] || false; }
+        function extractPlaylistID(u) { const m = u.match(/[?&]list=([^#\&\?]+)/); return m?.[1] || false; }
+        function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+        function resetPlaylist() { if (confirm('Удалить всё?')) { myVideos = []; renderPlaylist(); savePlaylist(); } }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.target.matches('input')) { e.preventDefault(); player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); }
+        });
+    </script>
+</body>
+</html>

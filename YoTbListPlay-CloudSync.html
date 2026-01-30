@@ -514,6 +514,142 @@
             transform: translateX(-50%) translateY(0);
         }
         
+        /* Confirmation Modal */
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .confirm-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+        
+        .confirm-modal-content {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            animation: slideDown 0.3s;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .confirm-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .confirm-modal-icon {
+            font-size: 2rem;
+        }
+        
+        .confirm-modal-title {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+        
+        .confirm-modal-body {
+            margin-bottom: 24px;
+        }
+        
+        .confirm-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .confirm-info-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .confirm-info-value {
+            color: var(--text);
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .confirm-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: start;
+        }
+        
+        .confirm-warning-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .confirm-warning-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .confirm-modal-buttons button {
+            flex: 1;
+            margin: 0;
+        }
+        
+        .btn-cancel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-cancel:hover {
+            background: var(--panel-hover);
+        }
+        
+        .btn-confirm {
+            background: var(--accent);
+        }
+        
+        .btn-confirm:hover {
+            background: var(--accent-hover);
+        }
+        
         /* Mobile responsive */
         @media (max-width: 768px) {
             body {
@@ -623,6 +759,9 @@
             <div style="text-align: center; margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary);">
                 Поддержка видео и целых плейлистов
             </div>
+            <button onclick="undoLastImport()" id="undoBtn" style="display: none; background: #f59e0b; margin-top: 8px;">
+                ↶ Отменить последнюю загрузку
+            </button>
         </div>
         <div class="playlist-items" id="playlist"></div>
     </div>
@@ -654,6 +793,41 @@
     
     <!-- Toast notification -->
     <div class="toast" id="toast"></div>
+    
+    <!-- Confirmation Modal -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <span class="confirm-modal-icon">📋</span>
+                <h3 class="confirm-modal-title">Обнаружен плейлист</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <div class="confirm-info-row">
+                    <span class="confirm-info-label">Название:</span>
+                    <span class="confirm-info-value" id="playlistName">-</span>
+                </div>
+                <div class="confirm-info-row">
+                    <span class="confirm-info-label">Автор:</span>
+                    <span class="confirm-info-value" id="playlistAuthor">-</span>
+                </div>
+                <div class="confirm-info-row">
+                    <span class="confirm-info-label">Количество видео:</span>
+                    <span class="confirm-info-value" id="playlistCount">-</span>
+                </div>
+                <div class="confirm-warning">
+                    <span class="confirm-warning-icon">⚠️</span>
+                    <div class="confirm-warning-text">
+                        Это добавит все видео из плейлиста в ваш список.<br>
+                        Загрузка большого плейлиста может занять некоторое время.
+                    </div>
+                </div>
+            </div>
+            <div class="confirm-modal-buttons">
+                <button class="btn-cancel" onclick="cancelPlaylistImport()">Отмена</button>
+                <button class="btn-confirm" onclick="confirmPlaylistImport()">Загрузить</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
@@ -738,6 +912,8 @@
         let player;
         let myVideos = [];
         let currentVideoIndex = -1;
+        let lastImportState = null; // Для отмены последней загрузки
+        let lastImportCount = 0; // Сколько видео было добавлено
         
         // Видео по умолчанию - будут загружены с полной информацией через API
         const DEFAULT_VIDEO_IDS = [
@@ -782,19 +958,31 @@
         async function initPlaylist() {
             updateStatus('syncing', 'Стучимся в облако...');
             
-            // Алгоритм получения
+            // ВАЖНО: Сначала всегда пробуем получить данные из облака
             const cloudPlaylist = await CloudSync.fetchFromCloud();
             
-            if (cloudPlaylist && cloudPlaylist.length > 0) {
+            if (cloudPlaylist && Array.isArray(cloudPlaylist)) {
+                // Облако доступно - это единственный источник правды
                 myVideos = cloudPlaylist;
                 localStorage.setItem('my_yt_playlist', JSON.stringify(myVideos));
-                updateStatus('success', 'Облако активно');
-                renderPlaylist();
+                
                 if (myVideos.length > 0) {
+                    updateStatus('success', 'Облако активно');
+                    renderPlaylist();
                     loadVideo(0);
+                } else {
+                    // Облако пустое - первый запуск, загружаем видео по умолчанию
+                    updateStatus('syncing', 'Загрузка видео по умолчанию...');
+                    await loadDefaultVideos();
+                    await savePlaylist();
+                    renderPlaylist();
+                    if (myVideos.length > 0) {
+                        loadVideo(0);
+                    }
+                    updateStatus('success', 'Готово!');
                 }
             } else {
-                // Если облако упало, берем локальную копию
+                // Облако недоступно - работаем локально
                 const localData = localStorage.getItem('my_yt_playlist');
                 if (localData) {
                     myVideos = JSON.parse(localData);
@@ -804,15 +992,11 @@
                         loadVideo(0);
                     }
                 } else {
-                    // Первый запуск - загружаем видео по умолчанию
-                    updateStatus('syncing', 'Загрузка видео по умолчанию...');
-                    await loadDefaultVideos();
-                    await savePlaylist();
+                    // Нет ни облака, ни локальных данных
+                    updateStatus('offline', 'Локальный режим (нет данных)');
+                    myVideos = [];
                     renderPlaylist();
-                    if (myVideos.length > 0) {
-                        loadVideo(0);
-                    }
-                    updateStatus('success', 'Готово!');
+                    document.getElementById('current-title').textContent = 'Добавьте первое видео';
                 }
             }
         }
@@ -865,16 +1049,109 @@
             // Check if it's a playlist
             const playlistId = extractPlaylistID(url);
             if (playlistId) {
-                await addPlaylistToList(playlistId);
+                // Сначала получаем информацию о плейлисте
+                await checkAndConfirmPlaylist(playlistId);
             } else {
                 await addVideoToList();
             }
+        }
+        
+        async function checkAndConfirmPlaylist(playlistId) {
+            const btn = document.getElementById('addBtn');
+            const btnText = document.getElementById('btnText');
+            
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading"></span> Подсчёт видео...';
+            
+            try {
+                // Получаем информацию о плейлисте
+                const playlistUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${playlistId}&key=${API_KEY}`;
+                const res = await fetch(playlistUrl);
+                const data = await res.json();
+                
+                if (data.error || !data.items || !data.items.length) {
+                    showToast('❌ Плейлист не найден');
+                    btn.disabled = false;
+                    btnText.textContent = 'Добавить';
+                    return;
+                }
+                
+                const playlist = data.items[0];
+                const playlistTitle = playlist.snippet.title;
+                const author = playlist.snippet.channelTitle;
+                
+                // РЕАЛЬНЫЙ ПОДСЧЁТ: считаем первую страницу, чтобы узнать точное число
+                btnText.textContent = 'Подсчёт видео...';
+                const firstPageUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}`;
+                const firstPageRes = await fetch(firstPageUrl);
+                const firstPageData = await firstPageRes.json();
+                
+                if (firstPageData.error || !firstPageData.pageInfo) {
+                    showToast('❌ Ошибка получения видео');
+                    btn.disabled = false;
+                    btnText.textContent = 'Добавить';
+                    return;
+                }
+                
+                // YouTube API возвращает РЕАЛЬНОЕ количество в pageInfo.totalResults
+                const realVideoCount = firstPageData.pageInfo.totalResults;
+                
+                // Считаем сколько из них уже добавлены
+                const firstPageVideos = firstPageData.items
+                    .filter(item => item.snippet.title !== 'Deleted video' && item.snippet.title !== 'Private video')
+                    .map(item => item.snippet.resourceId.videoId);
+                
+                const alreadyAdded = firstPageVideos.filter(id => myVideos.some(v => v.id === id)).length;
+                const newVideosCount = realVideoCount - alreadyAdded;
+                
+                // Сохраняем ID для подтверждения
+                window.pendingPlaylistId = playlistId;
+                
+                // Заполняем модальное окно
+                document.getElementById('playlistName').textContent = playlistTitle;
+                document.getElementById('playlistAuthor').textContent = author;
+                
+                if (newVideosCount > 0) {
+                    document.getElementById('playlistCount').textContent = `${realVideoCount} (${newVideosCount} новых)`;
+                } else {
+                    document.getElementById('playlistCount').textContent = `${realVideoCount} (все уже добавлены)`;
+                }
+                
+                // Показываем модальное окно
+                document.getElementById('confirmModal').classList.add('show');
+                
+            } catch (error) {
+                showToast('❌ Ошибка проверки плейлиста');
+                console.error(error);
+                btn.disabled = false;
+                btnText.textContent = 'Добавить';
+            }
+        }
+        
+        function cancelPlaylistImport() {
+            document.getElementById('confirmModal').classList.remove('show');
+            document.getElementById('video-url').value = '';
+            showToast('❌ Загрузка отменена');
+            
+            const btn = document.getElementById('addBtn');
+            const btnText = document.getElementById('btnText');
+            btn.disabled = false;
+            btnText.textContent = 'Добавить';
+        }
+        
+        async function confirmPlaylistImport() {
+            document.getElementById('confirmModal').classList.remove('show');
+            const playlistId = window.pendingPlaylistId;
+            await addPlaylistToList(playlistId);
         }
         
         async function addPlaylistToList(playlistId) {
             const btn = document.getElementById('addBtn');
             const btnText = document.getElementById('btnText');
             const input = document.getElementById('video-url');
+            
+            // Сохраняем состояние перед импортом
+            lastImportState = JSON.parse(JSON.stringify(myVideos));
             
             btn.disabled = true;
             btnText.innerHTML = '<span class="loading"></span> Загрузка плейлиста...';
@@ -898,6 +1175,7 @@
                     if (!data.items || data.items.length === 0) {
                         if (pageCount === 0) {
                             showToast('❌ Плейлист пуст или не найден');
+                            lastImportState = null; // Нечего отменять
                             return;
                         }
                         break;
@@ -925,13 +1203,20 @@
                 if (allVideos.length === 0) {
                     showToast('⚠️ Все видео из плейлиста уже добавлены');
                     input.value = '';
+                    lastImportState = null; // Нечего отменять
                     return;
                 }
+                
+                // Сохраняем количество добавленных видео
+                lastImportCount = allVideos.length;
                 
                 myVideos = myVideos.concat(allVideos);
                 await savePlaylist();
                 input.value = '';
                 renderPlaylist();
+                
+                // Показываем кнопку отмены
+                showUndoButton();
                 
                 showToast(`✅ Добавлено ${allVideos.length} видео из плейлиста`);
                 
@@ -943,6 +1228,7 @@
                 showToast(`❌ Ошибка: ${error.message}`);
                 console.error(error);
                 updateStatus('error', 'Ошибка загрузки');
+                lastImportState = null; // Сбрасываем при ошибке
             } finally {
                 btn.disabled = false;
                 btnText.textContent = 'Добавить';
@@ -1012,6 +1298,9 @@
                 return;
             }
             
+            // При удалении вручную - скрываем кнопку отмены импорта
+            hideUndoButton();
+            
             myVideos.splice(index, 1);
             savePlaylist();
             
@@ -1032,6 +1321,61 @@
             renderPlaylist();
             showToast('🗑️ Видео удалено');
         }
+        
+        // ========== ФУНКЦИИ ОТМЕНЫ ИМПОРТА ==========
+        function showUndoButton() {
+            const undoBtn = document.getElementById('undoBtn');
+            undoBtn.style.display = 'block';
+            
+            // Автоматически скрыть через 30 секунд
+            setTimeout(() => {
+                if (undoBtn.style.display === 'block') {
+                    hideUndoButton();
+                }
+            }, 30000);
+        }
+        
+        function hideUndoButton() {
+            const undoBtn = document.getElementById('undoBtn');
+            undoBtn.style.display = 'none';
+            lastImportState = null;
+            lastImportCount = 0;
+        }
+        
+        async function undoLastImport() {
+            if (!lastImportState) {
+                showToast('⚠️ Нет операций для отмены');
+                return;
+            }
+            
+            if (!confirm(`Отменить добавление ${lastImportCount} видео?`)) {
+                return;
+            }
+            
+            updateStatus('syncing', 'Отмена импорта...');
+            
+            // Восстанавливаем предыдущее состояние
+            myVideos = JSON.parse(JSON.stringify(lastImportState));
+            
+            await savePlaylist();
+            renderPlaylist();
+            
+            // Восстанавливаем текущее видео если нужно
+            if (currentVideoIndex >= myVideos.length) {
+                if (myVideos.length > 0) {
+                    loadVideo(0);
+                } else {
+                    currentVideoIndex = -1;
+                    document.getElementById('current-title').textContent = 'Плейлист пуст';
+                    document.getElementById('current-description').textContent = '';
+                    renderChapters([]);
+                }
+            }
+            
+            hideUndoButton();
+            showToast(`✅ Отменено добавление ${lastImportCount} видео`);
+        }
+
 
         function renderPlaylist() {
             const container = document.getElementById('playlist');

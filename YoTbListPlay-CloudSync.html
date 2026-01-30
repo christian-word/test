@@ -1,0 +1,1288 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal YT Studio - Cloud Sync</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0f0f0f; 
+            --bg-secondary: #181818;
+            --panel: #212121; 
+            --panel-hover: #2a2a2a;
+            --accent: #ff0000; 
+            --accent-hover: #cc0000;
+            --text: #f1f1f1; 
+            --text-secondary: #aaaaaa;
+            --border: #3a3a3a;
+            --success: #10b981;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        /* Sync Status Bar */
+        .sync-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--border);
+            z-index: 2000;
+        }
+        
+        .sync-status-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--success);
+            transition: width 0.3s, background 0.3s;
+        }
+        
+        .sync-status.syncing .sync-status-bar {
+            width: 70%;
+            background: #3b82f6;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .sync-status.success .sync-status-bar {
+            width: 100%;
+            background: var(--success);
+        }
+        
+        .sync-status.error .sync-status-bar {
+            width: 100%;
+            background: var(--accent);
+        }
+        
+        .sync-status.offline .sync-status-bar {
+            width: 100%;
+            background: #f59e0b;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Sync Indicator */
+        .sync-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 2001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sync-indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+        
+        .sync-indicator.success .sync-indicator-dot {
+            background: var(--success);
+            animation: blink 2s infinite;
+        }
+        
+        .sync-indicator.syncing .sync-indicator-dot {
+            background: #3b82f6;
+            animation: pulse 1s infinite;
+        }
+        
+        .sync-indicator.error .sync-indicator-dot {
+            background: var(--accent);
+        }
+        
+        .sync-indicator.offline .sync-indicator-dot {
+            background: #f59e0b;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Левая панель - Плейлист */
+        .sidebar { 
+            width: 380px; 
+            background: var(--panel); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar-header { 
+            padding: 24px 20px; 
+            border-bottom: 1px solid var(--border); 
+        }
+        
+        .sidebar-header h3 {
+            margin: 0 0 16px 0;
+            font-size: 1.3rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .playlist-stats {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .playlist-items { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 12px; 
+        }
+        
+        /* Центральная часть - Плеер и Главы */
+        .main-content { 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: var(--bg-secondary);
+            overflow-y: auto; 
+        }
+        
+        .player-wrapper {
+            position: relative;
+            background: #000;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .player-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Карточка видео в списке */
+        .video-item { 
+            display: flex; 
+            gap: 12px; 
+            padding: 12px; 
+            margin-bottom: 8px; 
+            background: var(--bg-secondary); 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        
+        .video-item:hover { 
+            background: var(--panel-hover);
+            border-color: var(--border);
+        }
+        
+        .video-item.active {
+            background: var(--panel-hover);
+            border-color: var(--accent);
+        }
+        
+        .video-item img { 
+            width: 120px; 
+            height: 68px;
+            border-radius: 6px; 
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .video-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .video-item-title { 
+            font-size: 0.9rem; 
+            font-weight: 500; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .video-item-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .chapters-badge {
+            background: var(--success);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .video-item-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .video-item:hover .video-item-actions {
+            opacity: 1;
+        }
+        
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon:hover {
+            background: var(--panel-hover);
+            transform: scale(1.1);
+        }
+        
+        .btn-icon.delete:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Стили для глав и ввода */
+        input { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border); 
+            background: var(--bg-secondary); 
+            color: var(--text); 
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg);
+        }
+        
+        button {
+            width: 100%; 
+            padding: 12px 16px; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        
+        button:hover {
+            background: var(--accent-hover);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .chapters-section {
+            margin-top: 24px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .section-header h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chapters-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 12px;
+        }
+        
+        .chapter-btn { 
+            background: var(--panel); 
+            padding: 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            text-align: left;
+        }
+        
+        .chapter-btn:hover { 
+            border-color: var(--accent); 
+            background: var(--panel-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .chapter-time {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .chapter-label {
+            font-size: 0.9rem;
+            color: var(--text);
+            line-height: 1.4;
+        }
+        
+        #player { 
+            width: 100%; 
+            aspect-ratio: 16/9; 
+            background: #000; 
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        
+        #current-title {
+            margin: 20px 0 12px 0;
+            font-size: 1.4rem;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+        
+        #current-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        
+        /* Mobile controls */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(255,0,0,0.4);
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mobile-menu-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 998;
+            backdrop-filter: blur(4px);
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Loading spinner */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--panel);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 1001;
+            opacity: 0;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 90%;
+                max-width: 380px;
+                z-index: 999;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                width: 100%;
+            }
+            
+            .player-container,
+            .content-wrapper {
+                padding: 12px;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .chapters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .video-item img {
+                width: 100px;
+                height: 56px;
+            }
+            
+            #current-title {
+                font-size: 1.1rem;
+            }
+            
+            .video-item-actions {
+                opacity: 1;
+            }
+            
+            .sync-indicator {
+                top: 60px;
+                right: 10px;
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+        }
+        
+        /* Scrollbar styling */
+        .playlist-items::-webkit-scrollbar,
+        .main-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .playlist-items::-webkit-scrollbar-track,
+        .main-content::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        
+        .playlist-items::-webkit-scrollbar-thumb,
+        .main-content::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        .playlist-items::-webkit-scrollbar-thumb:hover,
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: #4a4a4a;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sync Status Bar -->
+    <div class="sync-status" id="syncStatus">
+        <div class="sync-status-bar"></div>
+    </div>
+    
+    <!-- Sync Indicator -->
+    <div class="sync-indicator" id="syncIndicator">
+        <div class="sync-indicator-dot"></div>
+        <span id="syncText">Инициализация...</span>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>📋 Мой Плейлист</h3>
+            <div class="playlist-stats" id="playlistStats">0 видео</div>
+            <div class="input-group">
+                <input type="text" id="video-url" placeholder="YouTube ссылка (видео или плейлист)...">
+                <button onclick="addVideoOrPlaylist()" id="addBtn">
+                    <span id="btnText">Добавить</span>
+                </button>
+            </div>
+            <div style="text-align: center; margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary);">
+                Поддержка видео и целых плейлистов
+            </div>
+        </div>
+        <div class="playlist-items" id="playlist"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="player-wrapper">
+            <div class="player-container">
+                <div id="player"></div>
+            </div>
+        </div>
+        
+        <div class="content-wrapper">
+            <h2 id="current-title">Загрузка из облака...</h2>
+            <p id="current-description"></p>
+            
+            <div class="chapters-section" id="chaptersSection" style="display: none;">
+                <div class="section-header">
+                    <h3>🎵 Главы</h3>
+                    <span id="chaptersCount" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+                </div>
+                <div class="chapters-grid" id="chapters-list"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile controls -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">📋</button>
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+    
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        // ========== КОНФИГУРАЦИЯ ==========
+        const CLOUD_BRIDGE_URL = 'https://script.google.com/macros/s/AKfycbxo_bApK3lrzQyb-FA95jcHNDh6cr5R2eqWM9TILEyuxM5sb7slxunj9yEn-i7c9ldZ/exec'; // Замените на ваш URL
+        const API_KEY = 'AIzaSyB79LenCkfDqTFbrVMRVoAqRp5Wpzy_2Dg';
+        
+        // ========== CLOUD SYNC ENGINE v2.0 ==========
+        const CloudSync = {
+            url: CLOUD_BRIDGE_URL,
+            apiKey: API_KEY,
+
+            /**
+             * ПОЛУЧЕНИЕ ПРАВДЫ (Cloud -> Browser)
+             */
+            async fetchFromCloud() {
+                try {
+                    // Анти-кэш: добавляем случайное число к запросу
+                    const response = await fetch(`${this.url}?t=${Date.now()}`);
+                    if (!response.ok) throw new Error("Cloud unreachable");
+                    
+                    const data = await response.json();
+                    if (Array.isArray(data)) {
+                        console.log("📥 CloudSync: Данные загружены. Всего: " + data.length);
+                        return data;
+                    }
+                    return null;
+                } catch (err) {
+                    console.error("📥 CloudSync Error:", err);
+                    return null;
+                }
+            },
+
+            /**
+             * ОТПРАВКА ПРАВДЫ (Browser -> Cloud)
+             * Алгоритм перезаписи файла на Диске
+             */
+            async pushToCloud(playlist) {
+                if (!this.url || this.url === 'ВАШ_URL_APPS_SCRIPT_СЮДА') {
+                    console.warn("⚠️ CloudSync: URL не настроен");
+                    return false;
+                }
+
+                // КЛЯТВА: Очистка данных перед отправкой (удаляем лишние мегабайты описаний)
+                const cleanData = playlist.map(v => ({
+                    id: v.id,
+                    title: v.title,
+                    thumb: v.thumb
+                }));
+
+                try {
+                    await fetch(this.url, {
+                        method: 'POST',
+                        mode: 'no-cors', // Важно для Google Apps Script
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cleanData)
+                    });
+                    console.log("📤 CloudSync: Плейлист успешно перезаписан на Диске");
+                    return true;
+                } catch (err) {
+                    console.error("📤 CloudSync Push Error:", err);
+                    return false;
+                }
+            },
+
+            /**
+             * ПОИСК ПОТЕРЯННОГО (YouTube API)
+             * Если в облаке только ID, тянем описание здесь
+             */
+            async getFullDetails(videoId) {
+                try {
+                    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${this.apiKey}`);
+                    const data = await res.json();
+                    return data.items[0]?.snippet?.description || "Описание отсутствует";
+                } catch (e) {
+                    return "Ошибка загрузки описания";
+                }
+            }
+        };
+        
+        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+        let player;
+        let myVideos = [];
+        let currentVideoIndex = -1;
+        
+        // Видео по умолчанию - будут загружены с полной информацией через API
+        const DEFAULT_VIDEO_IDS = [
+            'LMTftEixYUY',
+            'tgXiHhwftEs', 
+            'EatV5u6aUXw'
+        ];
+
+        // ========== SYNC STATUS УПРАВЛЕНИЕ ==========
+        function updateStatus(status, text) {
+            const indicator = document.getElementById('syncIndicator');
+            const statusBar = document.getElementById('syncStatus');
+            const statusText = document.getElementById('syncText');
+            
+            indicator.className = 'sync-indicator ' + status;
+            statusBar.className = 'sync-status ' + status;
+            statusText.textContent = text;
+            
+            console.log(`🔄 Status: ${status} - ${text}`);
+        }
+
+        // ========== YOUTUBE PLAYER ==========
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', { 
+                videoId: '', 
+                playerVars: { 
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'playsinline': 1
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+        
+        function onPlayerReady() {
+            initPlaylist();
+        }
+        
+        // ========== ИНИЦИАЛИЗАЦИЯ ПЛЕЙЛИСТА ==========
+        async function initPlaylist() {
+            updateStatus('syncing', 'Стучимся в облако...');
+            
+            // Алгоритм получения
+            const cloudPlaylist = await CloudSync.fetchFromCloud();
+            
+            if (cloudPlaylist && cloudPlaylist.length > 0) {
+                myVideos = cloudPlaylist;
+                localStorage.setItem('my_yt_playlist', JSON.stringify(myVideos));
+                updateStatus('success', 'Облако активно');
+                renderPlaylist();
+                if (myVideos.length > 0) {
+                    loadVideo(0);
+                }
+            } else {
+                // Если облако упало, берем локальную копию
+                const localData = localStorage.getItem('my_yt_playlist');
+                if (localData) {
+                    myVideos = JSON.parse(localData);
+                    updateStatus('offline', 'Локальный режим');
+                    renderPlaylist();
+                    if (myVideos.length > 0) {
+                        loadVideo(0);
+                    }
+                } else {
+                    // Первый запуск - загружаем видео по умолчанию
+                    updateStatus('syncing', 'Загрузка видео по умолчанию...');
+                    await loadDefaultVideos();
+                    await savePlaylist();
+                    renderPlaylist();
+                    if (myVideos.length > 0) {
+                        loadVideo(0);
+                    }
+                    updateStatus('success', 'Готово!');
+                }
+            }
+        }
+        
+        async function loadDefaultVideos() {
+            try {
+                const ids = DEFAULT_VIDEO_IDS.join(',');
+                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${ids}&key=${API_KEY}`);
+                const data = await res.json();
+                
+                if (data.items && data.items.length > 0) {
+                    myVideos = data.items.map(item => ({
+                        id: item.id,
+                        title: item.snippet.title,
+                        thumb: item.snippet.thumbnails.medium.url,
+                        description: item.snippet.description
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading default videos:', error);
+            }
+        }
+        
+        // ========== СОХРАНЕНИЕ (при добавлении/удалении) ==========
+        async function savePlaylist() {
+            // 1. Мгновенно в локал
+            localStorage.setItem('my_yt_playlist', JSON.stringify(myVideos));
+            
+            // 2. Отправка в облако через наш новый алгоритм
+            updateStatus('syncing', 'Синхронизация...');
+            const success = await CloudSync.pushToCloud(myVideos);
+            
+            if (success) {
+                updateStatus('success', 'Синхронизировано');
+            } else {
+                updateStatus('error', 'Ошибка синхронизации');
+            }
+        }
+        
+        // ========== ДОБАВЛЕНИЕ ВИДЕО ИЛИ ПЛЕЙЛИСТА ==========
+        async function addVideoOrPlaylist() {
+            const input = document.getElementById('video-url');
+            const url = input.value.trim();
+            
+            if (!url) {
+                showToast('❌ Введите ссылку');
+                return;
+            }
+            
+            // Check if it's a playlist
+            const playlistId = extractPlaylistID(url);
+            if (playlistId) {
+                await addPlaylistToList(playlistId);
+            } else {
+                await addVideoToList();
+            }
+        }
+        
+        async function addPlaylistToList(playlistId) {
+            const btn = document.getElementById('addBtn');
+            const btnText = document.getElementById('btnText');
+            const input = document.getElementById('video-url');
+            
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading"></span> Загрузка плейлиста...';
+            updateStatus('syncing', 'Загрузка плейлиста...');
+            
+            try {
+                let allVideos = [];
+                let nextPageToken = '';
+                let pageCount = 0;
+                const maxPages = 10;
+                
+                do {
+                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&pageToken=${nextPageToken}&key=${API_KEY}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    if (data.error) {
+                        throw new Error(data.error.message);
+                    }
+                    
+                    if (!data.items || data.items.length === 0) {
+                        if (pageCount === 0) {
+                            showToast('❌ Плейлист пуст или не найден');
+                            return;
+                        }
+                        break;
+                    }
+                    
+                    const validVideos = data.items
+                        .filter(item => item.snippet.title !== 'Deleted video' && item.snippet.title !== 'Private video')
+                        .map(item => ({
+                            id: item.snippet.resourceId.videoId,
+                            title: item.snippet.title,
+                            thumb: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default.url,
+                            description: item.snippet.description || ''
+                        }))
+                        .filter(video => !myVideos.some(v => v.id === video.id));
+                    
+                    allVideos = allVideos.concat(validVideos);
+                    
+                    nextPageToken = data.nextPageToken || '';
+                    pageCount++;
+                    
+                    btnText.textContent = `Загружено ${allVideos.length} видео...`;
+                    
+                } while (nextPageToken && pageCount < maxPages);
+                
+                if (allVideos.length === 0) {
+                    showToast('⚠️ Все видео из плейлиста уже добавлены');
+                    input.value = '';
+                    return;
+                }
+                
+                myVideos = myVideos.concat(allVideos);
+                await savePlaylist();
+                input.value = '';
+                renderPlaylist();
+                
+                showToast(`✅ Добавлено ${allVideos.length} видео из плейлиста`);
+                
+                if (currentVideoIndex === -1 && myVideos.length > 0) {
+                    loadVideo(0);
+                }
+                
+            } catch (error) {
+                showToast(`❌ Ошибка: ${error.message}`);
+                console.error(error);
+                updateStatus('error', 'Ошибка загрузки');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Добавить';
+            }
+        }
+        
+        async function addVideoToList() {
+            const input = document.getElementById('video-url');
+            const url = input.value.trim();
+            const id = extractID(url);
+            
+            if (!id) {
+                showToast('❌ Неверная ссылка на YouTube');
+                return;
+            }
+            
+            if (myVideos.some(v => v.id === id)) {
+                showToast('⚠️ Это видео уже в плейлисте');
+                return;
+            }
+
+            const btn = document.getElementById('addBtn');
+            const btnText = document.getElementById('btnText');
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="loading"></span>';
+            updateStatus('syncing', 'Добавление видео...');
+
+            try {
+                const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${id}&key=${API_KEY}`);
+                const data = await res.json();
+                
+                if (!data.items || !data.items.length) {
+                    showToast('❌ Видео не найдено');
+                    updateStatus('error', 'Видео не найдено');
+                    return;
+                }
+                
+                const videoData = data.items[0];
+
+                const newVideo = {
+                    id: id,
+                    title: videoData.snippet.title,
+                    thumb: videoData.snippet.thumbnails.medium.url,
+                    description: videoData.snippet.description
+                };
+
+                myVideos.push(newVideo);
+                await savePlaylist();
+                input.value = '';
+                renderPlaylist();
+                showToast('✅ Видео добавлено в плейлист');
+                
+            } catch (error) {
+                showToast('❌ Ошибка при загрузке видео');
+                updateStatus('error', 'Ошибка API');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Добавить';
+            }
+        }
+        
+        function deleteVideo(index, event) {
+            event.stopPropagation();
+            
+            if (!confirm('Удалить это видео из плейлиста?')) {
+                return;
+            }
+            
+            myVideos.splice(index, 1);
+            savePlaylist();
+            
+            if (currentVideoIndex === index) {
+                if (myVideos.length > 0) {
+                    const newIndex = Math.min(index, myVideos.length - 1);
+                    loadVideo(newIndex);
+                } else {
+                    currentVideoIndex = -1;
+                    document.getElementById('current-title').textContent = 'Плейлист пуст';
+                    document.getElementById('current-description').textContent = '';
+                    renderChapters([]);
+                }
+            } else if (currentVideoIndex > index) {
+                currentVideoIndex--;
+            }
+            
+            renderPlaylist();
+            showToast('🗑️ Видео удалено');
+        }
+
+        function renderPlaylist() {
+            const container = document.getElementById('playlist');
+            const stats = document.getElementById('playlistStats');
+            
+            stats.textContent = `${myVideos.length} ${getVideoWord(myVideos.length)}`;
+            
+            if (myVideos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📺</div>
+                        <div>Плейлист пуст</div>
+                        <div style="font-size: 0.85rem; margin-top: 8px;">Добавьте первое видео</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            myVideos.forEach((video, index) => {
+                const chapters = video.description ? parseDescription(video.description) : [];
+                const item = document.createElement('div');
+                item.className = 'video-item';
+                if (index === currentVideoIndex) {
+                    item.classList.add('active');
+                }
+                
+                item.innerHTML = `
+                    <img src="${video.thumb}" alt="${video.title}">
+                    <div class="video-item-content">
+                        <div class="video-item-title">${video.title}</div>
+                        <div class="video-item-meta">
+                            <span>${video.id}</span>
+                            ${chapters.length > 0 ? `<span class="chapters-badge">${chapters.length} глав</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="video-item-actions">
+                        <button class="btn-icon delete" onclick="deleteVideo(${index}, event)" title="Удалить">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+                
+                item.onclick = (e) => {
+                    if (!e.target.closest('.video-item-actions')) {
+                        loadVideo(index);
+                    }
+                };
+                
+                container.appendChild(item);
+            });
+        }
+        
+        function getVideoWord(count) {
+            const lastDigit = count % 10;
+            const lastTwoDigits = count % 100;
+            
+            if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'видео';
+            if (lastDigit === 1) return 'видео';
+            if (lastDigit >= 2 && lastDigit <= 4) return 'видео';
+            return 'видео';
+        }
+
+        // ========== ВЫБОР ВИДЕО ==========
+        async function loadVideo(index) {
+            currentVideoIndex = index;
+            const video = myVideos[index];
+
+            // Если описания нет (пришло из "легкого" облака), догружаем его
+            if (!video.description) {
+                updateStatus('syncing', 'Загрузка описания...');
+                video.description = await CloudSync.getFullDetails(video.id);
+                // Сохраняем обновленное описание
+                localStorage.setItem('my_yt_playlist', JSON.stringify(myVideos));
+                updateStatus('success', 'Готово');
+            }
+
+            player.loadVideoById(video.id);
+            document.getElementById('current-title').textContent = video.title;
+            
+            const desc = video.description;
+            const maxLength = 200;
+            if (desc.length > maxLength) {
+                document.getElementById('current-description').textContent = desc.substring(0, maxLength) + '...';
+            } else {
+                document.getElementById('current-description').textContent = desc;
+            }
+            
+            const chapters = parseDescription(video.description);
+            renderChapters(chapters);
+            renderPlaylist();
+            
+            if (window.innerWidth <= 768) {
+                closeMobileMenu();
+            }
+        }
+
+        function parseDescription(text) {
+            const chapters = [];
+            const lines = text.split('\n');
+            
+            for (let line of lines) {
+                const timeMatch = line.match(/(\d{1,2}:)?(\d{1,2}):(\d{2})/);
+                if (timeMatch) {
+                    const timeStr = timeMatch[0];
+                    const label = line.replace(timeStr, '').trim().replace(/^[-–—]\s*/, '');
+                    
+                    if (label) {
+                        chapters.push({ 
+                            time: timeToSeconds(timeStr), 
+                            label: label
+                        });
+                    }
+                }
+            }
+            
+            return chapters;
+        }
+
+        function renderChapters(chapters) {
+            const list = document.getElementById('chapters-list');
+            const section = document.getElementById('chaptersSection');
+            const count = document.getElementById('chaptersCount');
+            
+            if (!chapters.length) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            count.textContent = `${chapters.length} ${getChapterWord(chapters.length)}`;
+            list.innerHTML = '';
+            
+            chapters.forEach((ch, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'chapter-btn';
+                btn.innerHTML = `
+                    <div class="chapter-time">${formatTime(ch.time)}</div>
+                    <div class="chapter-label">${ch.label}</div>
+                `;
+                btn.onclick = () => {
+                    player.seekTo(ch.time, true);
+                    showToast(`⏩ ${ch.label}`);
+                };
+                list.appendChild(btn);
+            });
+        }
+        
+        function getChapterWord(count) {
+            const lastDigit = count % 10;
+            const lastTwoDigits = count % 100;
+            
+            if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'глав';
+            if (lastDigit === 1) return 'глава';
+            if (lastDigit >= 2 && lastDigit <= 4) return 'главы';
+            return 'глав';
+        }
+
+        function timeToSeconds(s) {
+            const p = s.split(':'); 
+            let r = 0, m = 1;
+            while (p.length > 0) { 
+                r += m * parseInt(p.pop(), 10); 
+                m *= 60; 
+            }
+            return r;
+        }
+        
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            
+            if (h > 0) {
+                return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function extractID(url) {
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:v\/|u\/\w\/|embed\/|watch\?v=))([^#\&\?]*)/);
+            return (match && match[1].length === 11) ? match[1] : false;
+        }
+        
+        function extractPlaylistID(url) {
+            const match = url.match(/[?&]list=([^#\&\?]+)/);
+            return match ? match[1] : false;
+        }
+        
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (sidebar.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Handle Enter key in input
+        document.getElementById('video-url').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addVideoOrPlaylist();
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.target.matches('input')) {
+                e.preventDefault();
+                const state = player.getPlayerState();
+                if (state === 1) {
+                    player.pauseVideo();
+                } else {
+                    player.playVideo();
+                }
+            }
+            
+            if (e.code === 'ArrowDown' && currentVideoIndex < myVideos.length - 1) {
+                e.preventDefault();
+                loadVideo(currentVideoIndex + 1);
+            }
+            if (e.code === 'ArrowUp' && currentVideoIndex > 0) {
+                e.preventDefault();
+                loadVideo(currentVideoIndex - 1);
+            }
+        });
+    </script>
+</body>
+</html>

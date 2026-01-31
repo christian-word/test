@@ -272,8 +272,8 @@
         .group-videos {
             margin-bottom: 24px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
             overflow: hidden;
             transition: max-height 0.3s ease;
         }
@@ -321,26 +321,26 @@
         }
         
         .video-card-content {
-            padding: 12px;
+            padding: 10px;
         }
         
         .video-card-title {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 500;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             overflow: hidden;
             text-overflow: ellipsis;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
-            line-height: 1.4;
+            line-height: 1.3;
         }
         
         .video-card-meta {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.75rem;
+            gap: 6px;
+            font-size: 0.7rem;
             color: var(--text-secondary);
             flex-wrap: wrap;
         }
@@ -554,6 +554,16 @@
             border-color: var(--accent);
             background: var(--panel-hover);
             transform: translateY(-2px);
+        }
+        
+        .chapter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .chapter-btn.active .chapter-time,
+        .chapter-btn.active .chapter-label {
+            color: white;
         }
         
         .chapter-time {
@@ -781,6 +791,8 @@
         let myVideos = [];
         let currentVideoIndex = -1;
         let collapsedGroups = {};
+        let currentChapters = []; // Для отслеживания активной главы
+        let updateChapterInterval = null; // Интервал обновления глав
         
         const DEFAULT_VIDEO_IDS = [
             'LMTftEixYUY',
@@ -1205,6 +1217,7 @@
             document.getElementById('playerModal').classList.remove('active');
             document.body.style.overflow = '';
             player.pauseVideo();
+            stopChapterTracking(); // Останавливаем отслеживание
         }
 
         function parseDescription(text) {
@@ -1232,8 +1245,11 @@
             const section = document.getElementById('chaptersSection');
             const count = document.getElementById('chaptersCount');
             
+            currentChapters = chapters; // Сохраняем главы
+            
             if (!chapters.length) {
                 section.style.display = 'none';
+                stopChapterTracking();
                 return;
             }
             
@@ -1241,9 +1257,10 @@
             count.textContent = `${chapters.length} глав`;
             list.innerHTML = '';
             
-            chapters.forEach(ch => {
+            chapters.forEach((ch, idx) => {
                 const btn = document.createElement('div');
                 btn.className = 'chapter-btn';
+                btn.id = `chapter-${idx}`;
                 btn.innerHTML = `
                     <div class="chapter-time">${formatTime(ch.time)}</div>
                     <div class="chapter-label">${ch.label}</div>
@@ -1254,6 +1271,55 @@
                 };
                 list.appendChild(btn);
             });
+            
+            // Запускаем отслеживание активной главы
+            startChapterTracking();
+        }
+        
+        function startChapterTracking() {
+            stopChapterTracking(); // Останавливаем предыдущий интервал
+            
+            updateChapterInterval = setInterval(() => {
+                if (player && player.getCurrentTime) {
+                    updateActiveChapter();
+                }
+            }, 500); // Обновляем каждые 500ms
+        }
+        
+        function stopChapterTracking() {
+            if (updateChapterInterval) {
+                clearInterval(updateChapterInterval);
+                updateChapterInterval = null;
+            }
+        }
+        
+        function updateActiveChapter() {
+            try {
+                const currentTime = player.getCurrentTime();
+                
+                // Находим активную главу
+                let activeChapterIndex = -1;
+                for (let i = currentChapters.length - 1; i >= 0; i--) {
+                    if (currentTime >= currentChapters[i].time) {
+                        activeChapterIndex = i;
+                        break;
+                    }
+                }
+                
+                // Обновляем классы
+                currentChapters.forEach((ch, idx) => {
+                    const btn = document.getElementById(`chapter-${idx}`);
+                    if (btn) {
+                        if (idx === activeChapterIndex) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    }
+                });
+            } catch (e) {
+                // Плеер ещё не готов
+            }
         }
 
         function timeToSeconds(s) {

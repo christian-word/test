@@ -689,12 +689,17 @@
             
             .player-modal {
                 width: 100%;
-                height: 100vh;
-                max-height: 100vh;
+                height: 100dvh;
+                max-height: 100dvh;
                 border-radius: 0;
                 top: 0;
                 left: 0;
                 transform: none;
+            }
+            
+            .player-modal-content {
+                min-height: 0;
+                overflow-y: auto;
             }
             
             .player-modal-header {

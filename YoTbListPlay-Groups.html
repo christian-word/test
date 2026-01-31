@@ -598,22 +598,21 @@
             }
             
             .sidebar {
-                position: fixed;
+                position: relative;
                 left: 0;
                 top: 0;
-                bottom: 0;
-                width: 90%;
-                max-width: 380px;
-                z-index: 999;
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.active {
+                width: 100%;
+                max-width: 100%;
+                z-index: 1;
                 transform: translateX(0);
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                order: 1; /* Плейлист первым */
             }
             
             .main-content {
                 width: 100%;
+                order: 2; /* Плеер вторым */
             }
             
             .player-container,
@@ -622,9 +621,11 @@
             }
             
             .mobile-menu-btn {
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                display: none; /* Скрываем кнопку - плейлист всегда виден */
+            }
+            
+            .mobile-overlay {
+                display: none !important; /* Оверлей не нужен */
             }
             
             .chapters-grid {
@@ -645,10 +646,19 @@
             }
             
             .sync-indicator {
-                top: 60px;
+                top: 10px;
                 right: 10px;
                 font-size: 0.75rem;
                 padding: 6px 12px;
+            }
+            
+            /* Ограничиваем высоту плейлиста */
+            .sidebar {
+                max-height: 50vh;
+            }
+            
+            .playlist-items {
+                max-height: calc(50vh - 200px);
             }
         }
         
@@ -1297,10 +1307,6 @@
             const chapters = parseDescription(video.description);
             renderChapters(chapters);
             renderPlaylist();
-            
-            if (window.innerWidth <= 768) {
-                closeMobileMenu();
-            }
         }
 
         function parseDescription(text) {
@@ -1395,26 +1401,30 @@
             return match ? match[1] : false;
         }
         
-        // Mobile menu functions
+        // Mobile menu functions (not needed on mobile anymore)
         function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobileOverlay');
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-            
-            if (sidebar.classList.contains('active')) {
-                document.body.style.overflow = 'hidden';
-            } else {
-                document.body.style.overflow = '';
+            if (window.innerWidth > 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobileOverlay');
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                
+                if (sidebar.classList.contains('active')) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
             }
         }
         
         function closeMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobileOverlay');
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
+            if (window.innerWidth > 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobileOverlay');
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
         
         // Toast notification

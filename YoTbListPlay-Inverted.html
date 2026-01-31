@@ -466,8 +466,12 @@
         }
         
         .player-modal-title {
-            font-size: 1.3rem;
+            font-size: 0.95rem;
             font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
         }
         
         .btn-close-modal {
@@ -540,14 +544,14 @@
         
         .chapters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
         }
         
         .chapter-btn {
             background: var(--panel);
-            padding: 14px;
-            border-radius: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
             cursor: pointer;
             border: 1px solid var(--border);
             transition: all 0.2s;
@@ -561,26 +565,27 @@
         }
         
         .chapter-btn.active {
-            background: var(--accent);
+            background: var(--panel-hover);
             border-color: var(--accent);
+            border-width: 2px;
         }
         
         .chapter-btn.active .chapter-time,
         .chapter-btn.active .chapter-label {
-            color: white;
+            color: inherit;
         }
         
         .chapter-time {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: var(--accent);
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 3px;
             font-family: 'Courier New', monospace;
         }
         
         .chapter-label {
-            font-size: 0.9rem;
-            line-height: 1.4;
+            font-size: 0.8rem;
+            line-height: 1.3;
         }
         
         /* Loading spinner */
@@ -689,8 +694,57 @@
                 border-radius: 0;
             }
             
+            .player-modal-header {
+                padding: 12px 14px;
+            }
+            
+            .player-modal-title {
+                font-size: 0.85rem;
+            }
+            
+            .btn-close-modal {
+                width: 32px;
+                height: 32px;
+                font-size: 1.2rem;
+            }
+            
+            .player-modal-body {
+                padding: 12px 14px 16px;
+            }
+            
+            .chapters-section {
+                margin-top: 20px;
+            }
+            
+            .section-header {
+                margin-bottom: 10px;
+            }
+            
+            .section-header h3 {
+                font-size: 0.95rem;
+            }
+            
             .chapters-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .chapter-btn {
+                padding: 7px 8px;
+                border-radius: 6px;
+            }
+            
+            .chapter-btn.active {
+                border-width: 2px;
+            }
+            
+            .chapter-time {
+                font-size: 0.7rem;
+                margin-bottom: 2px;
+            }
+            
+            .chapter-label {
+                font-size: 0.75rem;
             }
         }
         

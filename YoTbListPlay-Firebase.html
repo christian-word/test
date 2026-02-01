@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal YT Studio - Firebase Cloud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0f0f0f; --bg-secondary: #181818; --panel: #212121; --accent: #ff0000; --text: #f1f1f1; --text-secondary: #aaaaaa; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        header { background: var(--bg-secondary); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .logo { color: var(--accent); font-weight: bold; font-size: 20px; }
+        .action-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .playlist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
+        .video-card { background: var(--panel); border-radius: 8px; overflow: hidden; }
+        .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; cursor: pointer; }
+        .video-info { padding: 12px; }
+        .video-title { font-size: 14px; margin-bottom: 8px; height: 40px; overflow: hidden; }
+        .delete-btn { color: #ff4444; background: none; border: none; cursor: pointer; font-size: 12px; }
+        #video-player-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:1000; }
+        .player-content { width: 80%; aspect-ratio: 16/9; position: relative; }
+        .close-player { position: absolute; top: -40px; right: 0; color: white; cursor: pointer; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">MY YT CLOUD</div>
+        <div id="auth-status">
+            <button onclick="loginWithGoogle()" class="action-btn">Sign in with Google</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="video-url" placeholder="Вставьте ссылку на YouTube" style="flex:1; padding:10px; border-radius:4px; border:1px solid #333; background:#222; color:white;">
+            <button onclick="addVideoOrPlaylist()" class="action-btn">Добавить</button>
+        </div>
+        
+        <div id="playlistTab" class="playlist-grid">
+            </div>
+    </div>
+
+    <div id="video-player-overlay">
+        <div class="player-content">
+            <span class="close-player" onclick="closePlayer()">&times;</span>
+            <div id="player-container" style="width:100%; height:100%;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCStotpGP7KhN2teP9S2pV42-lJNdO_L7U",
+            authDomain: "myplaulistplauer.firebaseapp.com",
+            projectId: "myplaulistplauer",
+            databaseURL: "https://myplaulistplauer-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // 1. Делаем переменную глобальной сразу
+        window.playlist = JSON.parse(localStorage.getItem('youtube_playlist')) || [];
+
+        // 2. Функции для кнопок
+        window.loginWithGoogle = async () => {
+            try { await signInWithPopup(auth, provider); } 
+            catch (e) { console.error(e); }
+        };
+
+        window.logout = () => signOut(auth).then(() => {
+            localStorage.removeItem('youtube_playlist');
+            location.reload();
+        });
+
+        // 3. Синхронизация
+        async function syncCloud() {
+            const user = auth.currentUser;
+            if (user) {
+                await set(ref(db, 'playlists/' + user.uid), { playlist: window.playlist });
+            }
+        }
+
+        // 4. Главный слушатель входа
+        onAuthStateChanged(auth, async (user) => {
+            const authStatus = document.getElementById('auth-status');
+            if (user) {
+                // МЕНЯЕМ КНОПКУ НА ПРОФИЛЬ
+                authStatus.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${user.photoURL}" style="width:32px; border-radius:50%; border:2px solid red">
+                        <span style="font-size:13px">${user.displayName}</span>
+                        <button onclick="logout()" style="background:none; border:none; color:red; cursor:pointer; text-decoration:underline; font-size:12px">Выйти</button>
+                    </div>`;
+
+                // ЗАГРУЖАЕМ ДАННЫЕ
+                const snapshot = await get(ref(db, 'playlists/' + user.uid));
+                if (snapshot.exists()) {
+                    window.playlist = snapshot.val().playlist || [];
+                    renderPlaylist();
+                }
+            } else {
+                authStatus.innerHTML = `<button onclick="loginWithGoogle()" class="action-btn">Sign in with Google</button>`;
+            }
+        });
+
+        // 5. Функции плейлиста
+        window.renderPlaylist = () => {
+            const container = document.getElementById('playlistTab');
+            if (!container) return;
+            container.innerHTML = window.playlist.map((v, i) => `
+                <div class="video-card">
+                    <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" onclick="playVideo('${v.id}')">
+                    <div class="video-info">
+                        <div class="video-title">${v.title}</div>
+                        <button class="delete-btn" onclick="deleteVideo(${i})">Удалить из облака</button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+// 1. Функция добавления (теперь понимает любые ссылки YouTube)
+    window.addVideoOrPlaylist = async () => {
+        const input = document.getElementById('video-url');
+        const url = input.value.trim();
+        
+        // Регулярка, которая вытаскивает ID из любого вида ссылок (short, long, embed)
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = url.match(regExp);
+        const id = (match && match[7].length == 11) ? match[7] : null;
+
+        if (id) {
+            try {
+                // Получаем название видео через noembed
+                const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`);
+                const data = await res.json();
+                
+                window.playlist.push({ 
+                    id: id, 
+                    title: data.title || "YouTube Video" 
+                });
+                
+                save(); // Сохраняем в LocalStorage и Firebase
+                input.value = '';
+            } catch (e) {
+                alert("Ошибка при получении данных видео");
+            }
+        } else {
+            alert("Пожалуйста, вставьте корректную ссылку на YouTube");
+        }
+    };
+
+    // 2. Функция запуска плеера (исправленная)
+    window.playVideo = (id) => {
+        const overlay = document.getElementById('video-player-overlay');
+        const container = document.getElementById('player-container');
+        
+        if (overlay && container) {
+            overlay.style.display = 'flex';
+            container.innerHTML = `
+                <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src="https://www.youtube.com/embed/${id}?autoplay=1" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>`;
+        }
+    };
+
+        window.deleteVideo = (i) => {
+            window.playlist.splice(i, 1);
+            save();
+        };
+
+        function save() {
+            localStorage.setItem('youtube_playlist', JSON.stringify(window.playlist));
+            renderPlaylist();
+            syncCloud();
+        }
+
+        window.playVideo = (id) => {
+            document.getElementById('video-player-overlay').style.display = 'flex';
+            document.getElementById('player-container').innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allowfullscreen></iframe>`;
+        };
+
+        window.closePlayer = () => {
+            document.getElementById('video-player-overlay').style.display = 'none';
+            document.getElementById('player-container').innerHTML = '';
+        };
+
+        // Начальный запуск
+        renderPlaylist();
+    </script>
+</body>
+</html>

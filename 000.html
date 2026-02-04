@@ -1,0 +1,227 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GospelVoice Studio - Cloud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        :root { 
+            --bg: #0f0f0f; --bg-secondary: #181818; --panel: #212121; 
+            --accent: #ff0000; --text: #f1f1f1; --text-secondary: #aaaaaa; --border: #3a3a3a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); }
+        header { background: var(--bg-secondary); padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+        .view-tabs { display: flex; gap: 10px; margin: 20px auto; justify-content: center; }
+        .tab-btn { background: var(--panel); color: var(--text-secondary); border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: var(--accent); color: white; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; background: var(--panel); padding: 15px; border-radius: 12px; }
+        input { flex: 1; background: #121212; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; outline: none; }
+        .primary-btn { background: var(--accent); color: #fff; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .video-card { background: var(--panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+        .thumb-wrap { position: relative; cursor: pointer; }
+        .thumb-wrap img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+        .video-info { padding: 12px; }
+        .owner-tag { font-size: 11px; color: var(--accent); margin-bottom: 5px; display: block; font-weight: bold; }
+        .owner-id { font-size: 9px; color: #555; display: block; margin-bottom: 5px; }
+        #player-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-weight: bold; font-size: 20px;">Gospel<span>Voice</span></div>
+    <div id="user-info" style="text-align: right;">
+        <div id="user-name" style="font-size: 14px; font-weight: 500;"></div>
+        <div id="user-id-display" style="font-size: 10px; color: var(--text-secondary);"></div>
+    </div>
+    <button onclick="firebase.auth().signOut()" class="tab-btn" style="padding: 5px 15px;">Выход</button>
+</header>
+
+<div id="auth-screen" style="display: flex; height: 80vh; align-items: center; justify-content: center; flex-direction: column;">
+    <h1 style="margin-bottom: 20px;">GospelVoice Cloud</h1>
+    <button onclick="login()" class="primary-btn" style="height: 50px; font-size: 16px;">Войти через Google</button>
+</div>
+
+<div id="app-content" style="display: none;">
+    <div class="view-tabs">
+        <button onclick="switchView('my')" id="tab-my" class="tab-btn active">Мои видео</button>
+        <button onclick="switchView('all')" id="tab-all" class="tab-btn">Общая лента</button>
+    </div>
+
+    <div class="container">
+        <div class="input-group" id="adder-ui">
+            <input type="text" id="main-input" placeholder="Вставьте ссылку на YouTube видео...">
+            <button onclick="handleAdd()" class="primary-btn">Добавить</button>
+        </div>
+        <div class="video-grid" id="video-grid"></div>
+    </div>
+</div>
+
+<div id="player-modal" onclick="closePlayer()">
+    <div id="player-container" style="width: 85%; aspect-ratio: 16/9;"></div>
+    <p style="color: white; margin-top: 15px;">Нажмите в любое место, чтобы закрыть</p>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCStotpGP7KhN2teP9S2pV42-lJNdO_L7U",
+        authDomain: "myplaulistplauer.firebaseapp.com",
+        projectId: "myplaulistplauer",
+        databaseURL: "https://myplaulistplauer-default-rtdb.europe-west1.firebasedatabase.app/"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let viewMode = 'my';
+
+    function login() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider).catch(e => alert("Ошибка входа: " + e.message));
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            document.getElementById('user-name').textContent = user.displayName;
+            document.getElementById('user-id-display').textContent = "ID: " + user.uid;
+            
+            // Обновляем имя пользователя в базе при каждом входе
+            db.ref('playlists/' + user.uid).update({
+                userName: user.displayName,
+                userEmail: user.email
+            });
+            
+            loadData();
+        } else {
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('app-content').style.display = 'none';
+        }
+    });
+
+    function switchView(mode) {
+        viewMode = mode;
+        document.getElementById('tab-my').classList.toggle('active', mode === 'my');
+        document.getElementById('tab-all').classList.toggle('active', mode === 'all');
+        document.getElementById('adder-ui').style.opacity = (mode === 'my' ? '1' : '0.3');
+        document.getElementById('main-input').disabled = (mode !== 'my');
+        loadData();
+    }
+
+    function loadData() {
+        const user = firebase.auth().currentUser;
+        if(!user) return;
+
+        const ref = viewMode === 'my' ? db.ref('playlists/' + user.uid) : db.ref('playlists');
+
+        ref.on('value', (snapshot) => {
+            const data = snapshot.val();
+            let videos = [];
+            
+            if (viewMode === 'my') {
+                videos = (data && data.videos) ? data.videos : [];
+                // Помечаем свои видео
+                videos = videos.map(v => ({...v, ownerName: "Вы", ownerId: user.uid}));
+            } else {
+                // Собираем видео всех пользователей для общей ленты
+                for (let uid in data) {
+                    if (data[uid].videos) {
+                        const userVideos = data[uid].videos.map(v => ({
+                            ...v, 
+                            ownerId: uid, 
+                            ownerName: data[uid].userName || 'Аноним'
+                        }));
+                        videos = videos.concat(userVideos);
+                    }
+                }
+            }
+            render(videos);
+        });
+    }
+
+    function render(videos) {
+        const container = document.getElementById('video-grid');
+        const currentUser = firebase.auth().currentUser;
+        container.innerHTML = '';
+
+        videos.forEach((v, i) => {
+            const isMy = v.ownerId === currentUser.uid;
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            card.innerHTML = `
+                <div class="thumb-wrap" onclick="playVideo('${v.id}')">
+                    <img src="${v.thumb}">
+                </div>
+                <div class="video-info">
+                    <span class="owner-tag">${v.ownerName}</span>
+                    <span class="owner-id">UID: ${v.ownerId}</span>
+                    <div style="font-size:13px; font-weight:500; margin-bottom:10px; height:36px; overflow:hidden;">${v.title}</div>
+                    ${isMy ? `<button onclick="deleteVideo(${i})" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:12px;">Удалить из моего списка</button>` : ''}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function handleAdd() {
+        const input = document.getElementById('main-input');
+        const url = input.value.trim();
+        const idMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^&?]+)/);
+        
+        if (!idMatch) {
+            alert("Пожалуйста, вставьте корректную ссылку на YouTube");
+            return;
+        }
+
+        const videoId = idMatch[1];
+        const user = firebase.auth().currentUser;
+        
+        // Получаем текущий список
+        const snap = await db.ref('playlists/' + user.uid + '/videos').once('value');
+        let vids = snap.val() || [];
+        
+        const newVideo = {
+            id: videoId,
+            title: "Видео YouTube (" + videoId + ")",
+            thumb: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+            addedAt: new Date().toISOString()
+        };
+
+        vids.unshift(newVideo);
+
+        await db.ref('playlists/' + user.uid).update({
+            userName: user.displayName,
+            videos: vids
+        });
+        
+        input.value = '';
+    }
+
+    async function deleteVideo(index) {
+        if (!confirm('Удалить это видео из вашего списка?')) return;
+        const user = firebase.auth().currentUser;
+        const snap = await db.ref('playlists/' + user.uid + '/videos').once('value');
+        let vids = snap.val() || [];
+        vids.splice(index, 1);
+        await db.ref('playlists/' + user.uid + '/videos').set(vids);
+    }
+
+    function playVideo(id) {
+        document.getElementById('player-modal').style.display = 'flex';
+        document.getElementById('player-container').innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    }
+
+    function closePlayer() {
+        document.getElementById('player-modal').style.display = 'none';
+        document.getElementById('player-container').innerHTML = '';
+    }
+</script>
+</body>
+</html>

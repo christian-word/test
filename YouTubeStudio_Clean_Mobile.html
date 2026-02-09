@@ -893,6 +893,175 @@ animation: spin 0.8s linear infinite;
 @keyframes spin {
 to { transform: rotate(360deg); }
 }
+
+/* Privacy Modal */
+.privacy-modal {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.85);
+z-index: 2000;
+align-items: center;
+justify-content: center;
+}
+
+.privacy-dialog {
+background: var(--panel);
+border-radius: 16px;
+padding: 24px;
+max-width: 400px;
+width: 90%;
+border: 2px solid var(--border);
+box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.privacy-dialog h3 {
+font-size: 1.3rem;
+margin-bottom: 8px;
+color: var(--text);
+}
+
+.privacy-dialog p {
+color: var(--text-secondary);
+font-size: 0.9rem;
+margin-bottom: 20px;
+line-height: 1.5;
+}
+
+.privacy-options {
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.privacy-option {
+background: var(--bg-secondary);
+border: 2px solid var(--border);
+padding: 16px;
+border-radius: 12px;
+cursor: pointer;
+transition: all 0.2s;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.privacy-option:hover {
+border-color: var(--accent);
+background: var(--panel-hover);
+}
+
+.privacy-option.selected {
+border-color: var(--accent);
+background: var(--accent);
+color: white;
+}
+
+.privacy-option-icon {
+font-size: 1.8rem;
+}
+
+.privacy-option-text {
+flex: 1;
+}
+
+.privacy-option-title {
+font-weight: 600;
+font-size: 1rem;
+margin-bottom: 4px;
+}
+
+.privacy-option-desc {
+font-size: 0.75rem;
+color: var(--text-secondary);
+}
+
+.privacy-option.selected .privacy-option-desc {
+color: rgba(255, 255, 255, 0.8);
+}
+
+.privacy-buttons {
+display: flex;
+gap: 10px;
+}
+
+.privacy-btn {
+flex: 1;
+padding: 12px;
+border-radius: 8px;
+border: none;
+cursor: pointer;
+font-weight: 600;
+font-size: 0.9rem;
+transition: all 0.2s;
+}
+
+.privacy-btn-cancel {
+background: var(--bg-secondary);
+color: var(--text);
+border: 1px solid var(--border);
+}
+
+.privacy-btn-cancel:hover {
+background: var(--panel-hover);
+}
+
+.privacy-btn-confirm {
+background: var(--accent);
+color: white;
+}
+
+.privacy-btn-confirm:hover {
+background: var(--accent-hover);
+}
+
+.privacy-btn-confirm:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+/* Filter Checkbox */
+.filter-checkbox {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 8px 12px;
+background: var(--bg-secondary);
+border: 1px solid var(--border);
+border-radius: 8px;
+cursor: pointer;
+user-select: none;
+transition: all 0.2s;
+font-size: 0.85rem;
+}
+
+.filter-checkbox:hover {
+background: var(--panel-hover);
+border-color: var(--accent);
+}
+
+.filter-checkbox input[type="checkbox"] {
+width: 16px;
+height: 16px;
+cursor: pointer;
+accent-color: var(--accent);
+}
+
+.filter-checkbox label {
+cursor: pointer;
+color: var(--text-secondary);
+}
+
+.filter-checkbox input[type="checkbox"]:checked + label {
+color: var(--text);
+font-weight: 500;
+}
+
+
 </style>
 </head>
 <body>
@@ -944,6 +1113,10 @@ to { transform: rotate(360deg); }
 <span id="searchBtnText">Искать</span>
 </button>
 </div>
+<div class="filter-checkbox" id="filterOnlyOthers" style="display: none; margin-top: 8px;" onclick="toggleOthersFilter()">
+<input type="checkbox" id="onlyOthersCheckbox">
+<label for="onlyOthersCheckbox">👥 Только чужие видео</label>
+</div>
 </div>
 </div>
 
@@ -971,6 +1144,34 @@ to { transform: rotate(360deg); }
 📑 Таймкоды <span class="chapters-badge" id="chaptersCount">0</span>
 </div>
 <div class="chapters-grid" id="chaptersList"></div>
+</div>
+</div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="privacy-modal" id="privacyModal">
+<div class="privacy-dialog">
+<h3>🔒 Настройка приватности</h3>
+<p>Выберите, кто сможет видеть это видео в общей ленте:</p>
+<div class="privacy-options">
+<div class="privacy-option selected" id="privacyPublic" onclick="selectPrivacy('public')">
+<div class="privacy-option-icon">🌐</div>
+<div class="privacy-option-text">
+<div class="privacy-option-title">Публичное</div>
+<div class="privacy-option-desc">Все пользователи увидят в общей ленте</div>
+</div>
+</div>
+<div class="privacy-option" id="privacyPrivate" onclick="selectPrivacy('private')">
+<div class="privacy-option-icon">🔒</div>
+<div class="privacy-option-text">
+<div class="privacy-option-title">Приватное</div>
+<div class="privacy-option-desc">Только вы увидите в своём плейлисте</div>
+</div>
+</div>
+</div>
+<div class="privacy-buttons">
+<button class="privacy-btn privacy-btn-cancel" onclick="cancelPrivacy()">Отмена</button>
+<button class="privacy-btn privacy-btn-confirm" onclick="confirmPrivacy()">Добавить</button>
 </div>
 </div>
 </div>
@@ -1009,6 +1210,13 @@ let ytPlayer = null;
 let currentChapters = [];
 let currentChapterIndex = -1;
 let chapterTracker = null;
+
+// Privacy Modal
+let privacySelection = 'public';
+let pendingVideoData = null;
+
+// Filter
+let showOnlyOthers = localStorage.getItem('showOnlyOthers') === 'true' || false;
 
 // YouTube IFrame API Ready
 window.onYouTubeIframeAPIReady = function() {
@@ -1076,20 +1284,27 @@ document.getElementById('mainTab-youtube').classList.toggle('active', mode === '
 const controlsSection = document.getElementById('controlsSection');
 const searchInput = document.getElementById('search-input');
 const tabAdd = document.getElementById('tab-add');
+const filterOnlyOthers = document.getElementById('filterOnlyOthers');
 
 if (mode === 'my') {
 searchInput.placeholder = 'Поиск в моём плейлисте...';
 controlsSection.style.display = 'block';
 tabAdd.style.display = 'block';
+filterOnlyOthers.style.display = 'none';
 } else if (mode === 'community') {
 searchInput.placeholder = 'Поиск в общей ленте...';
 controlsSection.style.display = 'block';
 tabAdd.style.display = 'none';
+filterOnlyOthers.style.display = 'flex';
+// Загружаем сохранённое состояние фильтра
+showOnlyOthers = localStorage.getItem('showOnlyOthers') === 'true';
+document.getElementById('onlyOthersCheckbox').checked = showOnlyOthers;
 if (activeTab === 'add') switchTab('search');
 } else if (mode === 'youtube') {
 searchInput.placeholder = 'Поиск на YouTube...';
 controlsSection.style.display = 'block';
 tabAdd.style.display = 'none';
+filterOnlyOthers.style.display = 'none';
 if (activeTab === 'add') switchTab('search');
 }
 
@@ -1119,6 +1334,14 @@ allVideos = [];
 Object.entries(allPlaylists).forEach(([uid, userData]) => {
 const videos = userData.videos || [];
 videos.forEach(video => {
+// Пропускаем приватные видео других пользователей
+if (video.isPrivate && uid !== currentUser.uid) {
+return;
+}
+// Применяем фильтр "только чужие"
+if (showOnlyOthers && uid === currentUser.uid) {
+return;
+}
 allVideos.push({
 ...video,
 ownerUid: uid,
@@ -1143,8 +1366,14 @@ const emptyState = document.getElementById('emptyState');
 grid.innerHTML = '';
 
 if (allVideos.length === 0) {
+// Не показываем сообщение "Плейлист пуст" в режиме YouTube
+if (viewMode !== 'youtube') {
 emptyState.style.display = 'block';
 grid.style.display = 'none';
+} else {
+emptyState.style.display = 'none';
+grid.style.display = 'none';
+}
 return;
 }
 
@@ -1152,12 +1381,18 @@ emptyState.style.display = 'none';
 grid.style.display = 'flex';
 
 allVideos.forEach((video, index) => {
+// В режиме community не показываем приватные видео других пользователей
+if (viewMode === 'community' && video.isPrivate && !video.isOwner) {
+return;
+}
+
 const card = document.createElement('div');
 card.className = 'video-card';
 card.innerHTML = `
 <img src="${video.thumb}" class="video-thumb" onclick="playVideo(${index})" loading="lazy">
 <div class="video-info">
 ${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${video.ownerName}</span>` : ''}
+${video.isPrivate ? `<span class="owner-badge" style="background: #666;">🔒 Приватное</span>` : ''}
 <div class="video-title" onclick="playVideo(${index})">${video.title || 'Без названия'}</div>
 <div class="video-meta">
 <span>📺 ${video.channel || 'YouTube'}</span>
@@ -1165,6 +1400,7 @@ ${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${v
 </div>
 ${viewMode === 'my' ? `
 <div class="video-actions">
+<button class="action-icon-btn" onclick="togglePrivacy(${index})">${video.isPrivate ? '🌐 Сделать публичным' : '🔒 Сделать приватным'}</button>
 <button class="action-icon-btn" onclick="deleteVideo(${index})">🗑️ Удалить</button>
 </div>
 ` : ''}
@@ -1190,6 +1426,11 @@ emptyState.style.display = 'none';
 grid.style.display = 'flex';
 
 videos.forEach((video) => {
+// В режиме community не показываем приватные видео других пользователей
+if (viewMode === 'community' && video.isPrivate && !video.isOwner) {
+return;
+}
+
 const index = allVideos.findIndex(v => v.id === video.id);
 const card = document.createElement('div');
 card.className = 'video-card';
@@ -1197,6 +1438,7 @@ card.innerHTML = `
 <img src="${video.thumb}" class="video-thumb" onclick="playVideo(${index})" loading="lazy">
 <div class="video-info">
 ${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${video.ownerName}</span>` : ''}
+${video.isPrivate ? `<span class="owner-badge" style="background: #666;">🔒 Приватное</span>` : ''}
 <div class="video-title" onclick="playVideo(${index})">${video.title || 'Без названия'}</div>
 <div class="video-meta">
 <span>📺 ${video.channel || 'YouTube'}</span>
@@ -1204,6 +1446,7 @@ ${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${v
 </div>
 ${viewMode === 'my' ? `
 <div class="video-actions">
+<button class="action-icon-btn" onclick="togglePrivacy(${index})">${video.isPrivate ? '🌐 Сделать публичным' : '🔒 Сделать приватным'}</button>
 <button class="action-icon-btn" onclick="deleteVideo(${index})">🗑️ Удалить</button>
 </div>
 ` : ''}
@@ -1274,7 +1517,9 @@ throw new Error('Видео не найдено');
 }
 
 const videoData = data.items[0].snippet;
-const newVideo = {
+
+// Сохраняем данные видео и показываем модальное окно выбора приватности
+pendingVideoData = {
 id: videoId,
 title: videoData.title,
 thumb: videoData.thumbnails.medium.url,
@@ -1284,10 +1529,7 @@ date: new Date().toLocaleDateString('ru-RU'),
 group: 'Мои видео'
 };
 
-videos.unshift(newVideo);
-await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
-showToast('✅ Видео добавлено');
-loadData();
+showPrivacyModal();
 }
 
 async function addPlaylist(playlistId) {
@@ -1312,7 +1554,8 @@ thumb: item.snippet.thumbnails.medium.url,
 description: item.snippet.description || '',
 channel: item.snippet.channelTitle,
 date: new Date().toLocaleDateString('ru-RU'),
-group: 'Из плейлиста'
+group: 'Из плейлиста',
+isPrivate: false
 });
 addedCount++;
 }
@@ -1351,9 +1594,8 @@ showToast('⚠️ Уже в вашем плейлисте');
 return;
 }
 
-updateSync('syncing');
-try {
-const newVideo = {
+// Сохраняем данные видео и показываем модальное окно выбора приватности
+pendingVideoData = {
 id: videoId,
 title: title,
 thumb: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
@@ -1362,14 +1604,8 @@ channel: 'YouTube',
 date: new Date().toLocaleDateString('ru-RU'),
 group: 'Из общей ленты'
 };
-videos.unshift(newVideo);
-await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
-showToast('✅ Добавлено в ваш плейлист');
-loadData();
-} catch (error) {
-console.error(error);
-showToast('❌ Ошибка добавления');
-}
+
+showPrivacyModal();
 };
 
 // YouTube Search
@@ -1532,9 +1768,8 @@ showToast('⚠️ Видео уже в плейлисте');
 return;
 }
 
-updateSync('syncing');
-try {
-const newVideo = {
+// Сохраняем данные видео и показываем модальное окно выбора приватности
+pendingVideoData = {
 id: videoId,
 title: result.snippet.title,
 thumb: result.snippet.thumbnails.medium.url,
@@ -1543,14 +1778,8 @@ channel: result.snippet.channelTitle,
 date: new Date().toLocaleDateString('ru-RU'),
 group: 'Из поиска'
 };
-videos.unshift(newVideo);
-await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
-showToast('✅ Добавлено в плейлист');
-loadData();
-} catch (error) {
-console.error(error);
-showToast('❌ Ошибка добавления');
-}
+
+showPrivacyModal();
 };
 
 // Play from search
@@ -1884,6 +2113,86 @@ toast.classList.add('show');
 setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
+// Privacy Modal Functions
+window.showPrivacyModal = () => {
+const modal = document.getElementById('privacyModal');
+modal.style.display = 'flex';
+privacySelection = 'public';
+document.getElementById('privacyPublic').classList.add('selected');
+document.getElementById('privacyPrivate').classList.remove('selected');
+};
+
+window.selectPrivacy = (type) => {
+privacySelection = type;
+document.getElementById('privacyPublic').classList.toggle('selected', type === 'public');
+document.getElementById('privacyPrivate').classList.toggle('selected', type === 'private');
+};
+
+window.cancelPrivacy = () => {
+const modal = document.getElementById('privacyModal');
+modal.style.display = 'none';
+pendingVideoData = null;
+const btn = document.getElementById('addBtn');
+btn.disabled = false;
+btn.textContent = 'Добавить';
+updateSync('success');
+};
+
+window.confirmPrivacy = async () => {
+if (!pendingVideoData) return;
+const modal = document.getElementById('privacyModal');
+modal.style.display = 'none';
+
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+const newVideo = {
+...pendingVideoData,
+isPrivate: privacySelection === 'private'
+};
+
+videos.unshift(newVideo);
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast(privacySelection === 'private' ? '✅ Видео добавлено (приватное)' : '✅ Видео добавлено (публичное)');
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка добавления');
+}
+
+pendingVideoData = null;
+const btn = document.getElementById('addBtn');
+btn.disabled = false;
+btn.textContent = 'Добавить';
+updateSync('success');
+};
+
+// Toggle Privacy for existing video
+window.togglePrivacy = async (index) => {
+updateSync('syncing');
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+videos[index].isPrivate = !videos[index].isPrivate;
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast(videos[index].isPrivate ? '🔒 Видео теперь приватное' : '🌐 Видео теперь публичное');
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка изменения приватности');
+}
+};
+
+// Toggle Others Filter
+window.toggleOthersFilter = () => {
+showOnlyOthers = !showOnlyOthers;
+document.getElementById('onlyOthersCheckbox').checked = showOnlyOthers;
+// Сохраняем состояние в localStorage
+localStorage.setItem('showOnlyOthers', showOnlyOthers);
+loadData();
+};
+
 // Event listeners
 document.getElementById('main-input').addEventListener('keypress', (e) => {
 if (e.key === 'Enter') handleAdd();
@@ -1894,7 +2203,14 @@ if (e.key === 'Enter') searchYouTube();
 });
 
 document.addEventListener('keydown', (e) => {
-if (e.key === 'Escape') closePlayer();
+if (e.key === 'Escape') {
+closePlayer();
+// Также закрываем модальное окно приватности
+const privacyModal = document.getElementById('privacyModal');
+if (privacyModal.style.display === 'flex') {
+cancelPrivacy();
+}
+}
 });
 </script>
 </body>

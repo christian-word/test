@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>My YouTube Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+--bg: #0f0f0f;
+--bg-secondary: #181818;
+--panel: #212121;
+--panel-hover: #2a2a2a;
+--accent: #ff0000;
+--accent-hover: #cc0000;
+--text: #f1f1f1;
+--text-secondary: #aaaaaa;
+--border: #3a3a3a;
+--success: #10b981;
+--blue: #3b82f6;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: 'Roboto', sans-serif;
+background: var(--bg);
+color: var(--text);
+overflow-x: hidden;
+}
+
+/* Header */
+header {
+background: var(--bg-secondary);
+padding: 12px 16px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+border-bottom: 1px solid var(--border);
+position: sticky;
+top: 0;
+z-index: 1000;
+}
+
+.logo {
+color: var(--accent);
+font-weight: bold;
+font-size: 18px;
+letter-spacing: 1px;
+}
+
+.user-section {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.sync-badge {
+padding: 4px 10px;
+background: var(--panel);
+border: 1px solid var(--border);
+border-radius: 20px;
+font-size: 0.75rem;
+display: flex;
+align-items: center;
+gap: 4px;
+}
+
+.sync-dot {
+width: 5px;
+height: 5px;
+border-radius: 50%;
+background: var(--success);
+animation: blink 2s infinite;
+}
+
+@keyframes blink {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.3; }
+}
+
+.sync-dot.syncing {
+background: var(--blue);
+animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.5; }
+}
+
+.user-avatar {
+width: 32px;
+height: 32px;
+border-radius: 50%;
+cursor: pointer;
+border: 2px solid var(--border);
+transition: all 0.2s;
+}
+
+.user-avatar:hover {
+border-color: var(--accent);
+transform: scale(1.05);
+}
+
+/* Auth Screen */
+#auth-screen {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 80vh;
+padding: 20px;
+}
+
+#auth-screen h1 {
+font-size: 2rem;
+margin-bottom: 10px;
+}
+
+.signin-btn {
+background: var(--accent);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 6px;
+cursor: pointer;
+font-weight: 500;
+transition: all 0.2s;
+font-size: 0.9rem;
+}
+
+.signin-btn:hover {
+background: var(--accent-hover);
+}
+
+/* Main Navigation Tabs */
+.main-tabs {
+display: flex;
+gap: 8px;
+padding: 16px;
+background: var(--bg-secondary);
+border-bottom: 2px solid var(--border);
+justify-content: center;
+overflow-x: auto;
+}
+
+.main-tab {
+padding: 10px 20px;
+background: transparent;
+border: 2px solid var(--border);
+color: var(--text-secondary);
+border-radius: 24px;
+cursor: pointer;
+font-size: 0.95rem;
+font-weight: 600;
+transition: all 0.3s;
+white-space: nowrap;
+}
+
+.main-tab:hover {
+background: var(--panel-hover);
+color: var(--text);
+border-color: var(--text-secondary);
+}
+
+.main-tab.active {
+background: var(--accent);
+color: white;
+border-color: var(--accent);
+transform: scale(1.05);
+box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+}
+
+/* Container */
+.container {
+max-width: 100%;
+margin: 0 auto;
+padding: 12px;
+}
+
+.controls-section {
+background: var(--panel);
+padding: 12px;
+border-radius: 12px;
+border: 1px solid var(--border);
+margin-bottom: 16px;
+}
+
+.tabs {
+display: flex;
+gap: 6px;
+border-bottom: 2px solid var(--border);
+margin-bottom: 10px;
+overflow-x: auto;
+}
+
+.tab-btn {
+padding: 8px 16px;
+background: transparent;
+border: none;
+color: var(--text-secondary);
+cursor: pointer;
+font-size: 0.85rem;
+font-weight: 500;
+border-bottom: 3px solid transparent;
+margin-bottom: -2px;
+transition: all 0.2s;
+white-space: nowrap;
+}
+
+.tab-btn:hover {
+color: var(--text);
+}
+
+.tab-btn.active {
+color: var(--accent);
+border-bottom-color: var(--accent);
+}
+
+.input-row {
+display: flex;
+gap: 8px;
+margin-bottom: 10px;
+flex-wrap: wrap;
+}
+
+.input-field {
+flex: 1;
+min-width: 150px;
+padding: 10px 12px;
+border-radius: 8px;
+border: 1px solid var(--border);
+background: var(--bg-secondary);
+color: var(--text);
+outline: none;
+font-size: 0.9rem;
+}
+
+.input-field:focus {
+border-color: var(--accent);
+}
+
+.action-btn {
+background: var(--accent);
+color: white;
+border: none;
+padding: 10px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 500;
+transition: all 0.2s;
+white-space: nowrap;
+font-size: 0.9rem;
+}
+
+.action-btn:hover {
+background: var(--accent-hover);
+}
+
+.action-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+/* Video Grid */
+.video-grid {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.video-card {
+background: var(--panel);
+border-radius: 10px;
+overflow: hidden;
+border: 1px solid var(--border);
+transition: all 0.2s;
+display: flex;
+align-items: center;
+gap: 10px;
+cursor: pointer;
+}
+
+.video-card:hover {
+transform: translateX(4px);
+box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+border-color: var(--accent);
+}
+
+.video-thumb {
+width: 100px;
+height: 60px;
+object-fit: cover;
+border-radius: 6px;
+flex-shrink: 0;
+}
+
+.video-info {
+flex: 1;
+padding: 8px 10px 8px 0;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.owner-badge {
+display: inline-block;
+padding: 2px 6px;
+background: var(--blue);
+color: white;
+border-radius: 8px;
+font-size: 0.6rem;
+font-weight: 600;
+width: fit-content;
+}
+
+.owner-badge.you {
+background: var(--success);
+}
+
+.video-title {
+font-size: 0.75rem;
+font-weight: 500;
+line-height: 1.3;
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+
+.video-meta {
+display: flex;
+justify-content: space-between;
+align-items: center;
+font-size: 0.6rem;
+color: var(--text-secondary);
+}
+
+.video-actions {
+display: flex;
+gap: 6px;
+margin-top: 6px;
+}
+
+.action-icon-btn {
+background: var(--bg-secondary);
+border: 1px solid var(--border);
+color: var(--text-secondary);
+padding: 4px 8px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.65rem;
+transition: all 0.2s;
+}
+
+.action-icon-btn:hover {
+background: var(--panel-hover);
+color: var(--text);
+border-color: var(--accent);
+}
+
+/* Search Results */
+.search-results-container {
+background: var(--panel);
+padding: 12px;
+border-radius: 12px;
+border: 1px solid var(--border);
+margin-bottom: 16px;
+display: none;
+}
+
+.search-item-row {
+display: flex;
+gap: 10px;
+padding: 10px;
+background: var(--bg-secondary);
+border-radius: 8px;
+border: 1px solid var(--border);
+margin-bottom: 8px;
+transition: all 0.2s;
+}
+
+.search-item-row:hover {
+border-color: var(--accent);
+transform: translateX(2px);
+}
+
+.search-item-row img {
+width: 100px;
+height: 60px;
+object-fit: cover;
+border-radius: 6px;
+cursor: pointer;
+flex-shrink: 0;
+}
+
+.search-item-info {
+flex: 1;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.search-title {
+font-size: 0.8rem;
+font-weight: 500;
+cursor: pointer;
+line-height: 1.3;
+}
+
+.search-title:hover {
+color: var(--accent);
+}
+
+.search-channel {
+font-size: 0.7rem;
+color: var(--text-secondary);
+}
+
+.add-btn {
+background: var(--success);
+color: white;
+border: none;
+padding: 6px 12px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.75rem;
+font-weight: 500;
+margin-top: 4px;
+width: fit-content;
+transition: all 0.2s;
+}
+
+.add-btn:hover {
+background: #0d9668;
+transform: scale(1.05);
+}
+
+/* Empty State */
+.empty-state {
+padding: 40px 20px;
+text-align: center;
+}
+
+.empty-icon {
+font-size: 4rem;
+margin-bottom: 15px;
+opacity: 0.6;
+}
+
+.empty-state h3 {
+font-size: 1.1rem;
+margin-bottom: 8px;
+color: var(--text);
+}
+
+.empty-state p {
+color: var(--text-secondary);
+font-size: 0.85rem;
+}
+
+/* Video Player Modal */
+.player-modal {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.95);
+z-index: 10000;
+padding: 10px;
+}
+
+.player-container {
+width: 100%;
+height: 100%;
+max-width: 1200px;
+max-height: 90vh;
+margin: auto;
+position: relative;
+top: 50%;
+transform: translateY(-50%);
+background: var(--bg-secondary);
+border-radius: 12px;
+overflow: hidden;
+}
+
+.close-player {
+position: absolute;
+top: 15px;
+right: 15px;
+width: 36px;
+height: 36px;
+background: rgba(0, 0, 0, 0.7);
+border: none;
+border-radius: 50%;
+color: white;
+font-size: 1.4rem;
+cursor: pointer;
+z-index: 10;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s;
+}
+
+.close-player:hover {
+background: var(--accent);
+transform: scale(1.1);
+}
+
+.player-box {
+width: 100%;
+height: 100%;
+background: #000;
+}
+
+.player-box iframe {
+width: 100%;
+height: 100%;
+border: 0;
+}
+
+/* Toast */
+.toast {
+position: fixed;
+bottom: 20px;
+left: 50%;
+transform: translateX(-50%) translateY(100px);
+background: var(--panel);
+color: var(--text);
+padding: 12px 20px;
+border-radius: 8px;
+border: 1px solid var(--border);
+font-size: 0.85rem;
+z-index: 10001;
+opacity: 0;
+transition: all 0.3s;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.toast.show {
+transform: translateX(-50%) translateY(0);
+opacity: 1;
+}
+
+/* Loading */
+.loading {
+display: inline-block;
+width: 14px;
+height: 14px;
+border: 2px solid rgba(255, 255, 255, 0.3);
+border-top-color: white;
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">📺 MY YOUTUBE STUDIO</div>
+<div class="user-section">
+<div class="sync-badge" id="syncBadge" style="display: none;">
+<div class="sync-dot" id="syncDot"></div>
+<span id="syncText">Синхронизировано</span>
+</div>
+<div id="auth-box"></div>
+</div>
+</header>
+
+<!-- Auth Screen -->
+<div id="auth-screen">
+<h1>🎬 YouTube Studio</h1>
+<p style="margin-bottom: 24px; color: var(--text-secondary); font-size: 0.95rem;">Войдите, чтобы начать</p>
+<button onclick="loginUser()" class="signin-btn" style="height: 44px; font-size: 0.95rem; padding: 0 32px;">
+Войти через Google
+</button>
+</div>
+
+<!-- Main Tabs -->
+<div class="main-tabs" id="mainTabs" style="display: none;">
+<button onclick="switchMainView('my')" id="mainTab-my" class="main-tab active">📚 Мой плейлист</button>
+<button onclick="switchMainView('community')" id="mainTab-community" class="main-tab">🌐 Общая лента</button>
+<button onclick="switchMainView('youtube')" id="mainTab-youtube" class="main-tab">▶️ YouTube</button>
+</div>
+
+<!-- App Content -->
+<div id="app-content" style="display: none;">
+<div class="container">
+<div class="controls-section" id="controlsSection">
+<div class="tabs">
+<button class="tab-btn active" onclick="switchTab('add')" id="tab-add">➕ Добавить</button>
+<button class="tab-btn" onclick="switchTab('search')" id="tab-search">🔍 Поиск</button>
+</div>
+<div id="add-tab">
+<div class="input-row">
+<input type="text" id="main-input" class="input-field" placeholder="Вставьте ссылку на видео...">
+<button onclick="handleAdd()" class="action-btn" id="addBtn">Добавить</button>
+</div>
+</div>
+<div id="search-tab" style="display: none;">
+<div class="input-row">
+<input type="text" id="search-input" class="input-field" placeholder="Поиск...">
+<button onclick="searchYouTube()" class="action-btn" id="searchBtn">
+<span id="searchBtnText">Искать</span>
+</button>
+</div>
+</div>
+</div>
+
+<div class="search-results-container" id="searchResultsContainer">
+<h4 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9rem;">Результаты поиска:</h4>
+<div id="resultsList"></div>
+</div>
+
+<div class="video-grid" id="videoGrid"></div>
+<div class="empty-state" id="emptyState">
+<div class="empty-icon">📺</div>
+<h3>Плейлист пуст</h3>
+<p>Добавьте первое видео</p>
+</div>
+</div>
+</div>
+
+<!-- Player Modal -->
+<div class="player-modal" id="playerModal" onclick="if(event.target === this) closePlayer()">
+<div class="player-container">
+<span class="close-player" onclick="closePlayer()">&times;</span>
+<div class="player-box" id="playerBox"></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const API_KEY = "AIzaSyBUngjcECW86iLuEaqrMekr0PSmX5w7EOo";
+const firebaseConfig = {
+apiKey: API_KEY,
+authDomain: "myplaulistplauer.firebaseapp.com",
+projectId: "myplaulistplauer",
+databaseURL: "https://myplaulistplauer-default-rtdb.europe-west1.firebasedatabase.app/"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let viewMode = 'my';
+let searchResults = [];
+let allVideos = [];
+let activeTab = 'add';
+let nextPageToken = null;
+let currentSearchQuery = '';
+
+// Auth State
+onAuthStateChanged(auth, async (user) => {
+const authBox = document.getElementById('auth-box');
+const syncBadge = document.getElementById('syncBadge');
+const authScreen = document.getElementById('auth-screen');
+const appContent = document.getElementById('app-content');
+const mainTabs = document.getElementById('mainTabs');
+
+if (user) {
+currentUser = user;
+authScreen.style.display = 'none';
+appContent.style.display = 'block';
+mainTabs.style.display = 'flex';
+syncBadge.style.display = 'flex';
+authBox.innerHTML = `<img src="${user.photoURL || 'https://www.gravatar.com/avatar/?d=mp'}" class="user-avatar" onclick="logoutUser()">`;
+
+await set(ref(db, 'playlists/' + user.uid), {
+userName: user.displayName || 'Пользователь',
+userEmail: user.email,
+videos: (await get(ref(db, 'playlists/' + user.uid + '/videos'))).val() || []
+});
+
+loadData();
+} else {
+currentUser = null;
+authScreen.style.display = 'flex';
+appContent.style.display = 'none';
+mainTabs.style.display = 'none';
+syncBadge.style.display = 'none';
+authBox.innerHTML = '';
+}
+});
+
+// Login/Logout
+window.loginUser = async () => {
+try {
+await signInWithPopup(auth, provider);
+showToast('✅ Вход выполнен');
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка входа');
+}
+};
+
+window.logoutUser = async () => {
+if (confirm('Выйти из аккаунта?')) {
+await signOut(auth);
+showToast('👋 Вы вышли');
+}
+};
+
+// Switch Main View
+window.switchMainView = (mode) => {
+viewMode = mode;
+document.getElementById('mainTab-my').classList.toggle('active', mode === 'my');
+document.getElementById('mainTab-community').classList.toggle('active', mode === 'community');
+document.getElementById('mainTab-youtube').classList.toggle('active', mode === 'youtube');
+
+const controlsSection = document.getElementById('controlsSection');
+const searchInput = document.getElementById('search-input');
+const tabAdd = document.getElementById('tab-add');
+
+if (mode === 'my') {
+searchInput.placeholder = 'Поиск в моём плейлисте...';
+controlsSection.style.display = 'block';
+tabAdd.style.display = 'block';
+} else if (mode === 'community') {
+searchInput.placeholder = 'Поиск в общей ленте...';
+controlsSection.style.display = 'block';
+tabAdd.style.display = 'none';
+if (activeTab === 'add') switchTab('search');
+} else if (mode === 'youtube') {
+searchInput.placeholder = 'Поиск на YouTube...';
+controlsSection.style.display = 'block';
+tabAdd.style.display = 'none';
+if (activeTab === 'add') switchTab('search');
+}
+
+document.getElementById('search-input').value = '';
+document.getElementById('searchResultsContainer').style.display = 'none';
+nextPageToken = null;
+currentSearchQuery = '';
+searchResults = [];
+loadData();
+};
+
+// Load Data
+function loadData() {
+if (!currentUser) return;
+updateSync('syncing');
+
+if (viewMode === 'my') {
+onValue(ref(db, 'playlists/' + currentUser.uid + '/videos'), (snapshot) => {
+allVideos = snapshot.val() || [];
+updateSync('success');
+renderVideos();
+});
+} else if (viewMode === 'community') {
+onValue(ref(db, 'playlists'), (snapshot) => {
+const allPlaylists = snapshot.val() || {};
+allVideos = [];
+Object.entries(allPlaylists).forEach(([uid, userData]) => {
+const videos = userData.videos || [];
+videos.forEach(video => {
+allVideos.push({
+...video,
+ownerUid: uid,
+ownerName: uid === currentUser.uid ? 'Вы' : (userData.userName || 'Пользователь'),
+isOwner: uid === currentUser.uid
+});
+});
+});
+updateSync('success');
+renderVideos();
+});
+} else if (viewMode === 'youtube') {
+allVideos = [];
+renderVideos();
+}
+}
+
+// Render Videos
+function renderVideos() {
+const grid = document.getElementById('videoGrid');
+const emptyState = document.getElementById('emptyState');
+grid.innerHTML = '';
+
+if (allVideos.length === 0) {
+emptyState.style.display = 'block';
+grid.style.display = 'none';
+return;
+}
+
+emptyState.style.display = 'none';
+grid.style.display = 'flex';
+
+allVideos.forEach((video, index) => {
+const card = document.createElement('div');
+card.className = 'video-card';
+card.innerHTML = `
+<img src="${video.thumb}" class="video-thumb" onclick="playVideo(${index})" loading="lazy">
+<div class="video-info">
+${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${video.ownerName}</span>` : ''}
+<div class="video-title" onclick="playVideo(${index})">${video.title || 'Без названия'}</div>
+<div class="video-meta">
+<span>📺 ${video.channel || 'YouTube'}</span>
+<span>📅 ${video.date || ''}</span>
+</div>
+${viewMode === 'my' ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="deleteVideo(${index})">🗑️ Удалить</button>
+</div>
+` : ''}
+${viewMode === 'community' && !video.isOwner ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="addToMyPlaylist('${video.id}', '${video.title.replace(/'/g, "\\'")}')">
+➕ В плейлист
+</button>
+</div>
+` : ''}
+</div>
+`;
+grid.appendChild(card);
+});
+}
+
+// Render Filtered Videos
+function renderFilteredVideos(videos) {
+const grid = document.getElementById('videoGrid');
+const emptyState = document.getElementById('emptyState');
+grid.innerHTML = '';
+emptyState.style.display = 'none';
+grid.style.display = 'flex';
+
+videos.forEach((video) => {
+const index = allVideos.findIndex(v => v.id === video.id);
+const card = document.createElement('div');
+card.className = 'video-card';
+card.innerHTML = `
+<img src="${video.thumb}" class="video-thumb" onclick="playVideo(${index})" loading="lazy">
+<div class="video-info">
+${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${video.ownerName}</span>` : ''}
+<div class="video-title" onclick="playVideo(${index})">${video.title || 'Без названия'}</div>
+<div class="video-meta">
+<span>📺 ${video.channel || 'YouTube'}</span>
+<span>📅 ${video.date || ''}</span>
+</div>
+${viewMode === 'my' ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="deleteVideo(${index})">🗑️ Удалить</button>
+</div>
+` : ''}
+${viewMode === 'community' && !video.isOwner ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="addToMyPlaylist('${video.id}', '${video.title.replace(/'/g, "\\'")}')">
+➕ В плейлист
+</button>
+</div>
+` : ''}
+</div>
+`;
+grid.appendChild(card);
+});
+}
+
+// Add Video
+window.handleAdd = async () => {
+const input = document.getElementById('main-input');
+const url = input.value.trim();
+if (!url) {
+showToast('❌ Введите ссылку');
+return;
+}
+
+const btn = document.getElementById('addBtn');
+btn.disabled = true;
+btn.textContent = 'Добавление...';
+updateSync('syncing');
+
+try {
+const videoId = extractVideoId(url);
+if (videoId) {
+await addSingleVideo(videoId);
+input.value = '';
+} else {
+const playlistId = extractPlaylistId(url);
+if (playlistId) {
+await addPlaylist(playlistId);
+input.value = '';
+} else {
+throw new Error('Неверная ссылка');
+}
+}
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка: ' + error.message);
+} finally {
+btn.disabled = false;
+btn.textContent = 'Добавить';
+}
+};
+
+async function addSingleVideo(videoId) {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+if (videos.some(v => v.id === videoId)) {
+showToast('⚠️ Видео уже в плейлисте');
+return;
+}
+
+const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`);
+const data = await res.json();
+
+if (!data.items || data.items.length === 0) {
+throw new Error('Видео не найдено');
+}
+
+const videoData = data.items[0].snippet;
+const newVideo = {
+id: videoId,
+title: videoData.title,
+thumb: videoData.thumbnails.medium.url,
+description: videoData.description || '',
+channel: videoData.channelTitle,
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Мои видео'
+};
+
+videos.unshift(newVideo);
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast('✅ Видео добавлено');
+loadData();
+}
+
+async function addPlaylist(playlistId) {
+const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${API_KEY}`);
+const data = await res.json();
+
+if (!data.items || data.items.length === 0) {
+throw new Error('Плейлист пуст или не найден');
+}
+
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+let addedCount = 0;
+for (const item of data.items) {
+const videoId = item.snippet.resourceId.videoId;
+if (!videos.some(v => v.id === videoId)) {
+videos.push({
+id: videoId,
+title: item.snippet.title,
+thumb: item.snippet.thumbnails.medium.url,
+description: item.snippet.description || '',
+channel: item.snippet.channelTitle,
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Из плейлиста'
+});
+addedCount++;
+}
+}
+
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast(`✅ Добавлено ${addedCount} видео`);
+loadData();
+}
+
+// Delete Video
+window.deleteVideo = async (index) => {
+if (!confirm('Удалить это видео из плейлиста?')) return;
+updateSync('syncing');
+
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+videos.splice(index, 1);
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast('🗑️ Видео удалено');
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка удаления');
+}
+};
+
+// Add to my playlist
+window.addToMyPlaylist = async (videoId, title) => {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+if (videos.some(v => v.id === videoId)) {
+showToast('⚠️ Уже в вашем плейлисте');
+return;
+}
+
+updateSync('syncing');
+try {
+const newVideo = {
+id: videoId,
+title: title,
+thumb: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+description: '',
+channel: 'YouTube',
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Из общей ленты'
+};
+videos.unshift(newVideo);
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast('✅ Добавлено в ваш плейлист');
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка добавления');
+}
+};
+
+// YouTube Search
+window.searchYouTube = async (loadMore = false) => {
+const input = document.getElementById('search-input');
+const query = input.value.trim();
+if (!query && !loadMore) {
+showToast('❌ Введите запрос');
+return;
+}
+
+if (!loadMore) {
+nextPageToken = null;
+currentSearchQuery = query;
+searchResults = [];
+}
+
+const btn = document.getElementById('searchBtn');
+const btnText = document.getElementById('searchBtnText');
+btn.disabled = true;
+btnText.innerHTML = '<span class="loading"></span>';
+
+try {
+if (viewMode === 'youtube') {
+document.getElementById('searchResultsContainer').style.display = 'block';
+if (!loadMore) {
+document.getElementById('videoGrid').style.display = 'none';
+document.getElementById('emptyState').style.display = 'none';
+}
+
+let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(currentSearchQuery)}&type=video&maxResults=50&key=${API_KEY}`;
+if (nextPageToken) url += `&pageToken=${nextPageToken}`;
+
+const res = await fetch(url);
+const data = await res.json();
+
+if (data.error) throw new Error(data.error.message);
+
+if (!data.items || data.items.length === 0) {
+if (!loadMore) {
+renderSearchResults([]);
+showToast('⚠️ Ничего не найдено');
+}
+return;
+}
+
+nextPageToken = data.nextPageToken || null;
+searchResults = loadMore ? [...searchResults, ...data.items] : data.items;
+renderSearchResults();
+showToast(loadMore ? `✅ Загружено ещё ${data.items.length} видео` : `✅ Найдено ${searchResults.length} видео`);
+} else {
+document.getElementById('searchResultsContainer').style.display = 'none';
+const filtered = allVideos.filter(video => 
+video.title?.toLowerCase().includes(query.toLowerCase()) ||
+video.channel?.toLowerCase().includes(query.toLowerCase())
+);
+
+if (filtered.length === 0) {
+showToast('⚠️ Ничего не найдено');
+document.getElementById('videoGrid').innerHTML = `
+<div class="empty-state">
+<div class="empty-icon">🔍</div>
+<h3>Ничего не найдено</h3>
+<p>Попробуйте изменить запрос</p>
+</div>
+`;
+document.getElementById('videoGrid').style.display = 'block';
+document.getElementById('emptyState').style.display = 'none';
+} else {
+showToast(`✅ Найдено ${filtered.length} видео`);
+renderFilteredVideos(filtered);
+}
+}
+} catch (error) {
+console.error(error);
+document.getElementById('resultsList').innerHTML = `
+<div class="empty-state">
+<div class="empty-icon">⚠️</div>
+<p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.85rem;">
+YouTube API недоступен
+</p>
+<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(currentSearchQuery)}"
+target="_blank"
+class="action-btn"
+style="display: inline-block; text-decoration: none; padding: 8px 16px; font-size: 0.85rem;">
+Открыть поиск
+</a>
+</div>
+`;
+showToast('⚠️ API недоступен');
+} finally {
+btn.disabled = false;
+btnText.textContent = 'Искать';
+}
+};
+
+// Render Search Results
+function renderSearchResults() {
+const container = document.getElementById('resultsList');
+if (!searchResults || searchResults.length === 0) {
+container.innerHTML = `
+<div class="empty-state">
+<div class="empty-icon">🔍</div>
+<h3>Ничего не найдено</h3>
+<p>Попробуйте изменить запрос</p>
+</div>
+`;
+return;
+}
+
+container.innerHTML = '';
+searchResults.forEach((result, index) => {
+const videoId = result.id.videoId;
+const title = result.snippet.title;
+const channel = result.snippet.channelTitle;
+const thumb = result.snippet.thumbnails.medium.url;
+const publishedAt = new Date(result.snippet.publishedAt).toLocaleDateString('ru-RU');
+
+const item = document.createElement('div');
+item.className = 'search-item-row';
+item.innerHTML = `
+<img loading="lazy" src="${thumb}" onclick="playFromSearch('${videoId}', '${title.replace(/'/g, "\\'")}')">
+<div class="search-item-info">
+<div class="search-title" onclick="playFromSearch('${videoId}', '${title.replace(/'/g, "\\'")}')">
+${title}
+</div>
+<div class="search-channel">${channel}</div>
+<div class="search-channel">📅 ${publishedAt}</div>
+<button class="add-btn" onclick="addFromSearch(${index})">
++ В плейлист
+</button>
+</div>
+`;
+container.appendChild(item);
+});
+
+if (nextPageToken) {
+const loadMoreBtn = document.createElement('div');
+loadMoreBtn.style.textAlign = 'center';
+loadMoreBtn.style.marginTop = '16px';
+loadMoreBtn.innerHTML = `
+<button class="action-btn" onclick="searchYouTube(true)" style="width: 100%; max-width: 400px;">
+📥 Загрузить ещё видео
+</button>
+`;
+container.appendChild(loadMoreBtn);
+}
+}
+
+// Add from YouTube search
+window.addFromSearch = async (index) => {
+const result = searchResults[index];
+const videoId = result.id.videoId;
+
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+if (videos.some(v => v.id === videoId)) {
+showToast('⚠️ Видео уже в плейлисте');
+return;
+}
+
+updateSync('syncing');
+try {
+const newVideo = {
+id: videoId,
+title: result.snippet.title,
+thumb: result.snippet.thumbnails.medium.url,
+description: result.snippet.description || '',
+channel: result.snippet.channelTitle,
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Из поиска'
+};
+videos.unshift(newVideo);
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast('✅ Добавлено в плейлист');
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка добавления');
+}
+};
+
+// Play from search
+window.playFromSearch = (videoId, title) => {
+const modal = document.getElementById('playerModal');
+const playerBox = document.getElementById('playerBox');
+
+playerBox.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.2rem;">Загрузка...</div>`;
+modal.style.display = 'block';
+
+setTimeout(() => {
+playerBox.innerHTML = `
+<iframe
+width="100%"
+height="100%"
+src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1"
+frameborder="0"
+allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+allowfullscreen
+></iframe>
+`;
+}, 100);
+};
+
+// Play Video
+window.playVideo = (index) => {
+const video = allVideos[index];
+const modal = document.getElementById('playerModal');
+const playerBox = document.getElementById('playerBox');
+
+playerBox.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.2rem;">Загрузка...</div>`;
+modal.style.display = 'block';
+
+setTimeout(() => {
+playerBox.innerHTML = `
+<iframe
+width="100%"
+height="100%"
+src="https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0&modestbranding=1"
+frameborder="0"
+allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+allowfullscreen
+></iframe>
+`;
+}, 100);
+};
+
+// Close Player
+window.closePlayer = () => {
+const modal = document.getElementById('playerModal');
+const playerBox = document.getElementById('playerBox');
+playerBox.innerHTML = '';
+modal.style.display = 'none';
+};
+
+// Switch Tabs
+window.switchTab = (tab) => {
+activeTab = tab;
+document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+if (tab === 'add') {
+document.getElementById('tab-add').classList.add('active');
+document.getElementById('add-tab').style.display = 'block';
+document.getElementById('search-tab').style.display = 'none';
+document.getElementById('searchResultsContainer').style.display = 'none';
+renderVideos();
+} else if (tab === 'search') {
+document.getElementById('tab-search').classList.add('active');
+document.getElementById('add-tab').style.display = 'none';
+document.getElementById('search-tab').style.display = 'block';
+document.getElementById('search-input').value = '';
+document.getElementById('searchResultsContainer').style.display = 'none';
+renderVideos();
+}
+};
+
+// Helpers
+function extractVideoId(url) {
+const patterns = [
+/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?#]+)/,
+/^([a-zA-Z0-9_-]{11})$/
+];
+for (const pattern of patterns) {
+const match = url.match(pattern);
+if (match) return match[1];
+}
+return false;
+}
+
+function extractPlaylistId(url) {
+const match = url.match(/[?&]list=([^&]+)/);
+return match ? match[1] : false;
+}
+
+function updateSync(status) {
+const dot = document.getElementById('syncDot');
+const text = document.getElementById('syncText');
+if (status === 'syncing') {
+dot.className = 'sync-dot syncing';
+text.textContent = 'Синхронизация...';
+} else if (status === 'success') {
+dot.className = 'sync-dot';
+text.textContent = 'Синхронизировано';
+}
+}
+
+function showToast(message) {
+const toast = document.getElementById('toast');
+toast.textContent = message;
+toast.classList.add('show');
+setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Event listeners
+document.getElementById('main-input').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') handleAdd();
+});
+
+document.getElementById('search-input').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') searchYouTube();
+});
+
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Escape') closePlayer();
+});
+</script>
+</body>
+</html>

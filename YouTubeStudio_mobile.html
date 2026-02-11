@@ -1,0 +1,2770 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta property="og:image" content="ico.png"> 
+<title>YouTube Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+--bg: #0f0f0f;
+--bg-secondary: #181818;
+--panel: #212121;
+--panel-hover: #2a2a2a;
+--accent: #ff0000;
+--accent-hover: #cc0000;
+--text: #f1f1f1;
+--text-secondary: #aaaaaa;
+--border: #3a3a3a;
+--success: #10b981;
+--blue: #3b82f6;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+font-family: 'Roboto', sans-serif;
+background: var(--bg);
+color: var(--text);
+overflow-x: hidden;
+}
+
+/* Header */
+header {
+background: var(--bg-secondary);
+padding: 12px 16px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+border-bottom: 1px solid var(--border);
+position: sticky;
+top: 0;
+z-index: 1000;
+}
+
+@media (max-width: 640px) {
+header {
+display: none;
+}
+}
+
+.logo {
+color: var(--accent);
+font-weight: bold;
+font-size: 18px;
+letter-spacing: 1px;
+}
+
+@media (max-width: 640px) {
+.logo {
+font-size: 16px;
+letter-spacing: 0.5px;
+}
+}
+
+.user-section {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+@media (max-width: 640px) {
+.user-section {
+gap: 6px;
+}
+}
+
+.sync-badge {
+padding: 4px 10px;
+background: var(--panel);
+border: 1px solid var(--border);
+border-radius: 20px;
+font-size: 0.75rem;
+display: flex;
+align-items: center;
+gap: 4px;
+}
+
+@media (max-width: 640px) {
+.sync-badge {
+padding: 3px 8px;
+font-size: 0.7rem;
+}
+}
+
+.sync-dot {
+width: 5px;
+height: 5px;
+border-radius: 50%;
+background: var(--success);
+animation: blink 2s infinite;
+}
+
+@keyframes blink {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.3; }
+}
+
+.sync-dot.syncing {
+background: var(--blue);
+animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.5; }
+}
+
+.user-avatar {
+width: 32px;
+height: 32px;
+border-radius: 50%;
+cursor: pointer;
+border: 2px solid var(--border);
+transition: all 0.2s;
+}
+
+@media (max-width: 640px) {
+.user-avatar {
+width: 28px;
+height: 28px;
+}
+}
+
+.user-avatar:hover {
+border-color: var(--accent);
+transform: scale(1.05);
+}
+
+/* Auth Screen */
+#auth-screen {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 80vh;
+padding: 20px;
+}
+
+#auth-screen h1 {
+font-size: 2rem;
+margin-bottom: 10px;
+}
+
+.signin-btn {
+background: var(--accent);
+color: white;
+border: none;
+padding: 8px 16px;
+border-radius: 6px;
+cursor: pointer;
+font-weight: 500;
+transition: all 0.2s;
+font-size: 0.9rem;
+}
+
+.signin-btn:hover {
+background: var(--accent-hover);
+}
+
+/* Main Navigation Tabs */
+.main-tabs {
+display: flex;
+gap: 8px;
+padding: 16px;
+background: var(--bg-secondary);
+border-bottom: 2px solid var(--border);
+justify-content: center;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+}
+
+.main-tabs::-webkit-scrollbar {
+display: none;
+}
+
+.main-tab {
+padding: 10px 20px;
+background: transparent;
+border: 2px solid var(--border);
+color: var(--text-secondary);
+border-radius: 24px;
+cursor: pointer;
+font-size: 0.95rem;
+font-weight: 600;
+transition: all 0.3s;
+white-space: nowrap;
+flex-shrink: 0;
+}
+
+.main-tab:hover {
+background: var(--panel-hover);
+color: var(--text);
+border-color: var(--text-secondary);
+}
+
+.main-tab.active {
+background: var(--accent);
+color: white;
+border-color: var(--accent);
+transform: scale(1.05);
+box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+.main-tabs {
+position: fixed;
+bottom: 0;
+left: 0;
+right: 0;
+padding: 8px 4px;
+gap: 4px;
+justify-content: space-around;
+border-top: 2px solid var(--border);
+border-bottom: none;
+background: var(--bg-secondary);
+z-index: 999;
+box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+}
+
+.main-tab {
+padding: 8px 4px;
+font-size: 0;
+border-radius: 12px;
+min-width: 56px;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 2px;
+}
+
+.main-tab::before {
+content: attr(data-icon);
+font-size: 1.3rem;
+display: block;
+}
+
+.main-tab.active {
+transform: scale(1);
+}
+}
+
+/* Playlist Tabs */
+.playlist-tabs {
+display: flex;
+gap: 8px;
+padding: 12px 16px;
+background: var(--bg-secondary);
+border-bottom: 1px solid var(--border);
+align-items: center;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+}
+
+.playlist-tabs::-webkit-scrollbar {
+display: none;
+}
+
+.playlist-tabs-container {
+display: flex;
+gap: 6px;
+flex: 1;
+overflow-x: auto;
+scrollbar-width: none;
+}
+
+.playlist-tabs-container::-webkit-scrollbar {
+display: none;
+}
+
+.playlist-tab {
+padding: 6px 14px;
+background: var(--panel);
+border: 1px solid var(--border);
+color: var(--text-secondary);
+border-radius: 16px;
+cursor: pointer;
+font-size: 0.8rem;
+font-weight: 500;
+transition: all 0.2s;
+white-space: nowrap;
+flex-shrink: 0;
+position: relative;
+}
+
+.playlist-tab:hover {
+background: var(--panel-hover);
+color: var(--text);
+}
+
+.playlist-tab.active {
+background: var(--success);
+color: white;
+border-color: var(--success);
+}
+
+.playlist-delete-btn {
+position: absolute;
+right: 6px;
+top: 50%;
+transform: translateY(-50%);
+cursor: pointer;
+font-size: 1.2rem;
+font-weight: bold;
+color: var(--text-secondary);
+padding: 0 4px;
+line-height: 1;
+transition: color 0.2s, opacity 0.2s;
+opacity: 0;
+}
+
+.playlist-tab:hover .playlist-delete-btn {
+opacity: 1;
+}
+
+.playlist-delete-btn:hover {
+color: var(--accent);
+}
+
+.playlist-tab-add {
+padding: 6px 14px;
+background: var(--accent);
+color: white;
+border: none;
+border-radius: 16px;
+cursor: pointer;
+font-size: 0.8rem;
+font-weight: 500;
+transition: all 0.2s;
+white-space: nowrap;
+flex-shrink: 0;
+}
+
+.playlist-tab-add:hover {
+background: var(--accent-hover);
+}
+
+.playlist-toggle {
+display: flex;
+align-items: center;
+gap: 6px;
+padding: 8px 12px;
+background: var(--panel);
+border: 1px solid var(--border);
+border-radius: 16px;
+cursor: pointer;
+font-size: 0.8rem;
+color: var(--text);
+}
+
+.playlist-toggle:hover {
+background: var(--panel-hover);
+}
+
+@media (max-width: 640px) {
+.playlist-tabs {
+padding: 8px 12px;
+gap: 6px;
+position: relative;
+}
+
+.playlist-toggle {
+display: flex !important;
+}
+
+.playlist-tabs-container {
+display: none;
+position: absolute;
+top: 100%;
+left: 0;
+right: 0;
+background: var(--bg-secondary);
+border-bottom: 1px solid var(--border);
+padding: 8px;
+flex-direction: column;
+gap: 6px;
+z-index: 100;
+box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.playlist-tabs-container.open {
+display: flex;
+}
+
+.playlist-tab {
+padding: 8px 12px;
+font-size: 0.75rem;
+width: 100%;
+}
+
+.playlist-tab-add {
+padding: 8px 12px;
+font-size: 0.75rem;
+width: 100%;
+}
+}
+
+/* Container */
+.container {
+max-width: 100%;
+margin: 0 auto;
+padding: 12px;
+}
+
+@media (max-width: 640px) {
+.container {
+padding: 8px;
+padding-bottom: 80px; /* Отступ для bottom navigation */
+}
+}
+
+.controls-section {
+background: var(--panel);
+padding: 12px;
+border-radius: 12px;
+border: 1px solid var(--border);
+margin-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+.controls-section {
+padding: 10px;
+border-radius: 10px;
+}
+
+.controls-section .input-row {
+flex-direction: column;
+gap: 6px;
+}
+
+.controls-section .input-field {
+min-width: 100%;
+}
+}
+
+.tabs {
+display: flex;
+gap: 6px;
+border-bottom: 2px solid var(--border);
+margin-bottom: 10px;
+overflow-x: auto;
+}
+
+.tab-btn {
+padding: 8px 16px;
+background: transparent;
+border: none;
+color: var(--text-secondary);
+cursor: pointer;
+font-size: 0.85rem;
+font-weight: 500;
+border-bottom: 3px solid transparent;
+margin-bottom: -2px;
+transition: all 0.2s;
+white-space: nowrap;
+}
+
+.tab-btn:hover {
+color: var(--text);
+}
+
+.tab-btn.active {
+color: var(--accent);
+border-bottom-color: var(--accent);
+}
+
+.input-row {
+display: flex;
+gap: 8px;
+margin-bottom: 10px;
+flex-wrap: wrap;
+}
+
+.input-field {
+flex: 1;
+min-width: 150px;
+padding: 10px 12px;
+border-radius: 8px;
+border: 1px solid var(--border);
+background: var(--bg-secondary);
+color: var(--text);
+outline: none;
+font-size: 0.9rem;
+}
+
+.input-field:focus {
+border-color: var(--accent);
+}
+
+.action-btn {
+background: var(--accent);
+color: white;
+border: none;
+padding: 10px 16px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 500;
+transition: all 0.2s;
+white-space: nowrap;
+font-size: 0.9rem;
+}
+
+.action-btn:hover {
+background: var(--accent-hover);
+}
+
+.action-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+/* Video Grid */
+.video-grid {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.video-card {
+background: var(--panel);
+border-radius: 10px;
+overflow: hidden;
+border: 1px solid var(--border);
+transition: all 0.2s;
+display: flex;
+align-items: center;
+gap: 10px;
+cursor: pointer;
+}
+
+.video-card:hover {
+transform: translateX(4px);
+box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+border-color: var(--accent);
+}
+
+.video-thumb {
+width: 100px;
+height: 60px;
+object-fit: cover;
+border-radius: 6px;
+flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+.video-thumb {
+width: 80px;
+height: 48px;
+}
+}
+
+.video-info {
+flex: 1;
+padding: 8px 10px 8px 0;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.owner-badge {
+display: inline-block;
+padding: 2px 6px;
+background: var(--blue);
+color: white;
+border-radius: 8px;
+font-size: 0.6rem;
+font-weight: 600;
+width: fit-content;
+}
+
+.owner-badge.you {
+background: var(--success);
+}
+
+.video-title {
+font-size: 0.75rem;
+font-weight: 500;
+line-height: 1.3;
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+
+.video-meta {
+display: flex;
+justify-content: space-between;
+align-items: center;
+font-size: 0.6rem;
+color: var(--text-secondary);
+}
+
+.video-actions {
+display: flex;
+gap: 6px;
+margin-top: 6px;
+}
+
+@media (max-width: 640px) {
+.video-actions {
+gap: 4px;
+}
+
+.video-actions .action-icon-btn:not(:first-child):not(:nth-child(2)) {
+display: none; /* Показываем только первые 2 кнопки на мобильных */
+}
+}
+
+.action-icon-btn {
+background: var(--bg-secondary);
+border: 1px solid var(--border);
+color: var(--text-secondary);
+padding: 4px 8px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.65rem;
+transition: all 0.2s;
+}
+
+.action-icon-btn:hover {
+background: var(--panel-hover);
+color: var(--text);
+border-color: var(--accent);
+}
+
+/* Search Results */
+.search-results-container {
+background: var(--panel);
+padding: 12px;
+border-radius: 12px;
+border: 1px solid var(--border);
+margin-bottom: 16px;
+display: none;
+}
+
+.search-item-row {
+display: flex;
+gap: 10px;
+padding: 10px;
+background: var(--bg-secondary);
+border-radius: 8px;
+border: 1px solid var(--border);
+margin-bottom: 8px;
+transition: all 0.2s;
+}
+
+.search-item-row:hover {
+border-color: var(--accent);
+transform: translateX(2px);
+}
+
+.search-item-row img {
+width: 100px;
+height: 60px;
+object-fit: cover;
+border-radius: 6px;
+cursor: pointer;
+flex-shrink: 0;
+}
+
+.search-item-info {
+flex: 1;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.search-title {
+font-size: 0.8rem;
+font-weight: 500;
+cursor: pointer;
+line-height: 1.3;
+}
+
+.search-title:hover {
+color: var(--accent);
+}
+
+.search-channel {
+font-size: 0.7rem;
+color: var(--text-secondary);
+}
+
+.add-btn {
+background: var(--success);
+color: white;
+border: none;
+padding: 6px 12px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.75rem;
+font-weight: 500;
+margin-top: 4px;
+width: fit-content;
+transition: all 0.2s;
+}
+
+.add-btn:hover {
+background: #0d9668;
+transform: scale(1.05);
+}
+
+/* Empty State */
+.empty-state {
+padding: 40px 20px;
+text-align: center;
+}
+
+.empty-icon {
+font-size: 4rem;
+margin-bottom: 15px;
+opacity: 0.6;
+}
+
+.empty-state h3 {
+font-size: 1.1rem;
+margin-bottom: 8px;
+color: var(--text);
+}
+
+.empty-state p {
+color: var(--text-secondary);
+font-size: 0.85rem;
+}
+
+/* Video Player Modal */
+.player-modal {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.95);
+z-index: 10000;
+padding: 10px;
+overflow-y: auto;
+}
+
+.player-container {
+width: 100%;
+max-width: 1200px;
+margin: 20px auto;
+background: var(--bg-secondary);
+border-radius: 12px;
+overflow: hidden;
+}
+
+.close-player {
+position: fixed;
+top: 15px;
+right: 15px;
+width: 36px;
+height: 36px;
+background: rgba(0, 0, 0, 0.7);
+border: none;
+border-radius: 50%;
+color: white;
+font-size: 1.4rem;
+cursor: pointer;
+z-index: 10001;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s;
+}
+
+.close-player:hover {
+background: var(--accent);
+transform: scale(1.1);
+}
+
+.player-box {
+width: 100%;
+padding-bottom: 56.25%;
+position: relative;
+background: #000;
+}
+
+.player-box iframe {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+border: 0;
+}
+
+.player-box #ytPlayerIframe {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+}
+
+/* Timestamps Section */
+.timestamps-section {
+padding: 16px;
+border-top: 1px solid var(--border);
+}
+
+.timestamps-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 12px;
+}
+
+.timestamps-title {
+font-size: 0.9rem;
+font-weight: 600;
+color: var(--text);
+}
+
+.add-timestamp-btn {
+background: var(--accent);
+color: white;
+border: none;
+padding: 6px 12px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 0.75rem;
+font-weight: 500;
+transition: all 0.2s;
+}
+
+.add-timestamp-btn:hover {
+background: var(--accent-hover);
+}
+
+.timestamp-form {
+background: var(--panel);
+padding: 12px;
+border-radius: 8px;
+margin-bottom: 12px;
+display: none;
+}
+
+.timestamp-input-row {
+display: flex;
+gap: 8px;
+margin-bottom: 8px;
+}
+
+.timestamp-input {
+flex: 1;
+padding: 8px;
+border-radius: 6px;
+border: 1px solid var(--border);
+background: var(--bg-secondary);
+color: var(--text);
+font-size: 0.8rem;
+outline: none;
+}
+
+.timestamp-input:focus {
+border-color: var(--accent);
+}
+
+.timestamp-input.time {
+flex: 0 0 80px;
+font-family: monospace;
+}
+
+.timestamp-buttons {
+display: flex;
+gap: 6px;
+}
+
+.timestamp-save-btn, .timestamp-cancel-btn {
+flex: 1;
+padding: 8px;
+border-radius: 6px;
+border: none;
+cursor: pointer;
+font-size: 0.8rem;
+font-weight: 500;
+transition: all 0.2s;
+}
+
+.timestamp-save-btn {
+background: var(--success);
+color: white;
+}
+
+.timestamp-save-btn:hover {
+background: #0d9668;
+}
+
+.timestamp-cancel-btn {
+background: var(--bg-secondary);
+color: var(--text-secondary);
+border: 1px solid var(--border);
+}
+
+.timestamp-cancel-btn:hover {
+background: var(--panel-hover);
+}
+
+.timestamps-list {
+display: flex;
+flex-direction: column;
+gap: 6px;
+max-height: 300px;
+overflow-y: auto;
+}
+
+.timestamp-item {
+background: var(--bg-secondary);
+padding: 10px 12px;
+border-radius: 8px;
+border: 1px solid var(--border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.timestamp-item:hover {
+border-color: var(--accent);
+background: var(--panel-hover);
+transform: translateX(2px);
+}
+
+.timestamp-info {
+flex: 1;
+}
+
+.timestamp-time {
+font-size: 0.75rem;
+color: var(--accent);
+font-weight: 600;
+margin-bottom: 4px;
+font-family: monospace;
+}
+
+.timestamp-label {
+font-size: 0.8rem;
+color: var(--text);
+}
+
+.timestamp-delete {
+background: transparent;
+border: none;
+color: var(--text-secondary);
+cursor: pointer;
+padding: 4px 8px;
+border-radius: 4px;
+font-size: 0.9rem;
+transition: all 0.2s;
+}
+
+.timestamp-delete:hover {
+background: var(--accent);
+color: white;
+}
+
+.empty-timestamps {
+text-align: center;
+padding: 20px;
+color: var(--text-secondary);
+font-size: 0.85rem;
+}
+
+/* Toast */
+.toast {
+position: fixed;
+bottom: 20px;
+left: 50%;
+transform: translateX(-50%) translateY(100px);
+background: var(--panel);
+color: var(--text);
+padding: 12px 20px;
+border-radius: 8px;
+border: 1px solid var(--border);
+font-size: 0.85rem;
+z-index: 10001;
+opacity: 0;
+transition: all 0.3s;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.toast.show {
+transform: translateX(-50%) translateY(0);
+opacity: 1;
+}
+
+/* Chapters */
+.chapters-section {
+margin-top: 20px;
+padding: 15px;
+background: var(--panel);
+border-radius: 10px;
+border: 1px solid var(--border);
+}
+
+.chapters-header {
+font-size: 1rem;
+font-weight: 600;
+margin-bottom: 12px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.chapters-badge {
+background: var(--success);
+color: white;
+padding: 2px 8px;
+border-radius: 12px;
+font-size: 0.7rem;
+font-weight: 600;
+}
+
+.chapters-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+gap: 10px;
+}
+
+.chapter-btn {
+background: var(--bg-secondary);
+border: 1px solid var(--border);
+padding: 12px;
+border-radius: 8px;
+cursor: pointer;
+transition: all 0.2s;
+text-align: left;
+}
+
+.chapter-btn:hover {
+background: var(--panel-hover);
+border-color: var(--accent);
+transform: translateY(-2px);
+}
+
+.chapter-btn.active {
+background: var(--accent);
+color: white;
+border-color: var(--accent);
+}
+
+.chapter-btn.active .chapter-time {
+color: white;
+}
+
+.chapter-time {
+color: var(--accent);
+font-weight: bold;
+font-size: 0.85rem;
+margin-bottom: 6px;
+font-family: monospace;
+}
+
+.chapter-label {
+font-size: 0.8rem;
+line-height: 1.3;
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+
+/* Loading */
+.loading {
+display: inline-block;
+width: 14px;
+height: 14px;
+border: 2px solid rgba(255, 255, 255, 0.3);
+border-top-color: white;
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+
+/* Privacy Modal */
+.privacy-modal {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.85);
+z-index: 2000;
+align-items: center;
+justify-content: center;
+}
+
+.privacy-dialog {
+background: var(--panel);
+border-radius: 16px;
+padding: 24px;
+max-width: 400px;
+width: 90%;
+border: 2px solid var(--border);
+box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.privacy-dialog h3 {
+font-size: 1.3rem;
+margin-bottom: 8px;
+color: var(--text);
+}
+
+.privacy-dialog p {
+color: var(--text-secondary);
+font-size: 0.9rem;
+margin-bottom: 20px;
+line-height: 1.5;
+}
+
+.privacy-options {
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.privacy-option {
+background: var(--bg-secondary);
+border: 2px solid var(--border);
+padding: 16px;
+border-radius: 12px;
+cursor: pointer;
+transition: all 0.2s;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.privacy-option:hover {
+border-color: var(--accent);
+background: var(--panel-hover);
+}
+
+.privacy-option.selected {
+border-color: var(--accent);
+background: var(--accent);
+color: white;
+}
+
+.privacy-option-icon {
+font-size: 1.8rem;
+}
+
+.privacy-option-text {
+flex: 1;
+}
+
+.privacy-option-title {
+font-weight: 600;
+font-size: 1rem;
+margin-bottom: 4px;
+}
+
+.privacy-option-desc {
+font-size: 0.75rem;
+color: var(--text-secondary);
+}
+
+.privacy-option.selected .privacy-option-desc {
+color: rgba(255, 255, 255, 0.8);
+}
+
+.privacy-buttons {
+display: flex;
+gap: 10px;
+}
+
+.privacy-btn {
+flex: 1;
+padding: 12px;
+border-radius: 8px;
+border: none;
+cursor: pointer;
+font-weight: 600;
+font-size: 0.9rem;
+transition: all 0.2s;
+}
+
+.privacy-btn-cancel {
+background: var(--bg-secondary);
+color: var(--text);
+border: 1px solid var(--border);
+}
+
+.privacy-btn-cancel:hover {
+background: var(--panel-hover);
+}
+
+.privacy-btn-confirm {
+background: var(--accent);
+color: white;
+}
+
+.privacy-btn-confirm:hover {
+background: var(--accent-hover);
+}
+
+.privacy-btn-confirm:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+/* Filter Checkbox */
+.filter-checkbox {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 8px 12px;
+background: var(--bg-secondary);
+border: 1px solid var(--border);
+border-radius: 8px;
+cursor: pointer;
+user-select: none;
+transition: all 0.2s;
+font-size: 0.85rem;
+}
+
+.filter-checkbox:hover {
+background: var(--panel-hover);
+border-color: var(--accent);
+}
+
+.filter-checkbox input[type="checkbox"] {
+width: 16px;
+height: 16px;
+cursor: pointer;
+accent-color: var(--accent);
+}
+
+.filter-checkbox label {
+cursor: pointer;
+color: var(--text-secondary);
+}
+
+.filter-checkbox input[type="checkbox"]:checked + label {
+color: var(--text);
+font-weight: 500;
+}
+
+
+</style>
+</head>
+<body>
+<header>
+<div class="logo">📺 MY YOUTUBE STUDIO</div>
+<div class="user-section">
+<div class="sync-badge" id="syncBadge" style="display: none;">
+<div class="sync-dot" id="syncDot"></div>
+<span id="syncText">Синхронизировано</span>
+</div>
+<div id="auth-box"></div>
+</div>
+</header>
+
+<!-- Auth Screen -->
+<div id="auth-screen">
+<h1>🎬 YouTube Studio</h1>
+<p style="margin-bottom: 24px; color: var(--text-secondary); font-size: 0.95rem;">Войдите, чтобы начать</p>
+<button onclick="loginUser()" class="signin-btn" style="height: 44px; font-size: 0.95rem; padding: 0 32px;">
+Войти через Google
+</button>
+</div>
+
+<!-- Main Tabs -->
+<div class="main-tabs" id="mainTabs" style="display: none;">
+<button onclick="switchMainView('my')" id="mainTab-my" class="main-tab active" data-icon="📚">Мой плейлист</button>
+<button onclick="switchMainView('community')" id="mainTab-community" class="main-tab" data-icon="🌐">Общая лента</button>
+<button onclick="switchMainView('youtube')" id="mainTab-youtube" class="main-tab" data-icon="▶️">YouTube</button>
+</div>
+
+<!-- Playlist Tabs (shown only in My Playlist mode) -->
+<div class="playlist-tabs" id="playlistTabs" style="display: none;">
+<button class="playlist-toggle" onclick="togglePlaylistMenu()" style="display: none;">
+<span id="currentPlaylistName">📁 Все</span>
+<span style="margin-left: auto;">▼</span>
+</button>
+<div class="playlist-tabs-container" id="playlistTabsContainer">
+<button class="playlist-tab active" data-playlist="Все" onclick="switchPlaylist('Все')">📁 Все</button>
+</div>
+<button class="playlist-tab-add" onclick="showCreatePlaylistModal()">+ Создать</button>
+</div>
+
+<!-- App Content -->
+<div id="app-content" style="display: none;">
+<div class="container">
+<div class="controls-section" id="controlsSection">
+<div class="tabs">
+<button class="tab-btn active" onclick="switchTab('add')" id="tab-add">➕ Добавить</button>
+<button class="tab-btn" onclick="switchTab('search')" id="tab-search">🔍 Поиск</button>
+</div>
+<div id="add-tab">
+<div class="input-row">
+<input type="text" id="main-input" class="input-field" placeholder="Вставьте ссылку на видео...">
+<button onclick="handleAdd()" class="action-btn" id="addBtn">Добавить</button>
+</div>
+</div>
+<div id="search-tab" style="display: none;">
+<div class="input-row">
+<input type="text" id="search-input" class="input-field" placeholder="Поиск...">
+<button onclick="searchYouTube()" class="action-btn" id="searchBtn">
+<span id="searchBtnText">Искать</span>
+</button>
+</div>
+<div class="filter-checkbox" id="filterOnlyOthers" style="display: none; margin-top: 8px;" onclick="toggleOthersFilter()">
+<input type="checkbox" id="onlyOthersCheckbox">
+<label for="onlyOthersCheckbox">👥 Только чужие видео</label>
+</div>
+</div>
+</div>
+
+<div class="search-results-container" id="searchResultsContainer">
+<h4 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 0.9rem;">Результаты поиска:</h4>
+<div id="resultsList"></div>
+</div>
+
+<div class="video-grid" id="videoGrid"></div>
+<div class="empty-state" id="emptyState">
+<div class="empty-icon">📺</div>
+<h3>Плейлист пуст</h3>
+<p>Добавьте первое видео</p>
+</div>
+</div>
+</div>
+
+<!-- Player Modal -->
+<div class="player-modal" id="playerModal" onclick="if(event.target === this) closePlayer()">
+<div class="player-container">
+<span class="close-player" onclick="closePlayer()">&times;</span>
+<div class="player-box" id="playerBox"></div>
+<div id="chaptersSection" class="chapters-section" style="display: none;">
+<div class="chapters-header">
+📑 Таймкоды <span class="chapters-badge" id="chaptersCount">0</span>
+</div>
+<div class="chapters-grid" id="chaptersList"></div>
+</div>
+</div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="privacy-modal" id="privacyModal">
+<div class="privacy-dialog">
+<h3>🔒 Настройка видео</h3>
+
+<!-- Playlist Selection -->
+<div style="margin-bottom: 20px;">
+<label style="display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-secondary);">📁 Плейлист:</label>
+<select id="playlistSelect" class="input-field" style="width: 100%;">
+</select>
+</div>
+
+<!-- Privacy Selection -->
+<p style="margin-bottom: 10px;">Приватность:</p>
+<div class="privacy-options">
+<div class="privacy-option selected" id="privacyPublic" onclick="selectPrivacy('public')">
+<div class="privacy-option-icon">🌐</div>
+<div class="privacy-option-text">
+<div class="privacy-option-title">Публичное</div>
+<div class="privacy-option-desc">Все пользователи увидят в общей ленте</div>
+</div>
+</div>
+<div class="privacy-option" id="privacyPrivate" onclick="selectPrivacy('private')">
+<div class="privacy-option-icon">🔒</div>
+<div class="privacy-option-text">
+<div class="privacy-option-title">Приватное</div>
+<div class="privacy-option-desc">Только вы увидите в своём плейлисте</div>
+</div>
+</div>
+</div>
+<div class="privacy-buttons">
+<button class="privacy-btn privacy-btn-cancel" onclick="cancelPrivacy()">Отмена</button>
+<button class="privacy-btn privacy-btn-confirm" onclick="confirmPrivacy()">Добавить</button>
+</div>
+</div>
+</div>
+
+<!-- Create Playlist Modal -->
+<div class="privacy-modal" id="createPlaylistModal">
+<div class="privacy-dialog">
+<h3>📁 Создать плейлист</h3>
+<p>Введите название для нового плейлиста:</p>
+<input type="text" id="playlistNameInput" class="input-field" placeholder="Например: Обучение" style="width: 100%; margin: 15px 0;">
+<div class="privacy-buttons">
+<button class="privacy-btn privacy-btn-cancel" onclick="cancelCreatePlaylist()">Отмена</button>
+<button class="privacy-btn privacy-btn-confirm" onclick="confirmCreatePlaylist()">Создать</button>
+</div>
+</div>
+</div>
+
+<!-- Move to Playlist Modal -->
+<div class="privacy-modal" id="movePlaylistModal">
+<div class="privacy-dialog">
+<h3>📁 Переместить в плейлист</h3>
+<p style="margin-bottom: 15px;">Выберите плейлист:</p>
+<select id="movePlaylistSelect" class="input-field" style="width: 100%; margin-bottom: 15px;">
+</select>
+<div class="privacy-buttons">
+<button class="privacy-btn privacy-btn-cancel" onclick="cancelMovePlaylist()">Отмена</button>
+<button class="privacy-btn privacy-btn-confirm" onclick="confirmMovePlaylist()">Переместить</button>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const API_KEY = "AIzaSyBUngjcECW86iLuEaqrMekr0PSmX5w7EOo";
+const firebaseConfig = {
+apiKey: API_KEY,
+authDomain: "myplaulistplauer.firebaseapp.com",
+projectId: "myplaulistplauer",
+databaseURL: "https://myplaulistplauer-default-rtdb.europe-west1.firebasedatabase.app/"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let viewMode = 'my';
+let searchResults = [];
+let allVideos = [];
+let activeTab = 'add';
+let nextPageToken = null;
+let currentSearchQuery = '';
+
+// YouTube Player and Chapters
+let ytPlayer = null;
+let currentChapters = [];
+let currentChapterIndex = -1;
+let chapterTracker = null;
+
+// Privacy Modal
+let privacySelection = 'public';
+let pendingVideoData = null;
+
+// Filter
+let showOnlyOthers = localStorage.getItem('showOnlyOthers') === 'true' || false;
+
+// Playlists
+let userPlaylists = ['Все']; // Default playlist
+let currentPlaylist = 'Все';
+
+// YouTube IFrame API Ready
+window.onYouTubeIframeAPIReady = function() {
+console.log('YouTube IFrame API Ready');
+};
+
+// Auth State
+onAuthStateChanged(auth, async (user) => {
+const authBox = document.getElementById('auth-box');
+const syncBadge = document.getElementById('syncBadge');
+const authScreen = document.getElementById('auth-screen');
+const appContent = document.getElementById('app-content');
+const mainTabs = document.getElementById('mainTabs');
+
+if (user) {
+currentUser = user;
+authScreen.style.display = 'none';
+appContent.style.display = 'block';
+mainTabs.style.display = 'flex';
+syncBadge.style.display = 'flex';
+document.getElementById('playlistTabs').style.display = 'flex';
+authBox.innerHTML = `<img src="${user.photoURL || 'https://www.gravatar.com/avatar/?d=mp'}" class="user-avatar" onclick="logoutUser()">`;
+
+// Используем update вместо set, чтобы НЕ удалять playlistNames
+await update(ref(db, 'playlists/' + user.uid), {
+userName: user.displayName || 'Пользователь',
+userEmail: user.email
+});
+
+await loadUserPlaylists();
+loadData();
+} else {
+currentUser = null;
+authScreen.style.display = 'flex';
+appContent.style.display = 'none';
+mainTabs.style.display = 'none';
+syncBadge.style.display = 'none';
+document.getElementById('playlistTabs').style.display = 'none';
+authBox.innerHTML = '';
+}
+});
+
+// Login/Logout
+window.loginUser = async () => {
+try {
+await signInWithPopup(auth, provider);
+showToast('✅ Вход выполнен');
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка входа');
+}
+};
+
+window.logoutUser = async () => {
+if (confirm('Выйти из аккаунта?')) {
+await signOut(auth);
+showToast('👋 Вы вышли');
+}
+};
+
+// Switch Main View
+window.switchMainView = (mode) => {
+viewMode = mode;
+document.getElementById('mainTab-my').classList.toggle('active', mode === 'my');
+document.getElementById('mainTab-community').classList.toggle('active', mode === 'community');
+document.getElementById('mainTab-youtube').classList.toggle('active', mode === 'youtube');
+
+const controlsSection = document.getElementById('controlsSection');
+const searchInput = document.getElementById('search-input');
+const tabAdd = document.getElementById('tab-add');
+const filterOnlyOthers = document.getElementById('filterOnlyOthers');
+const playlistTabs = document.getElementById('playlistTabs');
+
+if (mode === 'my') {
+searchInput.placeholder = 'Поиск в моём плейлисте...';
+controlsSection.style.display = 'block';
+tabAdd.style.display = 'block';
+filterOnlyOthers.style.display = 'none';
+playlistTabs.style.display = 'flex';
+} else if (mode === 'community') {
+searchInput.placeholder = 'Поиск в общей ленте...';
+controlsSection.style.display = 'block';
+tabAdd.style.display = 'none';
+filterOnlyOthers.style.display = 'flex';
+playlistTabs.style.display = 'none';
+// Загружаем сохранённое состояние фильтра
+showOnlyOthers = localStorage.getItem('showOnlyOthers') === 'true';
+document.getElementById('onlyOthersCheckbox').checked = showOnlyOthers;
+if (activeTab === 'add') switchTab('search');
+} else if (mode === 'youtube') {
+searchInput.placeholder = 'Поиск на YouTube...';
+controlsSection.style.display = 'block';
+tabAdd.style.display = 'none';
+filterOnlyOthers.style.display = 'none';
+playlistTabs.style.display = 'none';
+if (activeTab === 'add') switchTab('search');
+}
+
+document.getElementById('search-input').value = '';
+document.getElementById('searchResultsContainer').style.display = 'none';
+nextPageToken = null;
+currentSearchQuery = '';
+searchResults = [];
+loadData();
+};
+
+// Load Data
+function loadData() {
+if (!currentUser) return;
+updateSync('syncing');
+
+if (viewMode === 'my') {
+onValue(ref(db, 'playlists/' + currentUser.uid + '/videos'), (snapshot) => {
+allVideos = snapshot.val() || [];
+updateSync('success');
+renderVideos();
+});
+} else if (viewMode === 'community') {
+onValue(ref(db, 'playlists'), (snapshot) => {
+const allPlaylists = snapshot.val() || {};
+allVideos = [];
+Object.entries(allPlaylists).forEach(([uid, userData]) => {
+const videos = userData.videos || [];
+videos.forEach(video => {
+// Пропускаем приватные видео других пользователей
+if (video.isPrivate && uid !== currentUser.uid) {
+return;
+}
+// Применяем фильтр "только чужие"
+if (showOnlyOthers && uid === currentUser.uid) {
+return;
+}
+allVideos.push({
+...video,
+ownerUid: uid,
+ownerName: uid === currentUser.uid ? 'Вы' : (userData.userName || 'Пользователь'),
+isOwner: uid === currentUser.uid
+});
+});
+});
+updateSync('success');
+renderVideos();
+});
+} else if (viewMode === 'youtube') {
+allVideos = [];
+renderVideos();
+}
+}
+
+// Render Videos
+function renderVideos() {
+const grid = document.getElementById('videoGrid');
+const emptyState = document.getElementById('emptyState');
+grid.innerHTML = '';
+
+// Filter videos by playlist in "my" mode
+let videosToShow = allVideos;
+if (viewMode === 'my' && currentPlaylist !== 'Все') {
+videosToShow = allVideos.filter(v => v.playlist === currentPlaylist);
+}
+
+if (videosToShow.length === 0) {
+// Не показываем сообщение "Плейлист пуст" в режиме YouTube
+if (viewMode !== 'youtube') {
+emptyState.style.display = 'block';
+grid.style.display = 'none';
+} else {
+emptyState.style.display = 'none';
+grid.style.display = 'none';
+}
+return;
+}
+
+emptyState.style.display = 'none';
+grid.style.display = 'flex';
+
+videosToShow.forEach((video, index) => {
+// Find original index in allVideos for proper actions
+const originalIndex = allVideos.findIndex(v => v.id === video.id);
+
+// В режиме community не показываем приватные видео других пользователей
+if (viewMode === 'community' && video.isPrivate && !video.isOwner) {
+return;
+}
+
+const card = document.createElement('div');
+card.className = 'video-card';
+card.innerHTML = `
+<img src="${video.thumb}" class="video-thumb" onclick="playVideo(${originalIndex})" loading="lazy">
+<div class="video-info">
+${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${video.ownerName}</span>` : ''}
+${video.isPrivate ? `<span class="owner-badge" style="background: #666;">🔒 Приватное</span>` : ''}
+${video.playlist && video.playlist !== 'Все' ? `<span class="owner-badge" style="background: var(--success);">📁 ${video.playlist}</span>` : ''}
+<div class="video-title" onclick="playVideo(${originalIndex})">${video.title || 'Без названия'}</div>
+<div class="video-meta">
+<span>📺 ${video.channel || 'YouTube'}</span>
+<span>📅 ${video.date || ''}</span>
+</div>
+${viewMode === 'my' ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="showMovePlaylistModal(${originalIndex})">📁 Переместить</button>
+<button class="action-icon-btn" onclick="togglePrivacy(${originalIndex})">${video.isPrivate ? '🌐 Публичное' : '🔒 Приватное'}</button>
+<button class="action-icon-btn" onclick="deleteVideo(${originalIndex})">🗑️ Удалить</button>
+</div>
+` : ''}
+${viewMode === 'community' && !video.isOwner ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="addToMyPlaylist('${video.id}', '${video.title.replace(/'/g, "\\'")}')">
+➕ В плейлист
+</button>
+</div>
+` : ''}
+</div>
+`;
+grid.appendChild(card);
+});
+}
+
+// Render Filtered Videos
+function renderFilteredVideos(videos) {
+const grid = document.getElementById('videoGrid');
+const emptyState = document.getElementById('emptyState');
+grid.innerHTML = '';
+emptyState.style.display = 'none';
+grid.style.display = 'flex';
+
+videos.forEach((video) => {
+// В режиме community не показываем приватные видео других пользователей
+if (viewMode === 'community' && video.isPrivate && !video.isOwner) {
+return;
+}
+
+const index = allVideos.findIndex(v => v.id === video.id);
+const card = document.createElement('div');
+card.className = 'video-card';
+card.innerHTML = `
+<img src="${video.thumb}" class="video-thumb" onclick="playVideo(${index})" loading="lazy">
+<div class="video-info">
+${video.ownerName ? `<span class="owner-badge ${video.isOwner ? 'you' : ''}">${video.ownerName}</span>` : ''}
+${video.isPrivate ? `<span class="owner-badge" style="background: #666;">🔒 Приватное</span>` : ''}
+<div class="video-title" onclick="playVideo(${index})">${video.title || 'Без названия'}</div>
+<div class="video-meta">
+<span>📺 ${video.channel || 'YouTube'}</span>
+<span>📅 ${video.date || ''}</span>
+</div>
+${viewMode === 'my' ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="togglePrivacy(${index})">${video.isPrivate ? '🌐 Сделать публичным' : '🔒 Сделать приватным'}</button>
+<button class="action-icon-btn" onclick="deleteVideo(${index})">🗑️ Удалить</button>
+</div>
+` : ''}
+${viewMode === 'community' && !video.isOwner ? `
+<div class="video-actions">
+<button class="action-icon-btn" onclick="addToMyPlaylist('${video.id}', '${video.title.replace(/'/g, "\\'")}')">
+➕ В плейлист
+</button>
+</div>
+` : ''}
+</div>
+`;
+grid.appendChild(card);
+});
+}
+
+// Add Video
+window.handleAdd = async () => {
+const input = document.getElementById('main-input');
+const url = input.value.trim();
+if (!url) {
+showToast('❌ Введите ссылку');
+return;
+}
+
+const btn = document.getElementById('addBtn');
+btn.disabled = true;
+btn.textContent = 'Добавление...';
+updateSync('syncing');
+
+try {
+const videoId = extractVideoId(url);
+if (videoId) {
+await addSingleVideo(videoId);
+input.value = '';
+} else {
+const playlistId = extractPlaylistId(url);
+if (playlistId) {
+await addPlaylist(playlistId);
+input.value = '';
+} else {
+throw new Error('Неверная ссылка');
+}
+}
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка: ' + error.message);
+} finally {
+btn.disabled = false;
+btn.textContent = 'Добавить';
+}
+};
+
+async function addSingleVideo(videoId) {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+if (videos.some(v => v.id === videoId)) {
+showToast('⚠️ Видео уже в плейлисте');
+return;
+}
+
+const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`);
+const data = await res.json();
+
+if (!data.items || data.items.length === 0) {
+throw new Error('Видео не найдено');
+}
+
+const videoData = data.items[0].snippet;
+
+// Сохраняем данные видео и показываем модальное окно выбора приватности
+pendingVideoData = {
+id: videoId,
+title: videoData.title,
+thumb: videoData.thumbnails.medium.url,
+description: videoData.description || '',
+channel: videoData.channelTitle,
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Мои видео'
+};
+
+showPrivacyModal();
+}
+
+async function addPlaylist(playlistId) {
+const res = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${API_KEY}`);
+const data = await res.json();
+
+if (!data.items || data.items.length === 0) {
+throw new Error('Плейлист пуст или не найден');
+}
+
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+let addedCount = 0;
+for (const item of data.items) {
+const videoId = item.snippet.resourceId.videoId;
+if (!videos.some(v => v.id === videoId)) {
+videos.push({
+id: videoId,
+title: item.snippet.title,
+thumb: item.snippet.thumbnails.medium.url,
+description: item.snippet.description || '',
+channel: item.snippet.channelTitle,
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Из плейлиста',
+isPrivate: false,
+playlist: 'Все'
+});
+addedCount++;
+}
+}
+
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast(`✅ Добавлено ${addedCount} видео`);
+loadData();
+}
+
+// Delete Video
+window.deleteVideo = async (index) => {
+if (!confirm('Удалить это видео из плейлиста?')) return;
+updateSync('syncing');
+
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+videos.splice(index, 1);
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast('🗑️ Видео удалено');
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка удаления');
+}
+};
+
+// Add to my playlist
+window.addToMyPlaylist = async (videoId, title) => {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+if (videos.some(v => v.id === videoId)) {
+showToast('⚠️ Уже в вашем плейлисте');
+return;
+}
+
+// Сохраняем данные видео и показываем модальное окно выбора приватности
+pendingVideoData = {
+id: videoId,
+title: title,
+thumb: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+description: '',
+channel: 'YouTube',
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Из общей ленты'
+};
+
+showPrivacyModal();
+};
+
+// YouTube Search
+window.searchYouTube = async (loadMore = false) => {
+const input = document.getElementById('search-input');
+const query = input.value.trim();
+if (!query && !loadMore) {
+showToast('❌ Введите запрос');
+return;
+}
+
+if (!loadMore) {
+nextPageToken = null;
+currentSearchQuery = query;
+searchResults = [];
+}
+
+const btn = document.getElementById('searchBtn');
+const btnText = document.getElementById('searchBtnText');
+btn.disabled = true;
+btnText.innerHTML = '<span class="loading"></span>';
+
+try {
+if (viewMode === 'youtube') {
+document.getElementById('searchResultsContainer').style.display = 'block';
+if (!loadMore) {
+document.getElementById('videoGrid').style.display = 'none';
+document.getElementById('emptyState').style.display = 'none';
+}
+
+let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(currentSearchQuery)}&type=video&maxResults=50&key=${API_KEY}`;
+if (nextPageToken) url += `&pageToken=${nextPageToken}`;
+
+const res = await fetch(url);
+const data = await res.json();
+
+if (data.error) throw new Error(data.error.message);
+
+if (!data.items || data.items.length === 0) {
+if (!loadMore) {
+renderSearchResults([]);
+showToast('⚠️ Ничего не найдено');
+}
+return;
+}
+
+nextPageToken = data.nextPageToken || null;
+searchResults = loadMore ? [...searchResults, ...data.items] : data.items;
+renderSearchResults();
+showToast(loadMore ? `✅ Загружено ещё ${data.items.length} видео` : `✅ Найдено ${searchResults.length} видео`);
+} else {
+document.getElementById('searchResultsContainer').style.display = 'none';
+const filtered = allVideos.filter(video => 
+video.title?.toLowerCase().includes(query.toLowerCase()) ||
+video.channel?.toLowerCase().includes(query.toLowerCase())
+);
+
+if (filtered.length === 0) {
+showToast('⚠️ Ничего не найдено');
+document.getElementById('videoGrid').innerHTML = `
+<div class="empty-state">
+<div class="empty-icon">🔍</div>
+<h3>Ничего не найдено</h3>
+<p>Попробуйте изменить запрос</p>
+</div>
+`;
+document.getElementById('videoGrid').style.display = 'block';
+document.getElementById('emptyState').style.display = 'none';
+} else {
+showToast(`✅ Найдено ${filtered.length} видео`);
+renderFilteredVideos(filtered);
+}
+}
+} catch (error) {
+console.error(error);
+document.getElementById('resultsList').innerHTML = `
+<div class="empty-state">
+<div class="empty-icon">⚠️</div>
+<p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.85rem;">
+YouTube API недоступен
+</p>
+<a href="https://www.youtube.com/results?search_query=${encodeURIComponent(currentSearchQuery)}"
+target="_blank"
+class="action-btn"
+style="display: inline-block; text-decoration: none; padding: 8px 16px; font-size: 0.85rem;">
+Открыть поиск
+</a>
+</div>
+`;
+showToast('⚠️ API недоступен');
+} finally {
+btn.disabled = false;
+btnText.textContent = 'Искать';
+}
+};
+
+// Render Search Results
+function renderSearchResults() {
+const container = document.getElementById('resultsList');
+if (!searchResults || searchResults.length === 0) {
+container.innerHTML = `
+<div class="empty-state">
+<div class="empty-icon">🔍</div>
+<h3>Ничего не найдено</h3>
+<p>Попробуйте изменить запрос</p>
+</div>
+`;
+return;
+}
+
+container.innerHTML = '';
+searchResults.forEach((result, index) => {
+const videoId = result.id.videoId;
+const title = result.snippet.title;
+const channel = result.snippet.channelTitle;
+const thumb = result.snippet.thumbnails.medium.url;
+const publishedAt = new Date(result.snippet.publishedAt).toLocaleDateString('ru-RU');
+
+const item = document.createElement('div');
+item.className = 'search-item-row';
+item.innerHTML = `
+<img loading="lazy" src="${thumb}" onclick="playFromSearch('${videoId}', '${title.replace(/'/g, "\\'")}')">
+<div class="search-item-info">
+<div class="search-title" onclick="playFromSearch('${videoId}', '${title.replace(/'/g, "\\'")}')">
+${title}
+</div>
+<div class="search-channel">${channel}</div>
+<div class="search-channel">📅 ${publishedAt}</div>
+<button class="add-btn" onclick="addFromSearch(${index})">
++ В плейлист
+</button>
+</div>
+`;
+container.appendChild(item);
+});
+
+if (nextPageToken) {
+const loadMoreBtn = document.createElement('div');
+loadMoreBtn.style.textAlign = 'center';
+loadMoreBtn.style.marginTop = '16px';
+loadMoreBtn.innerHTML = `
+<button class="action-btn" onclick="searchYouTube(true)" style="width: 100%; max-width: 400px;">
+📥 Загрузить ещё видео
+</button>
+`;
+container.appendChild(loadMoreBtn);
+}
+}
+
+// Add from YouTube search
+window.addFromSearch = async (index) => {
+const result = searchResults[index];
+const videoId = result.id.videoId;
+
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+if (videos.some(v => v.id === videoId)) {
+showToast('⚠️ Видео уже в плейлисте');
+return;
+}
+
+// Сохраняем данные видео и показываем модальное окно выбора приватности
+pendingVideoData = {
+id: videoId,
+title: result.snippet.title,
+thumb: result.snippet.thumbnails.medium.url,
+description: result.snippet.description || '',
+channel: result.snippet.channelTitle,
+date: new Date().toLocaleDateString('ru-RU'),
+group: 'Из поиска'
+};
+
+showPrivacyModal();
+};
+
+// Play from search
+window.playFromSearch = async (videoId, title) => {
+const modal = document.getElementById('playerModal');
+const playerBox = document.getElementById('playerBox');
+
+// Stop chapter tracking if active
+if (chapterTracker) {
+clearInterval(chapterTracker);
+chapterTracker = null;
+}
+
+playerBox.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.2rem;">Загрузка...</div>`;
+modal.style.display = 'block';
+
+// Get video description for chapters
+let description = '';
+try {
+const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`);
+const data = await res.json();
+if (data.items && data.items[0]) {
+description = data.items[0].snippet.description || '';
+}
+} catch (error) {
+console.error('Error loading description:', error);
+}
+
+setTimeout(() => {
+// Create YouTube player with IFrame API
+if (ytPlayer) {
+ytPlayer.destroy();
+}
+
+playerBox.innerHTML = '<div id="ytPlayerIframe"></div>';
+
+ytPlayer = new YT.Player('ytPlayerIframe', {
+height: '100%',
+width: '100%',
+videoId: videoId,
+playerVars: {
+autoplay: 1,
+rel: 0,
+modestbranding: 1
+},
+events: {
+'onReady': () => {
+console.log('Player ready');
+startChapterTracking();
+},
+'onStateChange': (event) => {
+if (event.data === YT.PlayerState.PLAYING) {
+startChapterTracking();
+}
+}
+}
+});
+
+// Parse and render chapters
+const chapters = parseDescriptionForChapters(description);
+renderChapters(chapters);
+}, 100);
+};
+
+// Play Video
+window.playVideo = async (index) => {
+const video = allVideos[index];
+const modal = document.getElementById('playerModal');
+const playerBox = document.getElementById('playerBox');
+
+// Stop chapter tracking if active
+if (chapterTracker) {
+clearInterval(chapterTracker);
+chapterTracker = null;
+}
+
+playerBox.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.2rem;">Загрузка...</div>`;
+modal.style.display = 'block';
+
+// Get full video description if not available
+let description = video.description || '';
+if (!description) {
+try {
+const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${video.id}&key=${API_KEY}`);
+const data = await res.json();
+if (data.items && data.items[0]) {
+description = data.items[0].snippet.description || '';
+// Save description to allVideos
+video.description = description;
+}
+} catch (error) {
+console.error('Error loading description:', error);
+}
+}
+
+setTimeout(() => {
+// Create YouTube player with IFrame API
+if (ytPlayer) {
+ytPlayer.destroy();
+}
+
+playerBox.innerHTML = '<div id="ytPlayerIframe"></div>';
+
+ytPlayer = new YT.Player('ytPlayerIframe', {
+height: '100%',
+width: '100%',
+videoId: video.id,
+playerVars: {
+autoplay: 1,
+rel: 0,
+modestbranding: 1
+},
+events: {
+'onReady': () => {
+console.log('Player ready');
+startChapterTracking();
+},
+'onStateChange': (event) => {
+// Track chapter changes while playing
+if (event.data === YT.PlayerState.PLAYING) {
+startChapterTracking();
+}
+}
+}
+});
+
+// Parse and render chapters
+const chapters = parseDescriptionForChapters(description);
+renderChapters(chapters);
+}, 100);
+};
+
+// Close Player
+window.closePlayer = () => {
+const modal = document.getElementById('playerModal');
+const playerBox = document.getElementById('playerBox');
+
+// Stop chapter tracking
+if (chapterTracker) {
+clearInterval(chapterTracker);
+chapterTracker = null;
+}
+
+// Destroy YouTube player
+if (ytPlayer) {
+ytPlayer.destroy();
+ytPlayer = null;
+}
+
+playerBox.innerHTML = '';
+modal.style.display = 'none';
+
+// Hide chapters
+document.getElementById('chaptersSection').style.display = 'none';
+currentChapters = [];
+currentChapterIndex = -1;
+};
+
+// Switch Tabs
+window.switchTab = (tab) => {
+activeTab = tab;
+document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+if (tab === 'add') {
+document.getElementById('tab-add').classList.add('active');
+document.getElementById('add-tab').style.display = 'block';
+document.getElementById('search-tab').style.display = 'none';
+document.getElementById('searchResultsContainer').style.display = 'none';
+renderVideos();
+} else if (tab === 'search') {
+document.getElementById('tab-search').classList.add('active');
+document.getElementById('add-tab').style.display = 'none';
+document.getElementById('search-tab').style.display = 'block';
+document.getElementById('search-input').value = '';
+document.getElementById('searchResultsContainer').style.display = 'none';
+renderVideos();
+}
+};
+
+// Chapters Functions
+function parseDescriptionForChapters(description) {
+const chapters = [];
+if (!description) return chapters;
+
+const lines = description.split('\n');
+const timeRegex = /(\d{1,2}:)?(\d{1,2}):(\d{2})/;
+
+lines.forEach(line => {
+const match = line.match(timeRegex);
+if (match) {
+const timeStr = match[0];
+const seconds = timeToSeconds(timeStr);
+if (seconds !== null) {
+// Remove timestamp from label
+const label = line.replace(timeStr, '').trim().replace(/^[-–—:]\s*/, '').trim();
+if (label.length > 0) {
+chapters.push({
+time: timeStr,
+seconds: seconds,
+label: label
+});
+}
+}
+}
+});
+
+// Sort chapters by time
+chapters.sort((a, b) => a.seconds - b.seconds);
+return chapters;
+}
+
+function renderChapters(chapters) {
+const section = document.getElementById('chaptersSection');
+const list = document.getElementById('chaptersList');
+const count = document.getElementById('chaptersCount');
+
+currentChapters = chapters;
+
+if (!chapters || chapters.length === 0) {
+section.style.display = 'none';
+return;
+}
+
+section.style.display = 'block';
+count.textContent = chapters.length;
+list.innerHTML = '';
+
+chapters.forEach((chapter, index) => {
+const btn = document.createElement('div');
+btn.className = 'chapter-btn';
+btn.id = `chapter-${index}`;
+btn.innerHTML = `
+<div class="chapter-time">${chapter.time}</div>
+<div class="chapter-label">${chapter.label}</div>
+`;
+btn.onclick = () => {
+if (ytPlayer && ytPlayer.seekTo) {
+ytPlayer.seekTo(chapter.seconds, true);
+updateActiveChapter(index);
+}
+};
+list.appendChild(btn);
+});
+}
+
+function updateActiveChapter(index) {
+// Remove active class from all chapters
+document.querySelectorAll('.chapter-btn').forEach(btn => btn.classList.remove('active'));
+
+// Add active class to current chapter
+const activeBtn = document.getElementById(`chapter-${index}`);
+if (activeBtn) {
+activeBtn.classList.add('active');
+currentChapterIndex = index;
+}
+}
+
+function startChapterTracking() {
+if (chapterTracker) clearInterval(chapterTracker);
+
+if (!ytPlayer || !ytPlayer.getCurrentTime || currentChapters.length === 0) return;
+
+chapterTracker = setInterval(() => {
+if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+
+try {
+const currentTime = ytPlayer.getCurrentTime();
+
+// Find which chapter we're in
+for (let i = currentChapters.length - 1; i >= 0; i--) {
+if (currentTime >= currentChapters[i].seconds) {
+if (currentChapterIndex !== i) {
+updateActiveChapter(i);
+}
+break;
+}
+}
+} catch (error) {
+console.error('Error tracking chapters:', error);
+}
+}, 1000); // Check every second
+}
+
+function timeToSeconds(timeStr) {
+const parts = timeStr.split(':');
+let seconds = 0;
+let multiplier = 1;
+
+while (parts.length > 0) {
+seconds += multiplier * parseInt(parts.pop(), 10);
+multiplier *= 60;
+}
+
+return seconds;
+}
+
+// Helpers
+function extractVideoId(url) {
+const patterns = [
+// Обычные видео: youtube.com/watch?v=VIDEO_ID
+/(?:youtube\.com\/watch\?v=)([^&?#]+)/,
+// Короткие ссылки: youtu.be/VIDEO_ID
+/(?:youtu\.be\/)([^&?#]+)/,
+// YouTube Shorts: youtube.com/shorts/VIDEO_ID
+/(?:youtube\.com\/shorts\/)([^&?#]+)/,
+// Embed: youtube.com/embed/VIDEO_ID
+/(?:youtube\.com\/embed\/)([^&?#]+)/,
+// Mobile: m.youtube.com/watch?v=VIDEO_ID
+/(?:m\.youtube\.com\/watch\?v=)([^&?#]+)/,
+// Только ID (11 символов)
+/^([a-zA-Z0-9_-]{11})$/
+];
+for (const pattern of patterns) {
+const match = url.match(pattern);
+if (match) return match[1];
+}
+return false;
+}
+
+function extractPlaylistId(url) {
+const match = url.match(/[?&]list=([^&]+)/);
+return match ? match[1] : false;
+}
+
+function updateSync(status) {
+const dot = document.getElementById('syncDot');
+const text = document.getElementById('syncText');
+if (status === 'syncing') {
+dot.className = 'sync-dot syncing';
+text.textContent = 'Синхронизация...';
+} else if (status === 'success') {
+dot.className = 'sync-dot';
+text.textContent = 'Синхронизировано';
+}
+}
+
+function showToast(message) {
+const toast = document.getElementById('toast');
+toast.textContent = message;
+toast.classList.add('show');
+setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Privacy Modal Functions
+window.showPrivacyModal = () => {
+const modal = document.getElementById('privacyModal');
+modal.style.display = 'flex';
+privacySelection = 'public';
+document.getElementById('privacyPublic').classList.add('selected');
+document.getElementById('privacyPrivate').classList.remove('selected');
+
+// Populate playlist selector
+const playlistSelect = document.getElementById('playlistSelect');
+playlistSelect.innerHTML = '';
+userPlaylists.forEach(playlist => {
+const option = document.createElement('option');
+option.value = playlist;
+option.textContent = playlist;
+if (playlist === currentPlaylist) {
+option.selected = true;
+}
+playlistSelect.appendChild(option);
+});
+};
+
+window.selectPrivacy = (type) => {
+privacySelection = type;
+document.getElementById('privacyPublic').classList.toggle('selected', type === 'public');
+document.getElementById('privacyPrivate').classList.toggle('selected', type === 'private');
+};
+
+window.cancelPrivacy = () => {
+const modal = document.getElementById('privacyModal');
+modal.style.display = 'none';
+pendingVideoData = null;
+const btn = document.getElementById('addBtn');
+btn.disabled = false;
+btn.textContent = 'Добавить';
+updateSync('success');
+};
+
+window.confirmPrivacy = async () => {
+if (!pendingVideoData) return;
+const modal = document.getElementById('privacyModal');
+modal.style.display = 'none';
+
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+
+const selectedPlaylist = document.getElementById('playlistSelect').value;
+
+const newVideo = {
+...pendingVideoData,
+isPrivate: privacySelection === 'private',
+playlist: selectedPlaylist
+};
+
+videos.unshift(newVideo);
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+
+const privacyText = privacySelection === 'private' ? 'приватное' : 'публичное';
+const playlistText = selectedPlaylist !== 'Все' ? ` в "${selectedPlaylist}"` : '';
+showToast(`✅ Видео добавлено (${privacyText})${playlistText}`);
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка добавления');
+}
+
+pendingVideoData = null;
+const btn = document.getElementById('addBtn');
+btn.disabled = false;
+btn.textContent = 'Добавить';
+updateSync('success');
+};
+
+// Toggle Privacy for existing video
+window.togglePrivacy = async (index) => {
+updateSync('syncing');
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+videos[index].isPrivate = !videos[index].isPrivate;
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast(videos[index].isPrivate ? '🔒 Видео теперь приватное' : '🌐 Видео теперь публичное');
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка изменения приватности');
+}
+};
+
+// Playlist Management
+window.showCreatePlaylistModal = () => {
+document.getElementById('createPlaylistModal').style.display = 'flex';
+document.getElementById('playlistNameInput').value = '';
+document.getElementById('playlistNameInput').focus();
+};
+
+window.cancelCreatePlaylist = () => {
+document.getElementById('createPlaylistModal').style.display = 'none';
+};
+
+window.confirmCreatePlaylist = async () => {
+const name = document.getElementById('playlistNameInput').value.trim();
+if (!name) {
+showToast('❌ Введите название плейлиста');
+return;
+}
+
+if (userPlaylists.includes(name)) {
+showToast('⚠️ Плейлист с таким названием уже существует');
+return;
+}
+
+updateSync('syncing');
+try {
+// Создаем новый массив плейлистов
+const updatedPlaylists = [...userPlaylists, name];
+// Сохраняем в Firebase
+await set(ref(db, 'playlists/' + currentUser.uid + '/playlistNames'), updatedPlaylists);
+// Обновляем локальный массив только после успешного сохранения
+userPlaylists = updatedPlaylists;
+renderPlaylistTabs();
+updateSync('success');
+showToast(`✅ Плейлист "${name}" создан`);
+document.getElementById('createPlaylistModal').style.display = 'none';
+} catch (error) {
+console.error('Error creating playlist:', error);
+showToast('❌ Ошибка создания плейлиста: ' + error.message);
+updateSync('success');
+}
+};
+
+// Delete Playlist
+window.confirmDeletePlaylist = async (playlistName) => {
+if (playlistName === 'Все') {
+showToast('❌ Нельзя удалить плейлист "Все"');
+return;
+}
+
+// Проверяем сколько видео в плейлисте
+const videosInPlaylist = allVideos.filter(v => v.playlist === playlistName);
+const videoCount = videosInPlaylist.length;
+
+if (videoCount > 0) {
+// Плейлист не пустой - предупреждаем пользователя
+const message = `В плейлисте "${playlistName}" есть ${videoCount} ${videoCount === 1 ? 'видео' : 'видео'}.\n\nСначала переместите или удалите все видео из этого плейлиста.`;
+if (!confirm(message)) {
+return;
+}
+showToast(`⚠️ Удалите или переместите ${videoCount} видео из плейлиста`);
+return;
+}
+
+// Плейлист пустой - можно удалять
+const confirmMessage = `Удалить плейлист "${playlistName}"?`;
+if (!confirm(confirmMessage)) {
+return;
+}
+
+updateSync('syncing');
+try {
+// Удаляем плейлист из массива
+const updatedPlaylists = userPlaylists.filter(p => p !== playlistName);
+// Сохраняем в Firebase
+await set(ref(db, 'playlists/' + currentUser.uid + '/playlistNames'), updatedPlaylists);
+// Обновляем локальный массив
+userPlaylists = updatedPlaylists;
+// Если удалили текущий плейлист, переключаемся на "Все"
+if (currentPlaylist === playlistName) {
+currentPlaylist = 'Все';
+renderVideos();
+}
+renderPlaylistTabs();
+updateSync('success');
+showToast(`✅ Плейлист "${playlistName}" удалён`);
+} catch (error) {
+console.error('Error deleting playlist:', error);
+showToast('❌ Ошибка удаления плейлиста: ' + error.message);
+updateSync('success');
+}
+};
+
+window.switchPlaylist = (playlistName) => {
+currentPlaylist = playlistName;
+renderPlaylistTabs();
+renderVideos();
+
+// Обновляем текст кнопки toggle на мобильных
+const toggleBtn = document.getElementById('currentPlaylistName');
+if (toggleBtn) {
+toggleBtn.textContent = `📁 ${playlistName}`;
+}
+
+// Закрываем меню на мобильных
+const container = document.getElementById('playlistTabsContainer');
+if (container) {
+container.classList.remove('open');
+}
+};
+
+function renderPlaylistTabs() {
+const container = document.getElementById('playlistTabsContainer');
+container.innerHTML = '';
+
+userPlaylists.forEach(playlist => {
+const btn = document.createElement('button');
+btn.className = `playlist-tab ${currentPlaylist === playlist ? 'active' : ''}`;
+btn.setAttribute('data-playlist', playlist);
+btn.style.paddingRight = playlist !== 'Все' ? '30px' : '14px';
+btn.onclick = () => switchPlaylist(playlist);
+btn.innerHTML = `📁 ${playlist}`;
+
+// Добавляем кнопку удаления для всех плейлистов кроме "Все"
+if (playlist !== 'Все') {
+const deleteBtn = document.createElement('span');
+deleteBtn.className = 'playlist-delete-btn';
+deleteBtn.innerHTML = '×';
+deleteBtn.onclick = (e) => {
+e.stopPropagation();
+confirmDeletePlaylist(playlist);
+};
+btn.appendChild(deleteBtn);
+}
+
+container.appendChild(btn);
+});
+}
+
+async function loadUserPlaylists() {
+if (!currentUser) return;
+
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/playlistNames'));
+const playlists = snapshot.val();
+if (playlists && Array.isArray(playlists) && playlists.length > 0) {
+userPlaylists = playlists;
+} else {
+// Инициализируем с дефолтным плейлистом "Все"
+userPlaylists = ['Все'];
+// Сохраняем в Firebase
+await set(ref(db, 'playlists/' + currentUser.uid + '/playlistNames'), userPlaylists);
+}
+renderPlaylistTabs();
+} catch (error) {
+console.error('Error loading playlists:', error);
+userPlaylists = ['Все'];
+renderPlaylistTabs();
+}
+
+// После первичной загрузки подписываемся на обновления
+onValue(ref(db, 'playlists/' + currentUser.uid + '/playlistNames'), (snapshot) => {
+const playlists = snapshot.val();
+if (playlists && Array.isArray(playlists) && playlists.length > 0) {
+userPlaylists = playlists;
+renderPlaylistTabs();
+}
+});
+}
+
+// Move Video to Playlist
+let moveVideoIndex = null;
+
+window.showMovePlaylistModal = (index) => {
+moveVideoIndex = index;
+const modal = document.getElementById('movePlaylistModal');
+const select = document.getElementById('movePlaylistSelect');
+
+// Populate playlist options
+select.innerHTML = '';
+userPlaylists.forEach(playlist => {
+const option = document.createElement('option');
+option.value = playlist;
+option.textContent = playlist;
+if (playlist === allVideos[index].playlist) {
+option.selected = true;
+}
+select.appendChild(option);
+});
+
+modal.style.display = 'flex';
+};
+
+window.cancelMovePlaylist = () => {
+document.getElementById('movePlaylistModal').style.display = 'none';
+moveVideoIndex = null;
+};
+
+window.confirmMovePlaylist = async () => {
+if (moveVideoIndex === null) return;
+
+const selectedPlaylist = document.getElementById('movePlaylistSelect').value;
+const video = allVideos[moveVideoIndex];
+
+if (video.playlist === selectedPlaylist) {
+showToast('⚠️ Видео уже в этом плейлисте');
+document.getElementById('movePlaylistModal').style.display = 'none';
+return;
+}
+
+updateSync('syncing');
+try {
+const snapshot = await get(ref(db, 'playlists/' + currentUser.uid + '/videos'));
+let videos = snapshot.val() || [];
+videos[moveVideoIndex].playlist = selectedPlaylist;
+await set(ref(db, 'playlists/' + currentUser.uid + '/videos'), videos);
+showToast(`✅ Видео перемещено в "${selectedPlaylist}"`);
+document.getElementById('movePlaylistModal').style.display = 'none';
+moveVideoIndex = null;
+loadData();
+} catch (error) {
+console.error(error);
+showToast('❌ Ошибка перемещения');
+}
+};
+
+// Toggle Others Filter
+window.toggleOthersFilter = () => {
+showOnlyOthers = !showOnlyOthers;
+document.getElementById('onlyOthersCheckbox').checked = showOnlyOthers;
+// Сохраняем состояние в localStorage
+localStorage.setItem('showOnlyOthers', showOnlyOthers);
+loadData();
+};
+
+// Toggle Playlist Menu (Mobile)
+window.togglePlaylistMenu = () => {
+const container = document.getElementById('playlistTabsContainer');
+container.classList.toggle('open');
+};
+
+// Close playlist menu when clicking outside
+document.addEventListener('click', (e) => {
+const playlistTabs = document.getElementById('playlistTabs');
+const playlistContainer = document.getElementById('playlistTabsContainer');
+const toggleBtn = document.querySelector('.playlist-toggle');
+if (playlistContainer && playlistContainer.classList.contains('open')) {
+if (!playlistTabs.contains(e.target)) {
+playlistContainer.classList.remove('open');
+}
+}
+});
+
+// Event listeners
+document.getElementById('main-input').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') handleAdd();
+});
+
+document.getElementById('search-input').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') searchYouTube();
+});
+
+document.addEventListener('keydown', (e) => {
+if (e.key === 'Escape') {
+closePlayer();
+
+// Закрываем модальное окно приватности
+const privacyModal = document.getElementById('privacyModal');
+if (privacyModal.style.display === 'flex') {
+cancelPrivacy();
+}
+
+// Закрываем модальное окно создания плейлиста
+const createModal = document.getElementById('createPlaylistModal');
+if (createModal.style.display === 'flex') {
+cancelCreatePlaylist();
+}
+
+// Закрываем модальное окно перемещения
+const moveModal = document.getElementById('movePlaylistModal');
+if (moveModal.style.display === 'flex') {
+cancelMovePlaylist();
+}
+}
+});
+</script>
+</body>
+</html>

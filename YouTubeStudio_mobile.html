@@ -349,7 +349,7 @@ background: var(--accent-hover);
 }
 
 .playlist-toggle {
-display: flex;
+display: none; /* Hidden on desktop */
 align-items: center;
 gap: 6px;
 padding: 8px 12px;
@@ -373,11 +373,11 @@ position: relative;
 }
 
 .playlist-toggle {
-display: flex !important;
+display: flex !important; /* Show toggle button on mobile */
 }
 
 .playlist-tabs-container {
-display: none;
+display: none; /* Hidden by default on mobile */
 position: absolute;
 top: 100%;
 left: 0;
@@ -389,10 +389,12 @@ flex-direction: column;
 gap: 6px;
 z-index: 100;
 box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+max-height: 300px;
+overflow-y: auto;
 }
 
 .playlist-tabs-container.open {
-display: flex;
+display: flex; /* Show when open class is added */
 }
 
 .playlist-tab {
@@ -403,8 +405,13 @@ width: 100%;
 
 .playlist-tab-add {
 padding: 8px 12px;
-font-size: 0.75rem;
+font-size: 0;
 width: 100%;
+}
+
+.playlist-tab-add::before {
+content: '➕';
+font-size: 1.2rem;
 }
 }
 
@@ -520,6 +527,41 @@ background: var(--accent-hover);
 .action-btn:disabled {
 opacity: 0.5;
 cursor: not-allowed;
+}
+
+/* Mobile: compact action buttons with icons */
+@media (max-width: 640px) {
+.action-btn {
+padding: 10px 14px;
+min-width: auto;
+flex-shrink: 0;
+}
+
+#addBtn, #searchBtn {
+font-size: 0;
+}
+
+#addBtn::before {
+content: '➕';
+font-size: 1.3rem;
+display: inline-block;
+}
+
+#searchBtn::before {
+content: '🔍';
+font-size: 1.3rem;
+display: inline-block;
+}
+
+.input-row {
+display: flex;
+gap: 8px;
+align-items: center;
+}
+
+.input-field {
+flex: 1;
+}
 }
 
 /* Video Grid */
@@ -1291,7 +1333,7 @@ font-weight: 500;
 
 <!-- Playlist Tabs (shown only in My Playlist mode) -->
 <div class="playlist-tabs" id="playlistTabs" style="display: none;">
-<button class="playlist-toggle" onclick="togglePlaylistMenu()" style="display: none;">
+<button class="playlist-toggle" onclick="togglePlaylistMenu()">
 <span id="currentPlaylistName">📁 Все</span>
 <span style="margin-left: auto;">▼</span>
 </button>
@@ -2718,7 +2760,13 @@ loadData();
 // Toggle Playlist Menu (Mobile)
 window.togglePlaylistMenu = () => {
 const container = document.getElementById('playlistTabsContainer');
+if (!container) {
+console.error('playlistTabsContainer not found!');
+return;
+}
 container.classList.toggle('open');
+const isOpen = container.classList.contains('open');
+console.log('Playlist menu toggled. Now open:', isOpen);
 };
 
 // Close playlist menu when clicking outside

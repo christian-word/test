@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>довідка про опломбування РРО</title>
+<style>
+/* Базовые стили */
+body {
+font-family: 'Times New Roman', serif;
+font-size: 7pt; /* Зменшено з 8pt */
+line-height: 0.95; /* Зменшено */
+margin: 0;
+padding: 0;
+background: #f5f5f5;
+}
+/* Панель загрузки */
+.upload-section {
+background: white;
+padding: 10px;
+margin-bottom: 10px;
+border-radius: 4px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.upload-section h2 {
+margin: 3px 0 6px;
+color: #333;
+font-size: 12pt;
+}
+#fileInput {
+width: 100%;
+padding: 5px;
+margin: 5px 0;
+border: 2px dashed #ccc;
+border-radius: 4px;
+}
+.controls {
+text-align: center;
+margin: 10px 0;
+}
+button {
+padding: 6px 12px;
+margin: 0 5px;
+background: #0066cc;
+color: white;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 10px;
+}
+button:hover {
+background: #0055aa;
+}
+/* Контейнер двух документов */
+.documents-container {
+display: none;
+max-width: 210mm;
+margin: 0 auto;
+}
+/* Стиль одного документа */
+.document-half {
+width: 100%;
+height: 142mm; /* Зменшено з 145mm */
+padding: 1mm; /* Зменшено з 1.5mm */
+background: white;
+border-bottom: 2px solid #666; /* Зроблено жирнішим для кращого розділення */
+page-break-inside: avoid;
+box-sizing: border-box;
+overflow: hidden;
+margin-bottom: 3mm; /* Додано відступ між документами */
+}
+.last-document {
+border-bottom: none;
+margin-bottom: 0;
+}
+/* Стили формы */
+.form-header {
+text-align: center;
+margin-bottom: 0.3mm; /* Зменшено */
+}
+.header-top {
+margin-bottom: 0.2mm; /* Зменшено */
+}
+.form-title-small {
+font-size: 5.5pt; /* Зменшено з 6pt */
+margin-bottom: 0.1mm; /* Зменшено */
+line-height: 1.0;
+}
+.header-main {
+display: flex;
+justify-content: space-between;
+align-items: flex-end;
+margin-top: 0.2mm; /* Зменшено */
+}
+.header-left {
+flex: 1;
+text-align: left;
+font-size: 7pt; /* Зменшено з 7.5pt */
+padding-left: 2px;
+}
+.header-center {
+flex: 1;
+text-align: center;
+}
+.header-right {
+flex: 1;
+text-align: right;
+font-size: 8.5pt; /* Зменшено з 9.5pt */
+font-weight: bold;
+padding-right: 2px;
+}
+.form-title-main {
+font-size: 9pt; /* Зменшено з 10pt */
+font-weight: bold;
+text-transform: uppercase;
+margin: 0;
+line-height: 1.0;
+}
+.form-subtitle {
+font-size: 6.5pt; /* Зменшено з 7.5pt */
+margin-top: 0.1mm; /* Зменшено */
+line-height: 1.0;
+}
+/* Основная таблица */
+.main-table {
+width: 100%;
+border-collapse: collapse;
+margin-bottom: 0.3mm; /* Зменшено */
+font-size: 7pt; /* Зменшено */
+table-layout: fixed;
+}
+.main-table td {
+border: 0.5px solid #ccc;
+padding: 0.5px 2px; /* Зменшено padding */
+vertical-align: middle;
+line-height: 1.05; /* Зменшено */
+}
+.main-table .label {
+background: #fcfcfc;
+font-weight: normal;
+white-space: nowrap;
+font-size: 6.5pt; /* Зменшено з 7pt */
+}
+.main-table .value {
+font-weight: bold;
+font-size: 8.5pt; /* Зменшено з 9.5pt */
+}
+.main-table .section {
+font-weight: bold;
+text-align: center;
+background: #f5f5f5;
+border: 0.5px solid #ccc;
+font-size: 6.5pt; /* Зменшено з 7pt */
+padding: 0.5px 0; /* Зменшено */
+}
+.main-table .subtext {
+font-size: 5pt; /* Зменшено з 5.5pt */
+color: #666;
+text-align: center;
+}
+/* Таблица внизу - 4 колонки */
+.bottom-table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 0.3mm; /* Зменшено */
+margin-bottom: 0.3mm; /* Зменшено */
+font-size: 7pt; /* Зменшено */
+table-layout: fixed;
+}
+.bottom-table td {
+border: 0.5px solid #ccc;
+padding: 0.5px 2px; /* Зменшено */
+vertical-align: middle;
+line-height: 1.05; /* Зменшено */
+}
+.bottom-table .label {
+background: #fcfcfc;
+font-size: 6.5pt; /* Зменшено */
+}
+.bottom-table .value {
+font-weight: bold;
+font-size: 8.5pt; /* Зменшено */
+}
+.bottom-table .datetime-value {
+font-weight: bold;
+font-size: 8.5pt; /* Зменшено */
+text-align: left;
+}
+/* Подписи */
+.signature-block {
+margin-top: 0.3mm; /* Зменшено */
+}
+.signature-line {
+border-bottom: 0.5px solid #ccc;
+min-height: 6px; /* Зменшено */
+margin-top: 0;
+padding-bottom: 0;
+line-height: 1.0;
+}
+.signature-label {
+font-size: 5pt; /* Зменшено */
+text-align: center;
+margin-top: 0;
+line-height: 1.0;
+}
+/* Примечания */
+.footnotes {
+font-size: 4.5pt; /* Зменшено */
+line-height: 1.0;
+margin-top: 0.3mm; /* Зменшено */
+}
+.footnotes div {
+margin-bottom: 0.1mm; /* Зменшено */
+}
+/* Отказная часть */
+.rejection-section {
+margin-top: 0.3mm; /* Зменшено */
+font-size: 5.5pt; /* Зменшено */
+line-height: 1.0;
+}
+.rejection-title {
+font-weight: bold;
+text-align: center;
+margin-bottom: 0.2mm; /* Зменшено */
+font-size: 6pt; /* Зменшено */
+}
+/* Для печати */
+@media print {
+body {
+background: white;
+padding: 0;
+margin: 0;
+}
+.upload-section, .controls {
+display: none;
+}
+.documents-container {
+display: block;
+width: 210mm;
+height: 297mm;
+margin: 0;
+padding: 0;
+}
+.document-half {
+width: 100%;
+height: 142mm; /* Зменшено */
+padding: 1mm; /* Зменшено */
+margin: 0;
+box-shadow: none;
+page-break-after: auto;
+page-break-inside: avoid;
+}
+.last-document {
+border-bottom: none;
+margin-bottom: 0;
+page-break-after: auto;
+}
+}
+/* Стиль для текста */
+.standalone-text {
+margin: 0.3mm 0; /* Зменшено */
+font-size: 7pt; /* Зменшено */
+font-style: italic;
+text-align: justify;
+line-height: 1.0;
+font-weight: bold;
+}
+.usage-row {
+margin: 0.2mm 0; /* Зменшено */
+font-size: 7pt; /* Зменшено */
+font-weight: bold;
+line-height: 1.0;
+}
+</style>
+</head>
+<body>
+<div class="upload-section">
+<p>Оберіть XML-файл у форматі 1819.XML:</p>
+<input type="file" id="fileInput" accept=".xml,.txt">
+</div>
+<div class="controls">
+<button onclick="printDocument()">🖨️ Друк (2 екземпляри на 1 аркуш)</button>
+<button onclick="clearDocument()">🧹 Очистити</button>
+</div>
+<div id="documentsContainer" class="documents-container"></div>
+<script>
+document.getElementById('fileInput').addEventListener('change', function(e) {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = function(e) {
+try {
+processXML(e.target.result);
+} catch (error) {
+alert('Помилка: ' + error.message);
+console.error(error);
+}
+};
+reader.readAsText(file, 'windows-1251');
+});
+function processXML(xmlText) {
+const parser = new DOMParser();
+const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+const data = extractData(xmlDoc);
+renderTwoDocuments(data);
+document.getElementById('documentsContainer').style.display = 'block';
+}
+function extractData(xmlDoc) {
+const get = (tag) => {
+const el = xmlDoc.getElementsByTagName(tag)[0];
+return el ? el.textContent.trim() : '';
+};
+const getWithRowNum = (tag, rowNum) => {
+const elements = xmlDoc.getElementsByTagName(tag);
+for (let i = 0; i < elements.length; i++) {
+const rownum = elements[i].getAttribute('ROWNUM');
+if (rownum === rowNum) {
+return elements[i].textContent.trim();
+}
+}
+return '';
+};
+function formatDate(dateStr) {
+if (!dateStr || dateStr.length !== 8) return dateStr;
+return dateStr.substring(0,2) + '.' +
+dateStr.substring(2,4) + '.' +
+dateStr.substring(4,8);
+}
+function formatDateTime(dateTag, hourTag, minuteTag) {
+const date = formatDate(get(dateTag));
+const hour = get(hourTag);
+const minute = get(minuteTag);
+if (date || hour || minute) {
+let result = '';
+if (date) result += date + ' ';
+if (hour) result += 'о ' + hour + '-год';
+if (minute) {
+if (hour) result += ' : ';
+result += minute + '-ХВ';
+}
+return result.trim();
+}
+return '';
+}
+return {
+date: formatDate(get('D_FILL')),
+number: get('HNUM'),
+ksti: get('HKSTI'),
+sti: get('HSTI'),
+csoName: get('HNAME'),
+csoTin: get('HTIN'),
+contractNum: get('R0101G1S'),
+contractDate: formatDate(get('R0102G1D')),
+contractEndDate: formatDate(get('R0104G1D')),
+fiscalNum: get('R0105G1S'),
+modelCode: get('R0106G1'),
+modelName: get('R0106G1S'),
+serialNum: get('R0107G1S'),
+softwareCode: get('R0108G1'),
+softwareVer: get('R0108G1S'),
+manufacturer: get('R0111G1S'),
+manufactureDate: formatDate(get('R0112G1D')),
+operationDate: formatDate(get('R0113G1D')),
+unsealDate: formatDate(get('R0114G1D')),
+unsealHour: get('R0114G2') || '',
+unsealMinute: get('R0114G3') || '',
+unsealReason: get('R0115G1S'),
+entityName: get('R0118G1S'),
+entityTin: get('R0119G1S'),
+unitName: get('R0120G1S'),
+unitAddress: get('R0121G1S'),
+territoryCode: get('R0122G1S'),
+responsiblePerson: get('HBOS'),
+csoPosition: get('R0203G1S'),
+csoPerson: get('R0203G2S'),
+personalizationDateTime: formatDateTime('R0201G1D', 'R0201G2', 'R0201G3'),
+sealingDateTime: formatDateTime('R0202G1D', 'R0202G2', 'R0202G3'),
+controlMeansNumbers: getWithRowNum('T1RXXXXG1S', '1'),
+modemModel: get('R0109G1S'),
+modemSerial: get('R0110G1S')
+};
+}
+function renderDocumentHTML(data, isSecond = false) {
+return `
+<div class="document-half ${isSecond ? 'last-document' : ''}">
+<div class="form-header">
+<div class="header-top">
+<div class="form-title-small">F13I6105</div>
+<div class="form-title-small">Додаток 2 до Порядку складання реєстратора розрахункових операцій (пункт 7 розділу II)</div>
+</div>
+<div class="header-main">
+<div class="header-left">
+<strong>${data.date}</strong> року № <strong>${data.number}</strong>
+</div>
+<div class="header-center">
+<div class="form-title-main">ДОВІДКА</div>
+<div class="form-subtitle">про опломбування реєстратора розрахункових операцій</div>
+</div>
+<div class="header-right">
+ФОРМА № 1-ЦСО
+</div>
+</div>
+</div>
+<!-- 4 колонки для шахматного порядку -->
+<table class="main-table">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+</colgroup>
+<tr>
+<td class="label" colspan="4">Направлено до <strong>${data.ksti}</strong> <strong>${data.sti}</strong></td>
+</tr>
+<tr>
+<td colspan="4" class="section">центром сервісного обслуговування (дані щодо ЦСО):</td>
+</tr>
+<tr>
+<td class="label" colspan="2"><strong>${data.csoName}</strong></td>
+<td class="value subtext" colspan="2">(найменування / прізвище, ім'я, по батькові)</td>
+</tr>
+<tr>
+<td class="label" colspan="2">1<br>податковий номер / серія та номер паспорта</td>
+<td class="value" colspan="2"><strong>${data.csoTin}</strong></td>
+</tr>
+<tr>
+<td class="label">номер договору з ЦСО</td>
+<td class="value"><strong>${data.contractNum}</strong></td>
+<td class="label">дата договору з ЦСО</td>
+<td class="value"><strong>${data.contractDate}</strong></td>
+</tr>
+<tr>
+<td class="label" colspan="2">строк дії договору до:</td>
+<td class="value" colspan="2"><strong>${data.contractEndDate}</strong></td>
+</tr>
+<tr>
+<td colspan="4" class="section">Дані щодо РРО:</td>
+</tr>
+<tr>
+<td class="label" colspan="2">зарезервований/присвоєний фіскальний номер</td>
+<td class="value" colspan="2"><strong>${data.fiscalNum}</strong></td>
+</tr>
+<!-- ОБ'ЄДНАНО: Модель і заводський номер в одному рядку -->
+<tr>
+<td class="label" style="font-size:5.5pt;">модель (код / найменування)</td>
+<td class="value" style="font-size:7.5pt;"><strong>${data.modelCode} ${data.modelName}</strong></td>
+<td class="label">заводський номер</td>
+<td class="value"><strong>${data.serialNum}</strong></td>
+</tr>
+<!-- ОБ'ЄДНАНО: ПЗ і виробник в одному рядку -->
+<tr>
+<td class="label" style="font-size:5.5pt;">версія ПЗ (код / назва)</td>
+<td class="value" style="font-size:7.5pt;"><strong>${data.softwareCode} ${data.softwareVer}</strong></td>
+<td class="label" style="font-size:5.5pt;">виробник (постачальник)</td>
+<td class="value" style="font-size:7.5pt;"><strong>${data.manufacturer}</strong></td>
+</tr>
+<!-- ОБ'ЄДНАНО: Модем і дати в одному рядку -->
+<tr>
+<td class="label" style="font-size:5pt;">модель модема **</td>
+<td class="value" style="font-size:7pt;"><strong>${data.modemModel}</strong></td>
+<td class="label">дата виготовлення</td>
+<td class="value"><strong>${data.manufactureDate}</strong></td>
+</tr>
+<tr>
+<td class="label" style="font-size:5pt;">зав. номер модема **</td>
+<td class="value" style="font-size:7pt;"><strong>${data.modemSerial}</strong></td>
+<td class="label">дата введення в експлуатацію</td>
+<td class="value"><strong>${data.operationDate}</strong></td>
+</tr>
+<tr>
+<td colspan="4" class="section">Дата здійснення розпломбування <strong>${data.unsealDate}</strong> О <strong>${data.unsealHour}</strong> год <strong>${data.unsealMinute}</strong> ХВ</td>
+</tr>
+<tr>
+<td class="label" colspan="2">Причина розпломбування</td>
+<td class="value" colspan="2"><strong>${data.unsealReason}</strong></td>
+</tr>
+<tr>
+<td class="label" colspan="2">характер виявленої несправності РРО</td>
+<td class="value" colspan="2">-</td>
+</tr>
+<tr>
+<td class="label" colspan="2">сума денної виручки на момент розпломбування</td>
+<td class="value" colspan="2">-</td>
+</tr>
+</table>
+<div class="usage-row">
+<strong>РРО використовується (дані щодо суб'єкта господарювання): ${data.responsiblePerson}</strong>
+</div>
+<!-- 4 колонки для шахматного порядку -->
+<table class="main-table">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+</colgroup>
+<tr>
+<td colspan="4" class="section">в господарській одиниці (дані щодо господарської одиниці):</td>
+</tr>
+<tr>
+<td class="label" colspan="2">1<br>податковий номер / серія та номер паспорта</td>
+<td class="label">код території</td>
+<td class="value"><strong>${data.territoryCode}</strong></td>
+</tr>
+<tr>
+<td class="label" colspan="2">1<br>податковий номер (значення)</td>
+<td class="value" colspan="2"><strong>${data.entityTin}</strong></td>
+</tr>
+<tr>
+<td class="label" colspan="2">назва господарської одиниці /структурного підрозділу</td>
+<td class="value" colspan="2"><strong>${data.unitName}</strong></td>
+</tr>
+<tr>
+<td class="label" colspan="2">адреса господарської одиниці / структурного підрозділу</td>
+<td class="value" colspan="2"><strong>${data.unitAddress}</strong></td>
+</tr>
+</table>
+<div class="signature-block">
+<div><strong>Відповідальна особа суб'єкта господарювання :</strong></div>
+<div style="display: flex; margin-top: 0.3mm;">
+<div style="flex: 2;">
+<div class="signature-line"><strong>${data.responsiblePerson}</strong></div>
+<div class="signature-label">(прізвище та ініціали) (підпис)</div>
+</div>
+<div style="flex: 1; text-align: right; padding-right: 6px;">
+<div class="signature-line"><strong>${data.date}</strong></div>
+</div>
+</div>
+</div>
+<div class="standalone-text">
+<strong>Конструкція та програмне забезпечення РРО відповідають документації виробника. РРО працює у фіскальному режимі роботи</strong>
+</div>
+<!-- 4 колонки: персоналізація і опломбування в одному рядку -->
+<table class="bottom-table">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+</colgroup>
+<tr>
+<td class="label">РРО опломбовано</td>
+<td class="datetime-value">${data.personalizationDateTime || '-'}</td>
+<td class="label">Дата опломбування</td>
+<td class="datetime-value">${data.sealingDateTime || '-'}</td>
+</tr>
+<tr>
+<td class="label" colspan="2">Номери засобів контролю на РРО</td>
+<td class="datetime-value" colspan="2">${data.controlMeansNumbers || '-'}</td>
+</tr>
+</table>
+<div class="signature-block">
+<div><strong>Відповідальна особа ЦСО</strong></div>
+<div style="display: flex; margin-top: 0.3mm;">
+<div style="flex: 1;">
+<div class="signature-line"><strong>${data.csoPosition}</strong></div>
+<div class="signature-label">(посада)</div>
+</div>
+<div style="flex: 1;">
+<div class="signature-line"><strong>${data.csoPerson}</strong></div>
+<div class="signature-label">(прізвище та ініціали) (підпис)</div>
+</div>
+</div>
+</div>
+<div class="rejection-section">
+<div class="rejection-title">Відмовлено в опломбуванні РРО</div>
+<table class="bottom-table">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tr>
+<td class="label">Дата відмови .. о - год - ХВ</td>
+<td class="value"></td>
+</tr>
+<tr>
+<td class="label">Причина відмови в опломбуванні</td>
+<td class="value">-</td>
+</tr>
+</table>
+<div class="signature-block" style="margin-top: 0.2mm;">
+<div style="display: flex; margin-top: 0.2mm;">
+<div style="flex: 1; font-size: 5pt;">
+<div class="signature-line"></div>
+<div class="signature-label">(посада)</div>
+</div>
+<div style="flex: 1; font-size: 5pt;">
+<div class="signature-line"></div>
+<div class="signature-label">(прізвище та ініціали) (підпис)</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footnotes">
+<div>1 Серія та номер паспорта / номер ID картки (для фізичних осіб, які через свої релігійні переконання відмовились від прийняття реєстраційного номера облікової картки платника податків та офіційно повідомили про це відповідний контролюючий орган і мають відповідну відмітку в паспорті).</div>
+<div>2 Графа заповнюється в разі наявності у РРО зовнішнього модема.</div>
+</div>
+</div>
+`;
+}
+function renderTwoDocuments(data) {
+const container = document.getElementById('documentsContainer');
+container.innerHTML = renderDocumentHTML(data, false) + renderDocumentHTML(data, true);
+}
+function printDocument() {
+window.print();
+}
+function clearDocument() {
+document.getElementById('documentsContainer').style.display = 'none';
+document.getElementById('documentsContainer').innerHTML = '';
+document.getElementById('fileInput').value = '';
+}
+</script>
+</body>
+</html>

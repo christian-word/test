@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VideoGrade — Color Grading Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --panel: #111114;
+  --border: #222228;
+  --accent: #e8ff5a;
+  --accent2: #5af0e8;
+  --accent3: #f05aaa;
+  --text: #c8c8d4;
+  --text-dim: #555566;
+  --danger: #ff5a5a;
+  --success: #5aff8a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── DESKTOP SIDEBAR ── */
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--accent); }
+.tagline { font-size: 10px; color: var(--text-dim); margin-top: 2px; text-transform: uppercase; letter-spacing: 2px; }
+.sidebar-scroll { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.section { margin-bottom: 20px; }
+.section-title {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* File upload */
+.upload-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.upload-zone:hover { border-color: var(--accent); background: rgba(232,255,90,0.03); }
+.upload-zone:active { border-color: var(--accent); background: rgba(232,255,90,0.06); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-text { font-size: 11px; color: var(--text-dim); }
+.file-name { font-size: 11px; color: var(--accent); margin-top: 4px; word-break: break-all; }
+
+/* Histogram */
+#histo {
+  width: 100%;
+  height: 50px;
+  border-radius: 4px;
+  display: block;
+  background: #080808;
+  margin-bottom: 14px;
+}
+
+/* Sliders */
+.slider-group { margin-bottom: 14px; }
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.slider-val {
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 1px 7px;
+  border-radius: 4px;
+  min-width: 46px;
+  text-align: center;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(232,255,90,0.5);
+  cursor: pointer;
+}
+input[type="range"].c2::-webkit-slider-thumb { background: var(--accent2); box-shadow: 0 0 8px rgba(90,240,232,0.5); }
+input[type="range"].c3::-webkit-slider-thumb { background: var(--accent3); box-shadow: 0 0 8px rgba(240,90,170,0.5); }
+input[type="range"].c4::-webkit-slider-thumb { background: #aaa; box-shadow: 0 0 8px rgba(170,170,170,0.3); }
+
+/* Buttons */
+.btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:hover { border-color: var(--text-dim); color: #fff; }
+.btn:active { opacity: 0.75; }
+.btn-accent { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+.btn-accent:hover { background: #fff; border-color: #fff; }
+.btn-danger { border-color: var(--danger); color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #000; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-full { width: 100%; display: block; text-align: center; }
+
+/* Format select */
+select {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+select:focus { border-color: var(--accent); }
+
+/* Export progress */
+.export-info {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+  display: none;
+}
+.export-info.active { display: block; }
+.progress-bar-wrap { background: var(--border); border-radius: 2px; height: 3px; margin-top: 8px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+
+/* MAIN AREA */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #060608;
+  min-width: 0;
+}
+.canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  background: radial-gradient(ellipse at center, #0e0e14 0%, #060608 70%);
+}
+canvas#mainCanvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 2px;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+}
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  font-family: 'Syne', sans-serif;
+}
+.empty-state .big { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+.empty-state p { font-size: 13px; letter-spacing: 1px; }
+
+/* TIMELINE */
+.timeline-section {
+  padding: 14px 20px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+.time-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.time-display { font-size: 13px; color: var(--text); }
+.time-display .dur { color: var(--text-dim); }
+input[type="range"]#timeline {
+  height: 4px;
+  margin-bottom: 12px;
+  background: linear-gradient(to right, var(--accent) 0%, var(--border) 0%);
+}
+input[type="range"]#timeline::-webkit-slider-thumb { background: #fff; box-shadow: 0 0 6px rgba(255,255,255,0.4); }
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.t-btn {
+  font-family: 'DM Mono', monospace;
+  width: 42px; height: 42px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.t-btn:hover { border-color: var(--text-dim); color: #fff; background: rgba(255,255,255,0.04); }
+.t-btn:active { background: rgba(255,255,255,0.08); }
+.t-btn.play { background: var(--accent); border-color: var(--accent); color: #000; font-size: 18px; width: 50px; height: 50px; border-radius: 50%; }
+.t-btn.play:hover { background: #fff; }
+
+/* STATUS TOAST */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: #fff; color: #000;
+  padding: 8px 20px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  opacity: 0; transition: all 0.25s;
+  z-index: 999; pointer-events: none;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Recording indicator */
+.rec-dot {
+  display: none;
+  width: 8px; height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  animation: blink 1s infinite;
+  margin-right: 4px;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+.rec-dot.active { display: inline-block; }
+
+/* ─────────────── MOBILE ─────────────── */
+@media (max-width: 767px) {
+  body {
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Hide desktop sidebar */
+  .sidebar { display: none; }
+
+  /* Canvas takes available space */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .canvas-wrap {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Timeline touch-friendly */
+  .timeline-section {
+    padding: 10px 14px 12px;
+    flex-shrink: 0;
+  }
+
+  .time-row { margin-bottom: 8px; }
+  .time-display { font-size: 12px; }
+
+  input[type="range"]#timeline {
+    height: 6px;
+    margin-bottom: 10px;
+    border-radius: 3px;
+  }
+  input[type="range"]#timeline::-webkit-slider-thumb {
+    width: 20px; height: 20px;
+  }
+
+  .transport {
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .t-btn {
+    width: 46px; height: 46px;
+    font-size: 18px;
+  }
+  .t-btn.play {
+    width: 54px; height: 54px;
+    font-size: 20px;
+  }
+
+  /* ── MOBILE BOTTOM SHEET PANEL ── */
+  .mobile-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    max-height: 50dvh;
+    transition: max-height 0.3s ease;
+  }
+
+  .mobile-panel.collapsed { max-height: 0; overflow: hidden; }
+
+  .mobile-panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-panel-tabs::-webkit-scrollbar { display: none; }
+
+  .mob-tab {
+    flex: 1;
+    min-width: 72px;
+    padding: 10px 4px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .mob-tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  .mobile-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px;
+  }
+  .mobile-panel-body::-webkit-scrollbar { width: 3px; }
+  .mobile-panel-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .mob-pane { display: none; }
+  .mob-pane.active { display: block; }
+
+  /* Mobile sliders bigger touch targets */
+  .slider-group { margin-bottom: 16px; }
+  .slider-label { font-size: 12px; }
+  .slider-val { font-size: 12px; padding: 3px 8px; min-width: 48px; }
+
+  input[type="range"] {
+    height: 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 22px; height: 22px;
+  }
+  input[type="range"].c2::-webkit-slider-thumb { width: 22px; height: 22px; }
+  input[type="range"].c3::-webkit-slider-thumb { width: 22px; height: 22px; }
+  input[type="range"].c4::-webkit-slider-thumb { width: 22px; height: 22px; }
+
+  .btn {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  .btn-row { gap: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  select {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  /* Mobile header strip */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .mobile-header .logo { font-size: 16px; }
+
+  .mobile-upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 7px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-upload-btn input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  .mobile-upload-btn:active { background: rgba(232,255,90,0.08); border-color: var(--accent); }
+
+  /* Panel toggle button in transport */
+  .panel-toggle {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    margin-left: auto;
+  }
+  .panel-toggle:active { background: rgba(255,255,255,0.06); }
+}
+
+/* ── Show mobile-specific elements only on mobile ── */
+.mobile-header,
+.mobile-panel,
+.panel-toggle {
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<!-- DESKTOP SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Video<span>Grade</span></div>
+    <div class="tagline">Color Grading Studio</div>
+  </div>
+  <div class="sidebar-scroll">
+
+    <div class="section">
+      <div class="section-title">Source</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="videoIn" accept="video/*">
+        <div class="upload-icon">🎬</div>
+        <div class="upload-text">Виберіть відео</div>
+        <div class="file-name" id="fileName"></div>
+      </div>
+    </div>
+
+    <canvas id="histo"></canvas>
+
+    <div class="section">
+      <div class="section-title">Корекція</div>
+
+      <div class="slider-group">
+        <div class="slider-label">Яскравість <span class="slider-val" id="bV">100</span></div>
+        <input type="range" id="bright" min="0" max="200" value="100">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">Контраст <span class="slider-val" id="cV">100</span></div>
+        <input type="range" id="contrast" min="0" max="200" value="100" class="c2">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">Насиченість <span class="slider-val" id="sV">100</span></div>
+        <input type="range" id="saturate" min="0" max="200" value="100" class="c3">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">Різкість <span class="slider-val" id="shV">0</span></div>
+        <input type="range" id="sharp" min="0" max="10" value="0" step="0.5" class="c4">
+      </div>
+
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn" onclick="resetAll()" style="flex:1">↺ Скинути</button>
+        <button class="btn" onclick="applyPreset('warm')" style="flex:1">☀️ Warm</button>
+        <button class="btn" onclick="applyPreset('cold')" style="flex:1">❄️ Cold</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Експорт відео</div>
+      <select id="outFmt">
+        <option value="video/webm;codecs=vp9">WebM / VP9 (найкраща якість)</option>
+        <option value="video/webm;codecs=vp8">WebM / VP8</option>
+        <option value="video/webm">WebM (авто)</option>
+      </select>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+        <span style="font-size:11px; color:var(--text-dim); white-space:nowrap;">Швидкість:</span>
+        <input type="range" id="playbackRate" min="0.25" max="2" step="0.25" value="1" style="flex:1;" class="c4">
+        <span class="slider-val" id="prV" style="min-width:38px;">1×</span>
+      </div>
+      <button class="btn btn-accent btn-full" id="recBtn" onclick="toggleRecord()">
+        <span class="rec-dot" id="recDot"></span>
+        <span id="recLabel">▶ Запустити & Записати</span>
+      </button>
+      <div class="export-info" id="exportInfo">
+        <span id="exportStatus">Запис...</span>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Кадр</div>
+      <select id="imgFmt">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+      <button class="btn btn-full" onclick="saveFrame()">📷 Зберегти кадр</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Mobile header -->
+  <div class="mobile-header">
+    <div class="logo" style="font-family:'Syne',sans-serif;font-weight:800;color:#fff;">Video<span style="color:var(--accent)">Grade</span></div>
+    <label class="mobile-upload-btn">
+      <input type="file" id="videoInMob" accept="video/*">
+      🎬 <span id="mobFileName">Відео</span>
+    </label>
+  </div>
+
+  <div class="canvas-wrap" id="cvWrap">
+    <div class="empty-state" id="emptyState">
+      <div class="big">🎞</div>
+      <p>Завантажте відео щоб почати</p>
+    </div>
+    <canvas id="mainCanvas" style="display:none;"></canvas>
+  </div>
+
+  <div class="timeline-section">
+    <div class="time-row">
+      <span class="time-display" id="curTime">00:00.00</span>
+      <span class="time-display dur" id="durTime">00:00.00</span>
+    </div>
+    <input type="range" id="timeline" step="0.001" value="0" disabled>
+    <div class="transport">
+      <button class="t-btn" id="prevBtn">❮</button>
+      <button class="t-btn" id="stopBtn">■</button>
+      <button class="t-btn play" id="playBtn">▶</button>
+      <button class="t-btn" id="nextBtn">❯</button>
+      <span style="flex:1;"></span>
+      <span style="font-size:11px; color:var(--text-dim);" id="videoInfo"></span>
+      <!-- Mobile panel toggle -->
+      <button class="panel-toggle" id="panelToggle" onclick="toggleMobilePanel()" title="Налаштування">⚙</button>
+    </div>
+  </div>
+
+  <!-- Mobile bottom panel -->
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="mobile-panel-tabs">
+      <button class="mob-tab active" onclick="showMobTab('correction')">
+        <span class="mob-tab-icon">🎨</span>Корекція
+      </button>
+      <button class="mob-tab" onclick="showMobTab('export')">
+        <span class="mob-tab-icon">📤</span>Експорт
+      </button>
+      <button class="mob-tab" onclick="showMobTab('frame')">
+        <span class="mob-tab-icon">📷</span>Кадр
+      </button>
+      <button class="mob-tab" onclick="showMobTab('histo')">
+        <span class="mob-tab-icon">📊</span>Гістограма
+      </button>
+    </div>
+
+    <div class="mobile-panel-body">
+
+      <!-- Correction pane -->
+      <div class="mob-pane active" id="pane-correction">
+        <div class="slider-group">
+          <div class="slider-label">Яскравість <span class="slider-val" id="bV_m">100</span></div>
+          <input type="range" id="bright_m" min="0" max="200" value="100">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Контраст <span class="slider-val" id="cV_m">100</span></div>
+          <input type="range" id="contrast_m" min="0" max="200" value="100" class="c2">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Насиченість <span class="slider-val" id="sV_m">100</span></div>
+          <input type="range" id="saturate_m" min="0" max="200" value="100" class="c3">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">Різкість <span class="slider-val" id="shV_m">0</span></div>
+          <input type="range" id="sharp_m" min="0" max="10" value="0" step="0.5" class="c4">
+        </div>
+        <div class="btn-row" style="margin-top:4px;">
+          <button class="btn" onclick="resetAll()" style="flex:1">↺ Скинути</button>
+          <button class="btn" onclick="applyPreset('warm')" style="flex:1">☀️ Warm</button>
+          <button class="btn" onclick="applyPreset('cold')" style="flex:1">❄️ Cold</button>
+        </div>
+      </div>
+
+      <!-- Export pane -->
+      <div class="mob-pane" id="pane-export">
+        <select id="outFmt_m">
+          <option value="video/webm;codecs=vp9">WebM / VP9 (найкраща)</option>
+          <option value="video/webm;codecs=vp8">WebM / VP8</option>
+          <option value="video/webm">WebM (авто)</option>
+        </select>
+        <div class="slider-group">
+          <div class="slider-label">Швидкість <span class="slider-val" id="prV_m">1×</span></div>
+          <input type="range" id="playbackRate_m" min="0.25" max="2" step="0.25" value="1" class="c4">
+        </div>
+        <button class="btn btn-accent btn-full" id="recBtn_m" onclick="toggleRecord()">
+          <span class="rec-dot" id="recDot_m"></span>
+          <span id="recLabel_m">▶ Запустити & Записати</span>
+        </button>
+        <div class="export-info" id="exportInfo_m">
+          <span id="exportStatus_m">Запис...</span>
+          <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar_m"></div></div>
+        </div>
+      </div>
+
+      <!-- Frame pane -->
+      <div class="mob-pane" id="pane-frame">
+        <select id="imgFmt_m">
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WebP</option>
+        </select>
+        <button class="btn btn-full" onclick="saveFrame()">📷 Зберегти кадр</button>
+      </div>
+
+      <!-- Histogram pane -->
+      <div class="mob-pane" id="pane-histo">
+        <canvas id="histo_m" style="width:100%;height:80px;border-radius:4px;background:#080808;display:block;"></canvas>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:8px;text-align:center;">RGB гістограма поточного кадру</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+<video id="hiddenVideo" crossorigin="anonymous" style="display:none;" playsinline></video>
+
+<script>
+const video = document.getElementById('hiddenVideo');
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
+const timeline = document.getElementById('timeline');
+const playBtn = document.getElementById('playBtn');
+
+let fps = 30;
+let histoTimer = 0;
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recordingStartTime = 0;
+let isMobile = false;
+
+// Detect mobile
+function checkMobile() {
+  isMobile = window.innerWidth <= 767;
+  const mobileHeader = document.querySelector('.mobile-header');
+  const mobilePanel = document.getElementById('mobilePanel');
+  const panelToggle = document.querySelector('.panel-toggle');
+  if (isMobile) {
+    mobileHeader.style.display = 'flex';
+    mobilePanel.style.display = 'flex';
+    panelToggle.style.display = 'flex';
+  } else {
+    mobileHeader.style.display = 'none';
+    mobilePanel.style.display = 'none';
+    panelToggle.style.display = 'none';
+  }
+}
+checkMobile();
+window.addEventListener('resize', checkMobile);
+
+// Mobile panel toggle
+let panelOpen = true;
+function toggleMobilePanel() {
+  const panel = document.getElementById('mobilePanel');
+  panelOpen = !panelOpen;
+  if (panelOpen) {
+    panel.classList.remove('collapsed');
+    document.getElementById('panelToggle').style.color = 'var(--accent)';
+  } else {
+    panel.classList.add('collapsed');
+    document.getElementById('panelToggle').style.color = '';
+  }
+}
+
+// Mobile tab switching
+function showMobTab(id) {
+  document.querySelectorAll('.mob-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pane-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'histo') drawHistoMobile();
+}
+
+// ─── AUDIO CONTEXT ────────────────────────────────────────────
+let audioCtx = null;
+let audioSource = null;
+let audioDestination = null;
+
+function ensureAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioSource = audioCtx.createMediaElementSource(video);
+  audioDestination = audioCtx.createMediaStreamDestination();
+  audioSource.connect(audioCtx.destination);
+  audioSource.connect(audioDestination);
+}
+
+// ─── FILE LOAD ───────────────────────────────────────────────
+function loadVideoFile(file) {
+  if (!file) return;
+  document.getElementById('fileName').innerText = file.name;
+  const shortName = file.name.length > 14 ? file.name.substring(0, 12) + '…' : file.name;
+  document.getElementById('mobFileName').innerText = shortName;
+  video.src = URL.createObjectURL(file);
+  toast('Відео завантажено');
+}
+
+document.getElementById('videoIn').onchange = (e) => loadVideoFile(e.target.files[0]);
+document.getElementById('videoInMob').onchange = (e) => loadVideoFile(e.target.files[0]);
+
+video.onloadedmetadata = () => {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  timeline.max = video.duration;
+  timeline.disabled = false;
+  document.getElementById('durTime').innerText = fmt(video.duration);
+  document.getElementById('videoInfo').innerText = `${video.videoWidth}×${video.videoHeight}`;
+  document.getElementById('emptyState').style.display = 'none';
+  canvas.style.display = 'block';
+  detectFPS();
+  render();
+};
+
+function detectFPS() { fps = 30; }
+
+// ─── SYNC DESKTOP <-> MOBILE CONTROLS ────────────────────────
+// Map: mobile id → desktop id
+const syncMap = {
+  bright_m: 'bright', contrast_m: 'contrast',
+  saturate_m: 'saturate', sharp_m: 'sharp',
+  playbackRate_m: 'playbackRate',
+  outFmt_m: 'outFmt', imgFmt_m: 'imgFmt'
+};
+const valSyncMap = {
+  bright_m: ['bV_m', 'bV'], contrast_m: ['cV_m', 'cV'],
+  saturate_m: ['sV_m', 'sV'], sharp_m: ['shV_m', 'shV']
+};
+
+// Sync from mobile → desktop
+Object.keys(syncMap).forEach(mobId => {
+  const mobEl = document.getElementById(mobId);
+  if (!mobEl) return;
+  const deskEl = document.getElementById(syncMap[mobId]);
+  mobEl.addEventListener('input', () => {
+    deskEl.value = mobEl.value;
+    // sync value labels
+    if (valSyncMap[mobId]) {
+      const [mobLabel, deskLabel] = valSyncMap[mobId];
+      let display = mobEl.value;
+      if (mobId === 'playbackRate_m') display = parseFloat(mobEl.value) + '×';
+      document.getElementById(mobLabel).innerText = display;
+      if (document.getElementById(deskLabel))
+        document.getElementById(deskLabel).innerText = display;
+    }
+    if (mobId === 'playbackRate_m') video.playbackRate = parseFloat(mobEl.value);
+    if (video.paused) render();
+  });
+});
+
+// Sync from desktop → mobile (for presets/reset)
+function syncToMobile() {
+  Object.keys(syncMap).forEach(mobId => {
+    const mobEl = document.getElementById(mobId);
+    const deskEl = document.getElementById(syncMap[mobId]);
+    if (mobEl && deskEl) mobEl.value = deskEl.value;
+  });
+  document.getElementById('bV_m').innerText = document.getElementById('bV').innerText;
+  document.getElementById('cV_m').innerText = document.getElementById('cV').innerText;
+  document.getElementById('sV_m').innerText = document.getElementById('sV').innerText;
+  document.getElementById('shV_m').innerText = document.getElementById('shV').innerText;
+  document.getElementById('prV_m').innerText = document.getElementById('prV').innerText;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────
+function getFilter() {
+  const b = document.getElementById('bright').value;
+  const c = document.getElementById('contrast').value;
+  const s = document.getElementById('saturate').value;
+  return `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+}
+
+function render() {
+  if (!video.videoWidth) return;
+  ctx.filter = getFilter();
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const shVal = parseFloat(document.getElementById('sharp').value);
+  if (shVal > 0) applySharpness(shVal);
+
+  const now = Date.now();
+  if (now - histoTimer > 120) {
+    drawHisto();
+    if (isMobile && document.getElementById('pane-histo').classList.contains('active')) drawHistoMobile();
+    histoTimer = now;
+  }
+
+  document.getElementById('curTime').innerText = fmt(video.currentTime);
+  timeline.value = video.currentTime;
+  updateTimelineGradient();
+}
+
+function applySharpness(amount) {
+  try {
+    const w = canvas.width, h = canvas.height;
+    const img = ctx.getImageData(0, 0, w, h);
+    const d = img.data;
+    const factor = amount * 0.3;
+    const copy = new Uint8ClampedArray(d);
+    const stride = w * 4;
+    for (let y = 1; y < h-1; y++) {
+      for (let x = 1; x < w-1; x++) {
+        const i = (y * w + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const val = 5*copy[i+c] - copy[i-4+c] - copy[i+4+c] - copy[i-stride+c] - copy[i+stride+c];
+          d[i+c] = Math.max(0, Math.min(255, copy[i+c] + (val - copy[i+c]) * factor));
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  } catch(e) {}
+}
+
+function drawHistoTo(hc) {
+  const hx = hc.getContext('2d');
+  try {
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const r = new Uint32Array(256), g = new Uint32Array(256), b = new Uint32Array(256);
+    for (let i = 0; i < data.length; i += 40) {
+      r[data[i]]++; g[data[i+1]]++; b[data[i+2]]++;
+    }
+    const max = Math.max(...r, ...g, ...b) || 1;
+    hx.clearRect(0, 0, hc.width, hc.height);
+    const W = hc.width, H = hc.height;
+    const bw = W / 256;
+    [[r,'rgba(255,90,90,0.7)'],[g,'rgba(90,255,90,0.7)'],[b,'rgba(90,160,255,0.7)']].forEach(([ch, col]) => {
+      hx.fillStyle = col;
+      for (let i = 0; i < 256; i++) {
+        const hh = (ch[i] / max) * H;
+        hx.fillRect(i * bw, H - hh, bw + 0.5, hh);
+      }
+    });
+  } catch(e) {}
+}
+
+function drawHisto() {
+  const hc = document.getElementById('histo');
+  drawHistoTo(hc);
+}
+function drawHistoMobile() {
+  const hc = document.getElementById('histo_m');
+  if (hc) drawHistoTo(hc);
+}
+
+function updateTimelineGradient() {
+  const pct = (video.currentTime / (video.duration || 1)) * 100;
+  timeline.style.background = `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`;
+}
+
+// ─── TRANSPORT ────────────────────────────────────────────────
+function fmt(s) {
+  if (!isFinite(s)) return '00:00.00';
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(2);
+  return `${m.toString().padStart(2,'0')}:${sec.padStart(5,'0')}`;
+}
+
+playBtn.onclick = () => {
+  if (video.paused) { video.play(); playBtn.innerText = '⏸'; }
+  else { video.pause(); playBtn.innerText = '▶'; render(); }
+};
+document.getElementById('stopBtn').onclick = () => {
+  video.pause(); video.currentTime = 0; playBtn.innerText = '▶';
+};
+document.getElementById('nextBtn').onclick = () => step(1);
+document.getElementById('prevBtn').onclick = () => step(-1);
+function step(d) { video.pause(); playBtn.innerText = '▶'; video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + d / fps)); }
+
+video.onseeked = render;
+video.onplay = () => { const loop = () => { if (!video.paused) { render(); requestAnimationFrame(loop); } }; requestAnimationFrame(loop); };
+timeline.oninput = () => { video.currentTime = parseFloat(timeline.value); };
+timeline.onmousedown = () => { video.pause(); playBtn.innerText = '▶'; };
+timeline.ontouchstart = () => { video.pause(); playBtn.innerText = '▶'; };
+
+// ─── SLIDERS (desktop) ────────────────────────────────────────
+['bright','contrast','saturate'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const v = document.getElementById(id).value;
+    const label = {bright:'b',contrast:'c',saturate:'s'}[id];
+    document.getElementById(label+'V').innerText = v;
+    // Sync to mobile counterpart
+    const mobId = id + '_m';
+    const mobEl = document.getElementById(mobId);
+    if (mobEl) { mobEl.value = v; document.getElementById(label+'V_m').innerText = v; }
+    if (video.paused) render();
+  });
+});
+document.getElementById('sharp').addEventListener('input', () => {
+  const v = document.getElementById('sharp').value;
+  document.getElementById('shV').innerText = v;
+  const mobEl = document.getElementById('sharp_m');
+  if (mobEl) { mobEl.value = v; document.getElementById('shV_m').innerText = v; }
+  if (video.paused) render();
+});
+document.getElementById('playbackRate').addEventListener('input', function() {
+  const v = parseFloat(this.value);
+  video.playbackRate = v;
+  document.getElementById('prV').innerText = v + '×';
+  const mobEl = document.getElementById('playbackRate_m');
+  if (mobEl) { mobEl.value = v; document.getElementById('prV_m').innerText = v + '×'; }
+});
+
+// ─── PRESETS ─────────────────────────────────────────────────
+function applyPreset(name) {
+  const p = {
+    warm: { bright:105, contrast:108, saturate:120 },
+    cold: { bright:98, contrast:110, saturate:85 },
+  }[name];
+  if (!p) return;
+  document.getElementById('bright').value = p.bright; document.getElementById('bV').innerText = p.bright;
+  document.getElementById('contrast').value = p.contrast; document.getElementById('cV').innerText = p.contrast;
+  document.getElementById('saturate').value = p.saturate; document.getElementById('sV').innerText = p.saturate;
+  syncToMobile();
+  if (video.paused) render();
+  toast('Пресет застосовано');
+}
+
+function resetAll() {
+  ['bright','contrast','saturate'].forEach(id => {
+    document.getElementById(id).value = 100;
+    const l = {bright:'b',contrast:'c',saturate:'s'}[id];
+    document.getElementById(l+'V').innerText = '100';
+  });
+  document.getElementById('sharp').value = 0;
+  document.getElementById('shV').innerText = '0';
+  syncToMobile();
+  if (video.paused) render();
+  toast('Скинуто');
+}
+
+// ─── FRAME SAVE ───────────────────────────────────────────────
+function saveFrame() {
+  if (!video.src) return;
+  const fmtEl = isMobile ? document.getElementById('imgFmt_m') : document.getElementById('imgFmt');
+  const fmtVal = fmtEl ? fmtEl.value : 'image/jpeg';
+  const ext = fmtVal.split('/')[1];
+  const a = document.createElement('a');
+  a.download = `frame_${video.currentTime.toFixed(2)}s.${ext}`;
+  a.href = canvas.toDataURL(fmtVal, 0.92);
+  a.click();
+  toast('Кадр збережено');
+}
+
+// ─── VIDEO RECORD ─────────────────────────────────────────────
+function toggleRecord() {
+  if (isRecording) stopRecord();
+  else startRecord();
+}
+
+function startRecord() {
+  if (!video.src) { toast('Спочатку завантажте відео!'); return; }
+  ensureAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const fmtEl = isMobile ? document.getElementById('outFmt_m') : document.getElementById('outFmt');
+  const fmtId = fmtEl ? fmtEl.value : 'video/webm';
+  const supported = MediaRecorder.isTypeSupported(fmtId) ? fmtId :
+    MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' :
+    MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus' :
+    MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : null;
+  if (!supported) { toast('Ваш браузер не підтримує запис відео'); return; }
+
+  video.currentTime = 0;
+  const prEl = isMobile ? document.getElementById('playbackRate_m') : document.getElementById('playbackRate');
+  video.playbackRate = parseFloat(prEl ? prEl.value : 1);
+  recordedChunks = [];
+
+  const videoStream = canvas.captureStream(30);
+  const combinedStream = new MediaStream([
+    ...videoStream.getVideoTracks(),
+    ...audioDestination.stream.getAudioTracks()
+  ]);
+
+  mediaRecorder = new MediaRecorder(combinedStream, { mimeType: supported, videoBitsPerSecond: 8000000 });
+  mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = finalizeExport;
+  mediaRecorder.start(100);
+
+  isRecording = true;
+  recordingStartTime = Date.now();
+
+  // Update both desktop and mobile UI
+  ['recDot','recDot_m'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('active'); });
+  ['recLabel','recLabel_m'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = '⏹ Зупинити запис'; });
+  ['recBtn','recBtn_m'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.classList.remove('btn-accent'); el.classList.add('btn-danger');
+  });
+  ['exportInfo','exportInfo_m'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('active'); });
+  ['exportStatus','exportStatus_m'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = 'Запис...'; });
+  ['progressBar','progressBar_m'].forEach(id => { const el = document.getElementById(id); if (el) el.style.width = '0%'; });
+
+  video.play();
+  playBtn.innerText = '⏸';
+
+  progressInterval = setInterval(() => {
+    if (video.duration) {
+      const pct = (video.currentTime / video.duration) * 100;
+      const timeStr = `Запис: ${fmt(video.currentTime)} / ${fmt(video.duration)}`;
+      ['progressBar','progressBar_m'].forEach(id => { const el = document.getElementById(id); if (el) el.style.width = pct + '%'; });
+      ['exportStatus','exportStatus_m'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = timeStr; });
+    }
+  }, 200);
+
+  video.onended = () => { if (isRecording) stopRecord(); };
+}
+
+let progressInterval;
+function stopRecord() {
+  if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+  clearInterval(progressInterval);
+  mediaRecorder.stop();
+  video.pause();
+  playBtn.innerText = '▶';
+  isRecording = false;
+  ['recDot','recDot_m'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('active'); });
+  ['recLabel','recLabel_m'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '▶ Запустити & Записати'; });
+  ['recBtn','recBtn_m'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.classList.add('btn-accent'); el.classList.remove('btn-danger');
+  });
+  ['exportStatus','exportStatus_m'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = 'Фіналізація...'; });
+  ['progressBar','progressBar_m'].forEach(id => { const el = document.getElementById(id); if (el) el.style.width = '100%'; });
+}
+
+function finalizeExport() {
+  const fmtEl = document.getElementById('outFmt_m') || document.getElementById('outFmt');
+  const fmtId = fmtEl ? fmtEl.value : 'video/webm';
+  const ext = fmtId.includes('webm') ? 'webm' : 'mp4';
+  const blob = new Blob(recordedChunks, { type: fmtId.split(';')[0] });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `graded_video_${Date.now()}.${ext}`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  const msg = `✓ Збережено! (${(blob.size/1024/1024).toFixed(1)} МБ)`;
+  ['exportStatus','exportStatus_m'].forEach(id => { const el = document.getElementById(id); if (el) el.innerText = msg; });
+  toast('Відео збережено!');
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.innerText = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+window.onresize = render;
+</script>
+</body>
+</html>

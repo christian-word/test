@@ -3,66 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Конспект + Аудіо + MP3 + PDF</title>
-
-  <!-- pdfmake -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/pdfmake.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.10/vfs_fonts.min.js"></script>
-
-  <!-- ffmpeg.wasm -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
-
+  <title>Конспект + Аудіо-запис проповіді (оновлено)</title>
   <style>
-    body { font-family:system-ui,sans-serif; background:#f8f9fa; margin:0; padding:16px; }
-    .container { max-width:760px; margin:0 auto; background:white; border-radius:12px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
-    button { padding:10px 18px; margin:6px 4px; border:none; border-radius:8px; cursor:pointer; font-size:0.95rem; }
+    body { font-family: system-ui, sans-serif; background:#f8f9fa; margin:0; padding:16px; }
+    .container { max-width:720px; margin:0 auto; background:white; border-radius:12px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+    h2, h3 { color:#2c3e50; }
+    button { padding:10px 18px; margin:6px 4px; border:none; border-radius:8px; cursor:pointer; font-size:1rem; }
     .btn-primary   { background:#0d6efd; color:white; }
-    .btn-success   { background:#198754; color:white; }
     .btn-danger    { background:#dc3545; color:white; }
     .btn-warning   { background:#ffc107; color:black; }
     .btn-secondary { background:#6c757d; color:white; }
-    #timer { font-size:2.8rem; font-weight:bold; text-align:center; margin:20px 0; }
+    #timer { font-size:2.8rem; font-weight:bold; text-align:center; margin:20px 0; color:#343a40; }
+    #status { text-align:center; color:#555; min-height:1.5em; margin:12px 0; }
+    audio { width:100%; margin:16px 0; }
     .section { margin:24px 0; padding:16px; background:#f8f9fa; border-radius:10px; }
-    .marker-item { padding:10px; background:#e9ecef; margin:6px 0; border-radius:6px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    .marker-item input { flex:1; min-width:120px; }
-    input, textarea { width:100%; padding:9px; margin:5px 0; border:1px solid #ced4da; border-radius:6px; box-sizing:border-box; }
-    textarea { min-height:90px; }
-    .search-box { margin:16px 0; }
-    .small-btn { padding:6px 12px; font-size:0.85rem; }
+    .marker-item, .recording-item { padding:10px 14px; background:#e9ecef; margin:6px 0; border-radius:6px; }
+    .recording-item { cursor: default; }
+    .marker-item:hover { background:#dee2e6; }
+    .recordings-list { margin-top:16px; }
+    input, textarea { width:100%; padding:10px; margin:6px 0; border:1px solid #ced4da; border-radius:6px; box-sizing:border-box; }
+    textarea { min-height:80px; }
+    .small { font-size:0.9rem; padding:6px 12px; }
   </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- Запис -->
-  <div class="section">
+  <div id="recordSection" class="section">
     <h2>Запис проповіді</h2>
-    <input type="text" id="recTitle" placeholder="Назва / дата / тема">
+    
+    <input type="text" id="recTitle" placeholder="Назва / тема / дата (наприклад: Іван 3:16 – 02.03.2026)">
+    
     <div id="timer">00:00</div>
+    
     <div style="text-align:center;">
-      <button id="startRec" class="btn-primary">Почати</button>
-      <button id="stopRec" class="btn-danger" disabled>Зупинити</button>
+      <button id="startRec" class="btn-primary">Почати запис</button>
+      <button id="stopRec"  class="btn-danger" disabled>Зупинити</button>
       <button id="addMarker" class="btn-warning" disabled>Маркер</button>
     </div>
-    <div id="recStatus" style="text-align:center; margin:12px 0;">Готовий…</div>
-    <div id="currentMarkers"><h4>Маркери</h4></div>
+    
+    <div id="recStatus">Готовий до запису…</div>
+    
+    <div id="currentMarkers" style="margin-top:16px;">
+      <h3>Маркери поточного запису</h3>
+      <div id="markersList"></div>
+    </div>
   </div>
 
-  <!-- Пошук -->
-  <div class="section search-box">
-    <input type="text" id="searchInput" placeholder="Пошук по темі, нотатках, назві запису...">
+  <div id="playerSection" class="section" style="display:none;">
+    <h3>Відтворення</h3>
+    <audio id="audioPlayer" controls></audio>
+    <div id="playerMarkers"></div>
   </div>
 
-  <!-- Записи -->
-  <div class="section">
+  <div class="section recordings-list">
     <h3>Збережені записи</h3>
     <div id="recordingsList"></div>
   </div>
 
-  <!-- Конспект -->
-  <div class="section">
-    <h2>Конспект</h2>
+  <div id="outlineSection" class="section">
+    <h2>Конспект проповіді</h2>
+
     <label>Дата</label><input type="date" id="date">
     <label>Тема</label><input type="text" id="theme">
     <label>Проповідник / місце</label><input type="text" id="preacher">
@@ -71,9 +73,10 @@
 
     <div style="margin:20px 0; text-align:center;">
       <button id="saveOutline" class="btn-primary">Зберегти конспект</button>
-      <button id="exportPdf" class="btn-success">PDF</button>
-      <button id="clearForm" class="btn-secondary">Очистити</button>
+      <button id="clearForm" class="btn-secondary">Очистити форму</button>
     </div>
+
+    <div id="outlineStatus" style="text-align:center; color:#555;"></div>
   </div>
 
   <div class="section">
@@ -84,332 +87,314 @@
 </div>
 
 <script>
-// ──────────────────────────────────────────────
-// IndexedDB + ffmpeg + pdfmake
-// ──────────────────────────────────────────────
-const { createFFmpeg, fetchFile } = FFmpeg;
-const ffmpeg = createFFmpeg({ log: false }); // log:true для дебагу
-
-const DB_NAME = "SermonDB2026";
-const DB_VER = 1;
-const STORE_REC = "recordings";
-const OUTLINES_KEY = "sermonOutlines2026";
+// IndexedDB
+const DB_NAME = "SermonAudioDB";
+const DB_VER  = 1;
+const STORE   = "recordings";
 let db;
 
-async function initDB() {
+function openDB() {
   return new Promise((res, rej) => {
     const req = indexedDB.open(DB_NAME, DB_VER);
     req.onupgradeneeded = e => {
       const d = e.target.result;
-      d.createObjectStore(STORE_REC, {keyPath:"id", autoIncrement:true});
+      if (!d.objectStoreNames.contains(STORE)) {
+        d.createObjectStore(STORE, {keyPath: "id", autoIncrement: true});
+      }
     };
-    req.onsuccess = e => { db = e.target.result; res(); };
+    req.onsuccess = e => { db = e.target.result; res(db); };
     req.onerror = e => rej(e.target.error);
   });
 }
 
-// ─── Запис аудіо ───────────────────────────────────────
-let mediaRecorder, audioChunks, startTime, timerInt, currentMarkers = [], currentBlob, currentRecId;
-
-const startBtn = document.getElementById("startRec");
-const stopBtn  = document.getElementById("stopRec");
-const markerBtn= document.getElementById("addMarker");
-const timerEl  = document.getElementById("timer");
-const recStatus= document.getElementById("recStatus");
-const markersCont = document.getElementById("currentMarkers");
-const recTitleInp = document.getElementById("recTitle");
-
-function formatTime(s) {
-  const m = Math.floor(s/60).toString().padStart(2,"0");
-  return `${m}:${(s%60).toString().padStart(2,"0")}`;
-}
-
-function updateTimer() {
-  if(startTime) timerEl.textContent = formatTime(Math.floor((Date.now()-startTime)/1000));
-}
-
-function renderCurrentMarkers() {
-  const cont = markersCont.querySelector("div") || document.createElement("div");
-  cont.innerHTML = "";
-  currentMarkers.forEach((m,i) => {
-    const div = document.createElement("div");
-    div.className = "marker-item";
-    div.innerHTML = `
-      <span>${m.label}</span>
-      <input type="text" placeholder="Нотатка до маркера" value="${m.note||''}" data-index="${i}">
-    `;
-    cont.appendChild(div);
-  });
-  if (!markersCont.querySelector("div")) markersCont.appendChild(cont);
-
-  // Збереження нотаток при зміні
-  cont.querySelectorAll("input").forEach(inp => {
-    inp.onchange = () => {
-      const idx = inp.dataset.index;
-      currentMarkers[idx].note = inp.value.trim();
-    };
-  });
-}
-
-markerBtn.onclick = () => {
-  if(!startTime) return;
-  const sec = Math.floor((Date.now()-startTime)/1000);
-  const lbl = `Маркер ${currentMarkers.length+1} — ${formatTime(sec)}`;
-  currentMarkers.push({time:sec, label:lbl, note:""});
-  renderCurrentMarkers();
-  recStatus.textContent = `Додано ${lbl}`;
-};
-
-async function startRec() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = []; currentMarkers = []; markersCont.innerHTML = "<h4>Маркери</h4>";
-    startTime = Date.now();
-
-    mediaRecorder.ondataavailable = e => e.data.size && audioChunks.push(e.data);
-
-    mediaRecorder.onstop = async () => {
-      currentBlob = new Blob(audioChunks, {type:"audio/webm"});
-      const title = recTitleInp.value.trim() || new Date().toLocaleString("uk-UA");
-      currentRecId = await saveRecording(title, currentBlob, currentMarkers);
-
-      recStatus.textContent = `Збережено: ${title}`;
-      startBtn.disabled = stopBtn.disabled = markerBtn.disabled = true;
-      startBtn.disabled = false; stopBtn.disabled = true; markerBtn.disabled = true;
-
-      if(confirm("Створити конспект на основі маркерів?")) fillOutlineFromAudio();
-      loadRecordings(); loadOutlines();
-    };
-
-    mediaRecorder.start();
-    timerInt = setInterval(updateTimer, 333);
-    startBtn.disabled = true; stopBtn.disabled = false; markerBtn.disabled = false;
-    recStatus.textContent = "● Запис...";
-  } catch(e) { recStatus.textContent = "Помилка: "+e.message; }
-}
-
-stopBtn.onclick = () => {
-  if(mediaRecorder?.state!=="inactive") {
-    mediaRecorder.stop(); clearInterval(timerInt); timerEl.textContent="00:00"; startTime=null;
-  }
-};
-
-// ─── Збереження / отримання записів ──────────────────────
-async function saveRecording(title, blob, markers) {
-  if(!db) await initDB();
-  return new Promise(r => {
-    const tx = db.transaction(STORE_REC,"readwrite");
-    const st = tx.objectStore(STORE_REC);
-    const req = st.add({title, blob, markers, created:Date.now()});
-    req.onsuccess = () => r(req.result);
+async function saveRecording(title, blob, markers, durationSec) {
+  if (!db) await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, "readwrite");
+    const st = tx.objectStore(STORE);
+    const entry = { title: title || new Date().toLocaleString("uk-UA"), blob, markers, durationSec, created: Date.now() };
+    const r = st.add(entry);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
   });
 }
 
 async function getAllRecordings() {
-  if(!db) await initDB();
-  return new Promise(r => {
-    const tx = db.transaction(STORE_REC,"readonly");
-    const req = tx.objectStore(STORE_REC).getAll();
-    req.onsuccess = () => r(req.result);
+  if (!db) await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, "readonly");
+    const st = tx.objectStore(STORE);
+    const r = st.getAll();
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
   });
 }
 
 async function getRecording(id) {
-  if(!db) await initDB();
-  return new Promise(r => {
-    const tx = db.transaction(STORE_REC,"readonly");
-    const req = tx.objectStore(STORE_REC).get(id);
-    req.onsuccess = () => r(req.result);
+  if (!db) await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, "readonly");
+    const st = tx.objectStore(STORE);
+    const r = st.get(id);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
   });
 }
 
 async function deleteRecording(id) {
-  if(!db) await initDB();
-  return new Promise(r => {
-    const tx = db.transaction(STORE_REC,"readwrite");
-    tx.objectStore(STORE_REC).delete(id);
-    tx.oncomplete = r;
+  if (!db) await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, "readwrite");
+    const st = tx.objectStore(STORE);
+    const r = st.delete(id);
+    r.onsuccess = () => res();
+    r.onerror = () => rej(r.error);
   });
 }
 
-// ─── MP3 конвертація ─────────────────────────────────────
-async function convertToMp3(recId) {
-  const rec = await getRecording(recId);
-  if(!rec) return alert("Запис не знайдено");
+// Інтерфейс
+const startBtn     = document.getElementById("startRec");
+const stopBtn      = document.getElementById("stopRec");
+const markerBtn    = document.getElementById("addMarker");
+const timerEl      = document.getElementById("timer");
+const recStatus    = document.getElementById("recStatus");
+const markersList  = document.getElementById("markersList");
+const recTitleInp  = document.getElementById("recTitle");
 
-  if(!ffmpeg.isLoaded()) {
-    recStatus.textContent = "Завантаження FFmpeg... (перший раз може зайняти 10–30 с)";
-    await ffmpeg.load();
-  }
+let mediaRecorder = null;
+let audioChunks = [];
+let startTime = null;
+let timerInt = null;
+let currentMarkers = [];
+let currentBlob = null;
+let currentRecId = null;
+let recordingStartMs = 0;
+
+function formatTime(s) {
+  const m = Math.floor(s/60).toString().padStart(2,"0");
+  const sec = Math.floor(s%60).toString().padStart(2,"0");
+  return `${m}:${sec}`;
+}
+
+function updateTimer() {
+  if (!startTime) return;
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  timerEl.textContent = formatTime(elapsed);
+}
+
+function addMarker() {
+  if (!startTime || !mediaRecorder || mediaRecorder.state !== "recording") return;
+  const sec = Math.floor((Date.now() - startTime) / 1000);
+  const lbl = `Маркер ${currentMarkers.length+1} — ${formatTime(sec)}`;
+  currentMarkers.push({time: sec, label: lbl, note: ""});
+  
+  const div = document.createElement("div");
+  div.className = "marker-item";
+  div.textContent = lbl;
+  markersList.appendChild(div);
+  
+  recStatus.textContent = `Додано ${lbl}`;
+}
+
+async function startRec() {
+  if (mediaRecorder && mediaRecorder.state === "recording") return;
 
   try {
-    recStatus.textContent = "Конвертація в MP3...";
-    ffmpeg.FS("writeFile", "input.webm", await fetchFile(rec.blob));
-    await ffmpeg.run("-i","input.webm","-vn","-acodec","libmp3lame","-q:a","2","output.mp3");
-    const data = ffmpeg.FS("readFile","output.mp3");
-    const mp3Blob = new Blob([data.buffer], {type:"audio/mp3"});
+    recStatus.textContent = "Запит доступу до мікрофона...";
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    currentMarkers = [];
+    markersList.innerHTML = "";
+    startTime = Date.now();
+    recordingStartMs = Date.now();
 
-    const url = URL.createObjectURL(mp3Blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${rec.title.replace(/[^a-z0-9]/gi,"_")}.mp3`; a.click();
-    URL.revokeObjectURL(url);
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
 
-    recStatus.textContent = "MP3 завантажено!";
+    mediaRecorder.onstop = async () => {
+      const durationSec = Math.floor((Date.now() - recordingStartMs) / 1000);
+      currentBlob = new Blob(audioChunks, {type: "audio/webm"});
+      const title = recTitleInp.value.trim() || new Date().toLocaleString("uk-UA");
+      currentRecId = await saveRecording(title, currentBlob, currentMarkers, durationSec);
+
+      recStatus.textContent = `Запис збережено (${formatTime(durationSec)}) → ${title}`;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      markerBtn.disabled = true;
+
+      if (confirm(`Запис збережено (${formatTime(durationSec)}).\nСтворити конспект на основі маркерів?`)) {
+        fillOutlineFromAudio(currentRecId, title, currentMarkers);
+      }
+
+      loadRecordings();
+    };
+
+    mediaRecorder.start();
+    timerInt = setInterval(updateTimer, 333);
+    
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    markerBtn.disabled = false;
+    recStatus.textContent = "● Запис іде... Говоріть";
   } catch(e) {
-    recStatus.textContent = "Помилка конвертації: "+e.message;
-    console.error(e);
+    recStatus.textContent = "Помилка доступу до мікрофона:\n" + e.name + " — " + e.message;
   }
 }
 
-// ─── Відтворення / скачування ────────────────────────────
-window.playRec = async id => {
-  const rec = await getRecording(id);
-  if(!rec) return;
-  const url = URL.createObjectURL(rec.blob);
-  const audio = new Audio(url);
-  audio.play().catch(e=>alert("Автозапуск заблоковано: "+e.message));
-  // або використати <audio> елемент, якщо хочеш UI
-  alert("Відтворення запущено (без UI в цій версії)");
-};
+function stopRec() {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    clearInterval(timerInt);
+    timerEl.textContent = "00:00";
+    startTime = null;
+    recStatus.textContent = "Зупиняємо запис...";
+  }
+}
 
-window.downloadWebm = async id => {
-  const rec = await getRecording(id);
-  if(!rec) return;
-  const url = URL.createObjectURL(rec.blob);
-  const a = document.createElement("a");
-  a.href=url; a.download=`${rec.title}.webm`; a.click();
-};
+// Заповнення конспекту
+function fillOutlineFromAudio(recId, title, markers) {
+  document.getElementById("date").value = new Date().toISOString().split("T")[0];
+  document.getElementById("theme").value = title;
+  document.getElementById("preacher").value = "—";
 
-// ─── Рендер записів + пошук ──────────────────────────────
-async function loadRecordings(filter="") {
+  const notesText = markers.map(m =>
+    `${m.label}\n    (тут нотатка – що сказав проповідник на ${formatTime(m.time)})`
+  ).join("\n\n");
+
+  document.getElementById("notes").value = notesText || "(маркерів не було)";
+  document.getElementById("notes").dataset.audioId = recId;
+
+  alert("Маркери перенесено в поле «Нотатки»!\nДоповни і збережи конспект.");
+}
+
+// Список записів
+async function loadRecordings() {
   const recs = await getAllRecordings();
   const cont = document.getElementById("recordingsList");
-  cont.innerHTML = "";
+  cont.innerHTML = recs.length ? "" : "<p style='color:#777;text-align:center;'>Записів немає</p>";
 
-  const lower = filter.toLowerCase();
-  recs.filter(r => 
-    r.title.toLowerCase().includes(lower)
-  ).forEach(r => {
+  recs.forEach(r => {
+    const dur = r.durationSec ? formatTime(r.durationSec) : "—";
     const div = document.createElement("div");
-    div.style.padding="10px"; div.style.background="#f1f3f5"; div.style.margin="8px 0"; div.style.borderRadius="8px";
+    div.className = "recording-item";
     div.innerHTML = `
-      <strong>${r.title}</strong> • ${new Date(r.created).toLocaleDateString("uk-UA")}<br>
-      <button class="btn-primary small-btn" onclick="playRec(${r.id})">Відтворити</button>
-      <button class="btn-secondary small-btn" onclick="downloadWebm(${r.id})">WebM</button>
-      <button class="btn-success small-btn" onclick="convertToMp3(${r.id})">→ MP3</button>
-      <button class="btn-danger small-btn" onclick="if(confirm('Видалити?')){deleteRecording(${r.id}).then(loadRecordings)}">×</button>
-    `;
+      <strong>${r.title}</strong><br>
+      <small>${new Date(r.created).toLocaleString("uk-UA")} • ${dur}</small>
+      <div style="margin-top:8px;">
+        <button class="btn-primary small" onclick="playRecording(${r.id})">Відтворити</button>
+        <button class="btn-secondary small" onclick="downloadRecording(${r.id})">Скачати</button>
+        <button class="btn-danger small" onclick="delRecording(${r.id})">×</button>
+      </div>`;
     cont.appendChild(div);
   });
 }
 
-// ─── Конспекти ───────────────────────────────────────────
-function fillOutlineFromAudio() {
-  document.getElementById("date").value = new Date().toISOString().split("T")[0];
-  document.getElementById("theme").value = recTitleInp.value.trim() || "Проповідь";
-  document.getElementById("preacher").value = "—";
+window.playRecording = async id => {
+  const rec = await getRecording(id);
+  if (!rec) return;
+  const url = URL.createObjectURL(rec.blob);
+  const player = document.getElementById("audioPlayer");
+  player.src = url;
+  document.getElementById("playerSection").style.display = "block";
 
-  const notes = currentMarkers.map(m => 
-    `${m.label}\n   ${m.note || "(додай нотатку)"}`
-  ).join("\n\n");
+  const mCont = document.getElementById("playerMarkers");
+  mCont.innerHTML = "<h4>Маркери</h4>";
+  (rec.markers||[]).forEach(m => {
+    const el = document.createElement("div");
+    el.className = "marker-item";
+    el.textContent = m.label;
+    el.onclick = () => { player.currentTime = m.time; player.play().catch(()=>{}); };
+    mCont.appendChild(el);
+  });
 
-  document.getElementById("notes").value = notes || "(маркерів не було)";
-  alert("Маркери перенесено в нотатки!");
-}
+  player.play().catch(() => recStatus.textContent = "Автозапуск заблоковано — натисніть play вручну");
+};
+
+window.downloadRecording = async id => {
+  const rec = await getRecording(id);
+  if (!rec) return;
+  const url = URL.createObjectURL(rec.blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${rec.title.replace(/[^a-z0-9]/gi,"_")}.webm`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+window.delRecording = async id => {
+  if (!confirm("Видалити запис?")) return;
+  await deleteRecording(id);
+  loadRecordings();
+};
+
+// Конспекти — залишаємо як було (можемо покращити пізніше)
+const OUTLINES_KEY = "sermonOutlines2026";
 
 function saveOutline() {
-  const o = {
+  const data = {
     date: document.getElementById("date").value,
     theme: document.getElementById("theme").value.trim(),
     preacher: document.getElementById("preacher").value.trim(),
     notes: document.getElementById("notes").value.trim(),
     keyThought: document.getElementById("keyThought").value.trim(),
+    audioId: document.getElementById("notes").dataset.audioId || null,
     created: Date.now()
   };
-  if(!o.theme) return alert("Вкажіть тему");
+
+  if (!data.theme) return alert("Вкажіть тему");
 
   let arr = JSON.parse(localStorage.getItem(OUTLINES_KEY)||"[]");
-  arr.unshift(o);
+  arr.unshift(data);
   localStorage.setItem(OUTLINES_KEY, JSON.stringify(arr));
-  loadOutlines(); clearForm();
+  renderOutlines();
+  clearOutlineForm();
 }
 
-function loadOutlines(filter="") {
-  const arr = JSON.parse(localStorage.getItem(OUTLINES_KEY)||"[]");
+function renderOutlines() {
   const cont = document.getElementById("savedOutlines");
-  cont.innerHTML = "";
+  const arr = JSON.parse(localStorage.getItem(OUTLINES_KEY)||"[]");
+  cont.innerHTML = arr.length ? "" : "<p style='color:#777;text-align:center;'>Конспектів немає</p>";
 
-  const lower = filter.toLowerCase();
-  arr.filter(o => 
-    o.theme.toLowerCase().includes(lower) ||
-    o.notes.toLowerCase().includes(lower)
-  ).forEach((o,i) => {
+  arr.forEach((o,i) => {
     const div = document.createElement("div");
-    div.style.padding="12px"; div.style.background="#f1f3f5"; div.style.margin="8px 0"; div.style.borderRadius="8px";
+    div.style.padding = "12px";
+    div.style.background = "#f1f3f5";
+    div.style.margin = "8px 0";
+    div.style.borderRadius = "8px";
     div.innerHTML = `
       <strong>${o.theme}</strong><br>
       <small>${o.date || "—"} • ${o.preacher || "—"}</small>
-      <pre style="margin:8px 0; white-space:pre-wrap; font-size:0.9rem;">${o.notes.substring(0,200)}${o.notes.length>200?"...":""}</pre>
-      <button class="btn-danger small-btn" onclick="if(confirm('Видалити?')){let a=JSON.parse(localStorage.getItem('${OUTLINES_KEY}'));a.splice(${i},1);localStorage.setItem('${OUTLINES_KEY}',JSON.stringify(a));loadOutlines()}">Видалити</button>
-    `;
+      ${o.audioId ? `<br><button class="btn-primary small" onclick="playRecording(${o.audioId})">▶ Аудіо</button>` : ""}
+      <pre style="white-space:pre-wrap;margin-top:8px;">${o.notes.substring(0,180)}${o.notes.length>180?"...":""}</pre>
+      <button class="btn-danger small" onclick="deleteOutline(${i})">Видалити</button>`;
     cont.appendChild(div);
   });
 }
 
-function clearForm() {
-  ["date","theme","preacher","notes","keyThought"].forEach(id=>document.getElementById(id).value="");
+window.deleteOutline = i => {
+  if (!confirm("Видалити конспект?")) return;
+  let arr = JSON.parse(localStorage.getItem(OUTLINES_KEY)||"[]");
+  arr.splice(i,1);
+  localStorage.setItem(OUTLINES_KEY, JSON.stringify(arr));
+  renderOutlines();
+};
+
+function clearOutlineForm() {
+  ["date","theme","preacher","notes","keyThought"].forEach(id => document.getElementById(id).value = "");
+  delete document.getElementById("notes").dataset.audioId;
 }
 
-// ─── PDF експорт ─────────────────────────────────────────
-document.getElementById("exportPdf").onclick = () => {
-  const theme = document.getElementById("theme").value.trim() || "Конспект";
-  const date = document.getElementById("date").value || new Date().toLocaleDateString("uk-UA");
-  const preacher = document.getElementById("preacher").value.trim() || "—";
-  const notes = document.getElementById("notes").value.trim().split("\n");
-  const key = document.getElementById("keyThought").value.trim();
+// Ініціалізація
+openDB().then(loadRecordings);
+renderOutlines();
 
-  const dd = {
-    content: [
-      {text: theme, style:"title"},
-      {text: `Дата: ${date}   Проповідник: ${preacher}`, margin:[0,4], italics:true},
-      notes.length && {text:"Нотатки", style:"header", margin:[0,16,0,4]},
-      ...notes.map(l => ({text:l, margin:[0,0,0,2]})),
-      key && {text:"Ключова думка", style:"header", margin:[0,20,0,4]},
-      {text:key, italics:true}
-    ],
-    styles: {
-      title: {fontSize:18, bold:true, alignment:"center", margin:[0,0,0,12]},
-      header: {fontSize:14, bold:true, color:"#4a3b8c"}
-    }
-  };
-
-  // Додаємо посилання на аудіо (текст)
-  if(currentRecId) {
-    dd.content.push({text: "\nАудіо-запис: " + (recTitleInp.value.trim() || "Запис проповіді"), margin:[0,16,0,4], color:"#555"});
-    dd.content.push({text: "(відтворити в додатку за назвою)", italics:true, fontSize:10});
-  }
-
-  pdfMake.createPdf(dd).download(`конспект_${date || "без дати"}.pdf`);
-};
-
-// ─── Пошук ───────────────────────────────────────────────
-document.getElementById("searchInput").oninput = e => {
-  const val = e.target.value;
-  loadRecordings(val);
-  loadOutlines(val);
-};
-
-// ─── Ініціалізація ───────────────────────────────────────
-initDB().then(() => {
-  loadRecordings();
-  loadOutlines();
-});
-
-startBtn.onclick = startRec;
-stopBtn.onclick = stopRec;
+startBtn.onclick   = startRec;
+stopBtn.onclick    = stopRec;
+markerBtn.onclick  = addMarker;
 document.getElementById("saveOutline").onclick = saveOutline;
-document.getElementById("clearForm").onclick = clearForm;
+document.getElementById("clearForm").onclick = clearOutlineForm;
 
 recTitleInp.focus();
 </script>

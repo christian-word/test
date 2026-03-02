@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sermon AI Analyzer Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dot { transition: all 0.1s ease-in-out; }
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .recording { animation: pulse-red 1.5s infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">
+        <div class="bg-indigo-700 p-6 text-white">
+            <h1 class="text-2xl font-bold flex items-center gap-3">
+                <span>🕊️</span> Sermon AI Lab
+            </h1>
+            <p class="text-indigo-100 text-sm mt-1">Транскрибация и глубокий анализ проповедей через Groq AI</p>
+        </div>
+
+        <div class="p-6">
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button id="startRecord" class="flex-1 min-w-[200px] bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2">
+                    <span id="micStatus">🎤 Начать запись</span>
+                </button>
+                
+                <input type="file" id="fileInput" class="hidden" accept=".txt">
+                <button onclick="document.getElementById('fileInput').click()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-3 px-6 rounded-xl transition">
+                    📁 Из файла (.txt)
+                </button>
+
+                <button id="analyzeBtn" disabled class="flex-1 min-w-[200px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl disabled:opacity-30 transition">
+                    ✨ Анализировать ИИ
+                </button>
+            </div>
+
+            <div id="vizContainer" class="hidden flex items-end justify-center gap-1 h-12 mb-6 bg-slate-50 rounded-lg p-2">
+                <div class="w-2 bg-indigo-400 rounded-full dot h-2"></div>
+                <div class="w-2 bg-indigo-400 rounded-full dot h-4"></div>
+                <div class="w-2 bg-indigo-500 rounded-full dot h-8"></div>
+                <div class="w-2 bg-indigo-400 rounded-full dot h-4"></div>
+                <div class="w-2 bg-indigo-400 rounded-full dot h-2"></div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Текст проповеди</label>
+                    <textarea id="textContent" class="w-full h-80 p-5 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none text-slate-700 leading-relaxed transition shadow-inner" placeholder="Говорите в микрофон или загрузите текст..."></textarea>
+                </div>
+
+                <div id="resultBlock" class="hidden bg-indigo-50 rounded-2xl border border-indigo-100 p-6">
+                    <h2 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                        <span class="text-2xl">⚡</span> Результаты анализа
+                    </h2>
+                    <div id="aiOutput" class="text-slate-800 whitespace-pre-wrap leading-relaxed"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Твои настройки
+        const CONFIG = {
+            API_KEY: "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",
+            API_URL: "https://api.groq.com/openai/v1/chat/completions",
+            MODEL_NAME: "meta-llama/llama-4-maverick-17b-128e-instruct"
+        };
+
+        const startRecordBtn = document.getElementById('startRecord');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const textContent = document.getElementById('textContent');
+        const aiOutput = document.getElementById('aiOutput');
+        const resultBlock = document.getElementById('resultBlock');
+        const vizContainer = document.getElementById('vizContainer');
+        const fileInput = document.getElementById('fileInput');
+
+        let isRecording = false;
+        let recognition;
+        let audioContext;
+        let analyser;
+        let dataArray;
+        let animationId;
+
+        // 1. Инициализация распознавания речи
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ru-RU';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    }
+                }
+                textContent.value += finalTranscript;
+                analyzeBtn.disabled = textContent.value.length < 10;
+            };
+        }
+
+        // 2. Визуализатор звука
+        async function startVisualizer() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 32;
+            source.connect(analyser);
+            
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const dots = vizContainer.querySelectorAll('.dot');
+
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                dots.forEach((dot, i) => {
+                    const v = dataArray[i] / 2;
+                    dot.style.height = Math.max(4, v) + 'px';
+                });
+            }
+            draw();
+        }
+
+        // 3. Управление записью
+        startRecordBtn.onclick = async () => {
+            if (!isRecording) {
+                try {
+                    await startVisualizer();
+                    recognition.start();
+                    isRecording = true;
+                    vizContainer.classList.remove('hidden');
+                    startRecordBtn.classList.add('recording', 'bg-slate-800');
+                    document.getElementById('micStatus').innerText = "🛑 Остановить";
+                } catch (err) {
+                    alert("Нужен доступ к микрофону!");
+                }
+            } else {
+                recognition.stop();
+                cancelAnimationFrame(animationId);
+                if (audioContext) audioContext.close();
+                isRecording = false;
+                vizContainer.classList.add('hidden');
+                startRecordBtn.classList.remove('recording', 'bg-slate-800');
+                document.getElementById('micStatus').innerText = "🎤 Начать запись";
+            }
+        };
+
+        // 4. Чтение файла
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (f) => {
+                textContent.value = f.target.result;
+                analyzeBtn.disabled = false;
+            };
+            reader.readAsText(file);
+        };
+
+        // 5. Запрос к Groq
+        analyzeBtn.onclick = async () => {
+            const text = textContent.value;
+            resultBlock.classList.remove('hidden');
+            aiOutput.innerText = "⏳ ИИ анализирует структуру и смысл...";
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: CONFIG.MODEL_NAME,
+                        messages: [
+                            { role: "system", content: "Ты — эксперт-теолог. Делай глубокий разбор проповеди: тема, стихи, логика и практические советы." },
+                            { role: "user", content: `Проанализируй проповедь:\n${text}` }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                aiOutput.innerText = data.choices[0].message.content;
+            } catch (error) {
+                aiOutput.innerText = "Ошибка: " + error.message;
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

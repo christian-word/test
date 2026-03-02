@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Chrome Mic Test</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f9; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        button { 
+            padding: 15px 30px; font-size: 18px; margin: 10px; border: none; 
+            border-radius: 50px; cursor: pointer; transition: 0.3s; 
+        }
+        #start { background: #28a745; color: white; }
+        #stop { background: #dc3545; color: white; display: none; }
+        #status { margin: 20px; font-weight: bold; color: #555; }
+        #log { text-align: left; font-size: 12px; background: #eee; padding: 10px; border-radius: 5px; max-height: 150px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Тест микрофона (Android)</h2>
+    <div id="status">Нажмите кнопку для запроса доступа</div>
+    
+    <button id="start">Включить микрофон</button>
+    <button id="stop">Остановить</button>
+
+    <audio id="audioPlayback" controls style="display:none; width: 100%; margin-top: 20px;"></audio>
+    
+    <div id="log"></div>
+</div>
+
+<script>
+    const startBtn = document.getElementById('start');
+    const stopBtn = document.getElementById('stop');
+    const statusEl = document.getElementById('status');
+    const logEl = document.getElementById('log');
+    const player = document.getElementById('audioPlayback');
+
+    let mediaRecorder;
+    let audioChunks = [];
+
+    function log(msg) {
+        logEl.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    startBtn.onclick = async () => {
+        log("Нажата кнопка СТАРТ");
+        audioChunks = [];
+        
+        try {
+            // Форсируем аудио-контекст для мобильных устройств
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const audioCtx = new AudioContext();
+            
+            log("Запрос getUserMedia...");
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                } 
+            });
+
+            log("Доступ получен!");
+            statusEl.innerText = "Запись идет...";
+            statusEl.style.color = "red";
+            
+            startBtn.style.display = "none";
+            stopBtn.style.display = "inline-block";
+            player.style.display = "none";
+
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                player.src = audioUrl;
+                player.style.display = "block";
+                log("Файл сформирован. Можно слушать.");
+                
+                // Останавливаем все треки микрофона, чтобы иконка записи исчезла
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            log("MediaRecorder запущен");
+
+        } catch (err) {
+            log("ОШИБКА: " + err.name);
+            statusEl.innerText = "Ошибка: " + err.message;
+            statusEl.style.color = "black";
+            
+            if (location.protocol !== 'https:') {
+                statusEl.innerText += " (ТРЕБУЕТСЯ HTTPS)";
+            }
+        }
+    };
+
+    stopBtn.onclick = () => {
+        mediaRecorder.stop();
+        log("Запись остановлена");
+        statusEl.innerText = "Запись завершена";
+        statusEl.style.color = "green";
+        startBtn.style.display = "inline-block";
+        stopBtn.style.display = "none";
+    };
+</script>
+
+</body>
+</html>

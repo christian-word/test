@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Тест мікрофона — різні варіанти</title>
+  <style>
+    body { 
+      font-family: system-ui, sans-serif; 
+      padding: 20px; 
+      background: #f0f2f5; 
+      margin: 0;
+    }
+    .container { 
+      max-width: 640px; 
+      margin: auto; 
+      background: white; 
+      padding: 24px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12); 
+    }
+    h2 { text-align: center; color: #1a3c34; }
+    select, button { 
+      padding: 12px 20px; 
+      font-size: 1.1rem; 
+      margin: 10px 6px; 
+      border-radius: 8px; 
+      border: none; 
+      cursor: pointer; 
+    }
+    select { background: #e9ecef; }
+    #start  { background: #28a745; color: white; }
+    #stop   { background: #dc3545; color: white; }
+    #marker { background: #ffc107; color: black; }
+    #timer  { font-size: 3rem; font-weight: bold; text-align: center; margin: 20px 0; color: #343a40; }
+    #status { text-align: center; font-size: 1.1rem; margin: 16px 0; min-height: 1.4em; }
+    #log    { background: #f8f9fa; padding: 12px; border-radius: 6px; font-family: monospace; white-space: pre-wrap; margin-top: 16px; max-height: 180px; overflow-y: auto; }
+    audio   { width: 100%; margin: 20px 0; }
+    .small-btn { padding: 8px 16px; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Тест мікрофона — варіанти підключення</h2>
+
+  <div style="text-align:center; margin-bottom: 20px;">
+    <select id="variant">
+      <option value="1">Варіант 1 — базовий {audio: true}</option>
+      <option value="2">Варіант 2 — порожній об'єкт {audio: {}}</option>
+      <option value="3">Варіант 3 — вимкнені обробки (echo, noise, gain)</option>
+      <option value="4">Варіант 4 — ideal параметри (44100 Hz, mono)</option>
+      <option value="5">Варіант 5 — 16000 Hz + вимкнені обробки</option>
+      <option value="6">Варіант 6 — перший знайдений пристрій</option>
+      <option value="7">Варіант 7 — комбінований толерантний</option>
+    </select>
+  </div>
+
+  <div style="text-align:center;">
+    <button id="start">Почати запис</button>
+    <button id="stop" disabled>Зупинити</button>
+    <button id="marker" disabled>Маркер</button>
+    <button id="clearLog" class="small-btn">Очистити лог</button>
+  </div>
+
+  <div id="timer">00:00</div>
+  <div id="status">Оберіть варіант і натисніть «Почати запис»</div>
+
+  <div id="markers">
+    <strong>Маркери:</strong>
+    <div id="markersList"></div>
+  </div>
+
+  <audio id="player" controls></audio>
+
+  <div id="log"></div>
+</div>
+
+<script>
+// =============================================
+
+const variants = {
+  1: { audio: true },
+  2: { audio: {} },
+  3: { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } },
+  4: { audio: { sampleRate: { ideal: 44100 }, channelCount: { ideal: 1 }, echoCancellation: { ideal: false } } },
+  5: { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1, sampleRate: 16000 } },
+  6: null, // спеціальна логіка нижче
+  7: { audio: { echoCancellation: { ideal: false }, noiseSuppression: { ideal: false }, autoGainControl: { ideal: false }, channelCount: { ideal: 1 }, sampleRate: { ideal: 16000 } } }
+};
+
+let mediaRecorder = null;
+let audioChunks = [];
+let startTime = null;
+let timerInterval = null;
+let markers = [];
+let currentBlob = null;
+
+const startBtn    = document.getElementById('start');
+const stopBtn     = document.getElementById('stop');
+const markerBtn   = document.getElementById('marker');
+const timerEl     = document.getElementById('timer');
+const statusEl    = document.getElementById('status');
+const markersList = document.getElementById('markersList');
+const player      = document.getElementById('player');
+const logEl       = document.getElementById('log');
+const variantSel  = document.getElementById('variant');
+
+function log(msg, isError = false) {
+  const line = document.createElement('div');
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  if (isError) line.style.color = '#dc3545';
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2,'0');
+  const s = Math.floor(sec % 60).toString().padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+function updateTimer() {
+  if (!startTime) return;
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  timerEl.textContent = formatTime(elapsed);
+}
+
+function addMarker() {
+  if (!startTime) return;
+  const sec = Math.floor((Date.now() - startTime) / 1000);
+  const label = `Маркер ${markers.length + 1} — ${formatTime(sec)}`;
+  markers.push({ time: sec, label });
+
+  const div = document.createElement('div');
+  div.textContent = label;
+  div.style.padding = '8px';
+  div.style.background = '#e9ecef';
+  div.style.margin = '4px 0';
+  div.style.borderRadius = '6px';
+  div.style.cursor = 'pointer';
+  div.onclick = () => { if (player.src) player.currentTime = sec; };
+  markersList.appendChild(div);
+
+  log(`Додано ${label}`);
+}
+
+async function startRecording() {
+  log("Спроба запуску запису...");
+  statusEl.textContent = "Запит дозволу...";
+
+  const variant = variantSel.value;
+  log(`Вибрано варіант ${variant}`);
+
+  try {
+    let constraints;
+
+    if (variant === "6") {
+      log("Перелік аудіо-пристроїв...");
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter(d => d.kind === 'audioinput');
+      
+      if (audioInputs.length === 0) {
+        throw new Error("Не знайдено жодного мікрофона");
+      }
+      
+      log(`Знайдено ${audioInputs.length} мікрофонів, беру перший`);
+      constraints = { audio: { deviceId: { exact: audioInputs[0].deviceId } } };
+    } else {
+      constraints = variants[variant];
+      log("Обмеження: " + JSON.stringify(constraints, null, 2));
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    log("Мікрофон отримано ✓");
+
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    markers = [];
+    markersList.innerHTML = '';
+    startTime = Date.now();
+
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      currentBlob = blob;
+      player.src = URL.createObjectURL(blob);
+      log("Запис завершено, файл готовий для відтворення");
+      statusEl.textContent = "Запис збережено локально";
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      markerBtn.disabled = true;
+    };
+
+    mediaRecorder.start();
+    timerInterval = setInterval(updateTimer, 400);
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    markerBtn.disabled = false;
+    statusEl.textContent = "Запис іде… Говоріть!";
+
+  } catch (err) {
+    statusEl.textContent = "Помилка: " + err.name;
+    log("ПОМИЛКА: " + err.name + " — " + err.message, true);
+    console.error(err);
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+    clearInterval(timerInterval);
+    timerEl.textContent = '00:00';
+    startTime = null;
+    log("Запис зупинено");
+  }
+}
+
+startBtn.onclick = startRecording;
+stopBtn.onclick  = stopRecording;
+markerBtn.onclick = addMarker;
+
+document.getElementById('clearLog').onclick = () => { logEl.innerHTML = ''; };
+
+log("Сторінка завантажена. Оберіть варіант і починайте тест.");
+</script>
+</body>
+</html>

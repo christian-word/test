@@ -204,13 +204,23 @@ const Dispatcher = {
         this.intentDisplay.innerHTML = ai;
     },
 
-    async analyze(text) {
-        const systemPrompt = `You are a Bible SPA controller. Analyze the user's input and return ONLY JSON. 
-        Possible actions: 
-        1. {"action": "font", "value": "up" | "down"} - scale text size.
-        2. {"action": "scroll", "value": "number"} - go to specific verse ID (1-5).
-        3. {"action": "search", "value": "keyword"} - search for a word or topic in the text.
-        Example: "Знайди про світло" -> {"action": "search", "value": "світло"}`;
+async analyze(text) {
+        // 1. Збираємо весь контент зі сторінки, щоб дати ШІ "очі"
+        const verses = Array.from(document.querySelectorAll('.verse')).map(v => ({
+            id: v.id,
+            text: v.innerText
+        }));
+
+        const systemPrompt = `Ти - інтелектуальний асистент Біблії. 
+        Тобі надано список віршів: ${JSON.stringify(verses)}.
+        
+        Аналізуй запит користувача і поверни JSON.
+        Якщо користувач шукає щось за змістом, порівняй його запит з текстом усіх віршів і вибери ОДИН найбільш підходящий ID.
+        
+        Формат відповіді: 
+        {"action": "scroll", "value": "ID_вірша", "reason": "чому вибрано"}
+        АБО для команд:
+        {"action": "font", "value": "up/down"}`;
 
         try {
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -225,17 +235,22 @@ const Dispatcher = {
                         { role: "system", content: systemPrompt },
                         { role: "user", content: text }
                     ],
-                    temperature: 0.1,
+                    temperature: 0.1, // Максимальна точність
                     response_format: { "type": "json_object" }
                 })
             });
 
             const data = await response.json();
             const intent = JSON.parse(data.choices[0].message.content);
+            
+            // Виводимо пояснення ШІ в консоль для перевірки
+            console.log("ШІ вибрав цей вірш, тому що:", intent.reason);
+            
             this.execute(intent);
 
         } catch (err) {
-            this.intentDisplay.innerText = "Помилка API: " + err.message;
+            this.intentDisplay.innerText = "Помилка розумного пошуку";
+            console.error(err);
         }
     },
 

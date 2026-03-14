@@ -1,0 +1,315 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible AI Navigator - Active Pro</title>
+    <style>
+        :root {
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --highlight: #fff9db;
+            --text-main: #34495e;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            transition: font-size 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 150px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), #34495e);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        #nav-info {
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .verse-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .verse {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 5px solid transparent;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            line-height: 1.6;
+        }
+
+        .verse b {
+            color: var(--accent);
+            margin-right: 12px;
+            font-size: 1.1em;
+        }
+
+        .verse.active {
+            border-left-color: var(--accent);
+            background-color: var(--highlight);
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.15);
+        }
+
+        /* Керування */
+        #mic-btn {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        #mic-btn.listening {
+            background: #e74c3c;
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.6); }
+            70% { box-shadow: 0 0 0 25px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .ai-console {
+            position: fixed;
+            bottom: 130px;
+            left: 20px;
+            right: 20px;
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .reason-tag {
+            color: #3498db;
+            font-size: 0.9em;
+            margin-top: 8px;
+            display: block;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1 id="book-title" style="margin:0">Завантаження...</h1>
+        <div id="nav-info">Готовність до роботи</div>
+    </div>
+
+    <div id="bible-display" class="verse-list">
+        </div>
+</div>
+
+<div id="ai-console" class="ai-console">
+    <div id="stt-text" style="opacity: 0.8; font-size: 0.9em;"></div>
+    <div id="ai-status" style="font-weight: bold; margin-top: 5px;"></div>
+    <div id="ai-reason" class="reason-tag"></div>
+</div>
+
+<button id="mic-btn">🎤</button>
+
+<script>
+/**
+ * БАЗА ДАНИХ (JSON)
+ */
+const BIBLE_DATA = [
+    {
+        title: "Буття",
+        chapters: [{
+            number: 1,
+            verses: [
+                { n: 1, text: "На початку Бог створив Небо та землю." },
+                { n: 2, text: "А земля була пуста та порожня, і темрява була над безоднею." },
+                { n: 3, text: "І сказав Бог: Хай буде світло! І сталося світло." }
+            ]
+        }]
+    },
+    {
+        title: "Івана",
+        chapters: [{
+            number: 1,
+            verses: [
+                { n: 1, text: "Спочатку було Слово, а Слово в Бога було, і Бог було Слово." },
+                { n: 2, text: "Воно в Бога було спочатку." },
+                { n: 3, text: "Усе через Нього повстало, і без Нього ніщо не повстало." }
+            ]
+        }]
+    }
+];
+
+const GROQ_API_KEY = "gsk_...............................................................................TW"; 
+const MODEL = "llama-3.3-70b-versatile";
+
+const Dispatcher = {
+    fontSize: 100,
+
+    init() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) return alert("Браузер не підтримує Speech API.");
+
+        this.rec = new Speech();
+        this.rec.lang = 'uk-UA';
+
+        this.btn = document.getElementById('mic-btn');
+        this.console = document.getElementById('ai-console');
+        this.statusText = document.getElementById('ai-status');
+        this.sttText = document.getElementById('stt-text');
+        this.reasonText = document.getElementById('ai-reason');
+
+        this.btn.onclick = () => this.rec.start();
+
+        this.rec.onstart = () => {
+            this.btn.classList.add('listening');
+            this.showUI("Слухаю...", "Натисніть і говоріть", "");
+        };
+
+        this.rec.onend = () => this.btn.classList.remove('listening');
+
+        this.rec.onresult = async (e) => {
+            const transcript = e.results[0][0].transcript;
+            this.showUI(`"${transcript}"`, "ШІ аналізує зміст Біблії...", "");
+            await this.processAI(transcript);
+        };
+
+        this.render("Івана", 1); // Початковий стан
+    },
+
+    showUI(stt, status, reason) {
+        this.console.style.display = 'block';
+        this.sttText.innerText = stt;
+        this.statusText.innerText = status;
+        this.reasonText.innerText = reason;
+    },
+
+    async processAI(text) {
+        const bibleBrief = BIBLE_DATA.map(b => ({
+            book: b.title,
+            content: b.chapters.map(c => ({
+                ch: c.number,
+                text: c.verses.map(v => v.n + ":" + v.text).join(" ")
+            }))
+        }));
+
+        const systemPrompt = `Ти - інтелектуальний диспетчер Біблії. 
+        Ось доступний текст: ${JSON.stringify(bibleBrief)}.
+        
+        Твоя задача:
+        1. Якщо це навігація (напр. "Буття 1 3"), поверни: {"action": "nav", "book": "Буття", "chapter": 1, "verse": 3}
+        2. Якщо це ПИТАННЯ по змісту (напр. "Де сказано про світло?"), знайди найкращий вірш і поверни: 
+           {"action": "nav", "book": "Назва", "chapter": X, "verse": Y, "reason": "Тут написано про..."}
+        3. Масштабування: {"action": "font", "value": "up" | "down"}
+        
+        Поверни ТІЛЬКИ чистий JSON.`;
+
+        try {
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: MODEL,
+                    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: text }],
+                    temperature: 0.1,
+                    response_format: { "type": "json_object" }
+                })
+            });
+
+            const data = await response.json();
+            const res = JSON.parse(data.choices[0].message.content);
+
+            if (res.action === 'nav') {
+                this.showUI(`"${text}"`, `Відкрито: ${res.book} ${res.chapter}:${res.verse}`, res.reason || "");
+                this.render(res.book, res.chapter, res.verse);
+            } else if (res.action === 'font') {
+                this.fontSize += (res.value === 'up' ? 20 : -20);
+                document.body.style.fontSize = this.fontSize + "%";
+                this.showUI(`"${text}"`, "Шрифт змінено", "");
+            }
+
+        } catch (err) {
+            console.error(err);
+            this.showUI("Помилка", "Не вдалося обробити запит", err.message);
+        }
+
+        setTimeout(() => this.console.style.display = 'none', 6000);
+    },
+
+    render(bookTitle, chapterNum, highlightVerse = null) {
+        const book = BIBLE_DATA.find(b => b.title.toLowerCase() === bookTitle.toLowerCase());
+        if (!book) return;
+
+        const chapter = book.chapters.find(c => c.number == chapterNum);
+        if (!chapter) return;
+
+        document.getElementById('book-title').innerText = `${book.title} ${chapter.number}`;
+        document.getElementById('nav-info').innerText = highlightVerse ? `Вірш ${highlightVerse}` : "Розділ повністю";
+
+        const display = document.getElementById('bible-display');
+        display.innerHTML = '';
+
+        chapter.verses.forEach(v => {
+            const div = document.createElement('div');
+            div.className = 'verse' + (highlightVerse && v.n == highlightVerse ? ' active' : '');
+            div.id = 'v' + v.n;
+            div.innerHTML = `<b>${v.n}</b> ${v.text}`;
+            display.appendChild(div);
+        });
+
+        if (highlightVerse) {
+            setTimeout(() => {
+                const target = document.getElementById('v' + highlightVerse);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+        }
+    }
+};
+
+Dispatcher.init();
+</script>
+
+</body>
+</html>

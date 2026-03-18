@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовый Аудио Плеер</title>
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .player-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 90%; max-width: 600px; }
+        h2 { color: #ae5f9d; margin-top: 0; font-weight: 400; }
+        #waveform { margin: 20px 0; background: #fafafa; border-radius: 4px; border: 1px solid #eee; }
+        .controls { display: flex; align-items: center; gap: 15px; }
+        button { background: #ae5f9d; color: white; border: none; padding: 12px 25px; border-radius: 50px; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #8e4d80; transform: scale(1.05); }
+        .time { color: #666; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="player-card">
+    <h2>Фонограмма</h2>
+    <div id="waveform"></div>
+    
+    <div class="controls">
+        <button id="playPause">Воспроизвести</button>
+        <span class="time" id="currentTime">00:00</span> / <span class="time" id="totalDuration">00:00</span>
+    </div>
+</div>
+
+<script>
+    // Настройка плеера
+    const wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: '#dcdcdc',
+        progressColor: '#ae5f9d',
+        barWidth: 3,
+        barGap: 2,
+        barRadius: 3,
+        height: 100,
+        responsive: true,
+        normalize: true,
+        cursorColor: 'transparent'
+    });
+
+    // ВАЖНО: Твоя прямая ссылка из Dropbox (с dl.dropboxusercontent.com)
+    const audioUrl = 'https://fonki.pro/plugin/sounds/uploads/2023100117595272.mp3';
+    // Замени выше на реальную ссылку!
+    
+    wavesurfer.load(audioUrl);
+
+    // Управление кнопкой
+    const btn = document.getElementById('playPause');
+    btn.onclick = () => wavesurfer.playPause();
+
+    wavesurfer.on('play', () => btn.textContent = 'Пауза');
+    wavesurfer.on('pause', () => btn.textContent = 'Воспроизвести');
+
+    // Обновление времени
+    const formatTime = (seconds) => new Date(seconds * 1000).toISOString().substr(14, 5);
+    
+    wavesurfer.on('ready', () => {
+        document.getElementById('totalDuration').textContent = formatTime(wavesurfer.getDuration());
+    });
+
+    wavesurfer.on('audioprocess', () => {
+        document.getElementById('currentTime').textContent = formatTime(wavesurfer.getCurrentTime());
+    });
+</script>
+
+</body>
+</html>

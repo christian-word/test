@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аудіо Конвертер</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --surface: #14141c;
+  --surface2: #1c1c28;
+  --surface3: #242430;
+  --border: rgba(255,255,255,0.10);
+  --border2: rgba(255,255,255,0.18);
+  --accent: #7c6cff;
+  --accent2: #a599ff;
+  --accent-glow: rgba(124,108,255,0.25);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.08);
+  --orange: #fb923c;
+  --orange-bg: rgba(251,146,60,0.08);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.08);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,0.08);
+  --text: #f5f5ff;
+  --text2: #c0c0dd;
+  --text3: #9090b0;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px 60px;
+}
+
+/* Ambient background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(124,108,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 80% 80%, rgba(96,165,250,0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 580px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--accent), #5b8fff);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px var(--accent-glow);
+  flex-shrink: 0;
+}
+
+.logo-icon svg { width: 22px; height: 22px; stroke: #fff; }
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.logo-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Format toggle */
+.format-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.format-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+.out-toggle {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.out-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 7px 18px;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all .2s;
+  background: transparent;
+  color: var(--text3);
+  position: relative;
+}
+
+.out-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.out-btn:not(.active):hover { color: var(--text2); background: var(--surface2); }
+
+/* Drop zone */
+.drop-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .25s;
+  position: relative;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 100%, var(--accent-glow), transparent 70%);
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.drop-zone:hover::before, .drop-zone.drag::before { opacity: 1; }
+.drop-zone:hover, .drop-zone.drag {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.drop-zone input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+.drop-icon-wrap {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  position: relative;
+  pointer-events: none;
+}
+
+.drop-icon-bg {
+  width: 64px;
+  height: 64px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .3s;
+}
+
+.drop-zone:hover .drop-icon-bg {
+  background: var(--surface3);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.drop-icon-bg svg { width: 28px; height: 28px; stroke: var(--accent2); }
+
+.drop-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  position: relative;
+  pointer-events: none;
+}
+
+.drop-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  position: relative;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+/* Warn */
+.warn-box {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--orange-bg);
+  border: 1px solid rgba(251,146,60,0.2);
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--orange);
+  display: none;
+  line-height: 1.5;
+}
+
+/* Files list */
+.files-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color .2s;
+}
+
+.file-card:hover { border-color: var(--border2); }
+
+.file-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.fi-wav  { background: var(--blue-bg);   color: var(--blue); border: 1px solid rgba(96,165,250,0.15); }
+.fi-flac { background: var(--green-bg);  color: var(--green); border: 1px solid rgba(74,222,128,0.15); }
+.fi-m4a, .fi-m4p, .fi-aac { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(251,146,60,0.15); }
+.fi-ogg  { background: rgba(192,132,252,0.08); color: #c084fc; border: 1px solid rgba(192,132,252,0.15); }
+.fi-mp3  { background: rgba(124,108,255,0.08); color: var(--accent2); border: 1px solid rgba(124,108,255,0.15); }
+
+.file-meta { flex: 1; min-width: 0; }
+
+.file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-size {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.file-arrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.pb {
+  height: 2px;
+  background: var(--surface3);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+  display: none;
+}
+.pf { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width .15s; }
+
+.file-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+}
+
+.s-wait { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+.s-proc { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(96,165,250,0.2); }
+.s-done { background: var(--green-bg); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.s-err  { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+
+.dl-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all .2s;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.dl-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+
+.file-remove {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  transition: all .15s;
+}
+.file-remove:hover { background: var(--red-bg); color: var(--red); }
+
+/* Settings */
+.settings {
+  margin-top: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: none;
+}
+
+.settings-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 14px;
+}
+
+.settings-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.sg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+select {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2355556a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  transition: border-color .2s;
+}
+
+select:focus { outline: none; border-color: var(--accent); }
+select:hover { border-color: var(--border2); }
+
+/* Actions */
+.actions {
+  margin-top: 14px;
+  display: none;
+  gap: 10px;
+}
+
+.btn-go {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--accent), #5b8fff);
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 24px var(--accent-glow);
+  letter-spacing: -0.2px;
+}
+
+.btn-go:hover { transform: translateY(-1px); box-shadow: 0 8px 32px var(--accent-glow); }
+.btn-go:active { transform: translateY(0); }
+.btn-go:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+
+.btn-clear {
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text2);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.btn-clear:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+
+/* Global progress */
+.glob-pb {
+  height: 2px;
+  background: var(--surface2);
+  border-radius: 2px;
+  margin-top: 14px;
+  overflow: hidden;
+  display: none;
+}
+.glob-pf {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  transition: width .3s;
+}
+
+/* Info box */
+.info-box {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--green-bg);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--green);
+  display: none;
+  letter-spacing: 0.3px;
+}
+
+
+.footer {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent2);
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+.footer-logo svg { opacity: 0.8; }
+.footer-logo strong { font-weight: 800; color: var(--accent); }
+.footer-divider { width: 32px; height: 1px; background: var(--border2); }
+.footer-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+  line-height: 1.7;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+
+[data-theme="light"] {
+  --bg: #f4f4f8;
+  --surface: #ffffff;
+  --surface2: #f0f0f5;
+  --surface3: #e8e8f0;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --accent: #5b4de8;
+  --accent2: #7c6cff;
+  --accent-glow: rgba(91,77,232,0.2);
+  --green: #16a34a;
+  --green-bg: rgba(22,163,74,0.08);
+  --orange: #c2410c;
+  --orange-bg: rgba(194,65,12,0.08);
+  --red: #dc2626;
+  --red-bg: rgba(220,38,38,0.08);
+  --blue: #2563eb;
+  --blue-bg: rgba(37,99,235,0.08);
+  --text: #0f0f1a;
+  --text2: #4a4a6a;
+  --text3: #8888aa;
+}
+
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(91,77,232,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 80% 80%, rgba(37,99,235,0.04) 0%, transparent 60%);
+}
+
+[data-theme="light"] .s-wait { background: #ebebf5; color: #6666aa; border: 1px solid rgba(0,0,0,0.08); }
+[data-theme="light"] .fi-wav  { background: #dbeafe; color: #1d4ed8; border: 1px solid rgba(29,78,216,0.15); }
+[data-theme="light"] .fi-flac { background: #dcfce7; color: #15803d; border: 1px solid rgba(21,128,61,0.15); }
+[data-theme="light"] .fi-m4a, [data-theme="light"] .fi-m4p, [data-theme="light"] .fi-aac { background: #ffedd5; color: #c2410c; border: 1px solid rgba(194,65,12,0.15); }
+[data-theme="light"] .fi-ogg  { background: #f3e8ff; color: #7e22ce; border: 1px solid rgba(126,34,206,0.15); }
+[data-theme="light"] .fi-mp3  { background: #ede9fe; color: #5b21b6; border: 1px solid rgba(91,33,182,0.15); }
+
+
+.theme-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.toggle-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text3);
+  transition: color .2s;
+  user-select: none;
+}
+.toggle-track {
+  width: 42px;
+  height: 24px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  position: relative;
+  transition: all .25s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover .toggle-track { border-color: var(--accent); }
+[data-theme="light"] .toggle-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: var(--text3);
+  border-radius: 50%;
+  transition: all .25s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="light"] .toggle-thumb {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  body { padding: 20px 12px 48px; }
+
+  .header { margin-bottom: 22px; gap: 11px; }
+  .logo-icon { width: 36px; height: 36px; border-radius: 10px; }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .logo-title { font-size: 16px; }
+  .logo-sub { font-size: 9px; }
+
+  .format-row { margin-bottom: 14px; }
+  .out-btn { font-size: 10px; padding: 7px 14px; }
+
+  .drop-zone { padding: 28px 16px; }
+  .drop-icon-wrap { width: 52px; height: 52px; margin-bottom: 12px; }
+  .drop-icon-bg { width: 52px; height: 52px; border-radius: 14px; }
+  .drop-icon-bg svg { width: 22px; height: 22px; }
+  .drop-title { font-size: 14px; }
+  .drop-sub { font-size: 10px; }
+
+  .file-card { padding: 10px 11px; gap: 9px; }
+  .file-icon { width: 34px; height: 34px; border-radius: 8px; font-size: 7px; }
+  .file-name { font-size: 12px; }
+  .file-size { font-size: 9px; }
+  .file-arrow { display: none; }
+  .file-status { font-size: 9px; padding: 2px 7px; }
+  .dl-btn { font-size: 9px; padding: 4px 10px; }
+  .file-remove { width: 22px; height: 22px; font-size: 12px; }
+
+  .settings { padding: 13px 14px; }
+  .settings-title { font-size: 9px; margin-bottom: 11px; }
+  .settings-grid { gap: 14px; }
+  .sl { font-size: 9px; }
+  select { font-size: 12px; padding: 6px 28px 6px 10px; }
+
+  .actions { gap: 8px; }
+  .btn-go { padding: 13px 16px; font-size: 14px; }
+  .btn-clear { padding: 13px 14px; font-size: 13px; }
+
+  .footer { margin-top: 28px; padding-top: 16px; }
+  .footer-logo { font-size: 14px; }
+  .footer-text { font-size: 9px; }
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12 0c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM9 10l12-3"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <div class="logo-title">Аудіо Конвертер</div>
+      <div class="logo-sub">WAV · FLAC · M4A · OGG → MP3 / WAV</div>
+    </div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Змінити тему">
+      <span class="toggle-label">Тема</span>
+      <div class="toggle-track">
+        <div class="toggle-thumb"></div>
+      </div>
+    </button>
+  </div>
+
+  <div class="format-row">
+    <span class="format-label">Вихід</span>
+    <div class="out-toggle">
+      <button class="out-btn active" id="btnMp3" onclick="setOut('mp3')">→ MP3</button>
+      <button class="out-btn" id="btnWav" onclick="setOut('wav')">→ WAV</button>
+    </div>
+  </div>
+
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".wav,.flac,.m4a,.m4p,.aac,.ogg,audio/*" multiple>
+    <div class="drop-icon-wrap">
+      <div class="drop-icon-bg">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+      </div>
+    </div>
+    <p class="drop-title">Перетягніть аудіо файли</p>
+    <p class="drop-sub">або натисніть для вибору · кілька файлів</p>
+  </div>
+
+  <div class="warn-box" id="warnBox"></div>
+  <div class="files-list" id="filesList"></div>
+
+  <div class="settings" id="settings">
+    <div class="settings-title">Параметри конвертації</div>
+    <div id="mp3Opts" class="settings-grid">
+      <div class="sg">
+        <span class="sl">Бітрейт</span>
+        <select id="bitrate">
+          <option value="128">128 kbps</option>
+          <option value="192" selected>192 kbps</option>
+          <option value="256">256 kbps</option>
+          <option value="320">320 kbps</option>
+        </select>
+      </div>
+      <div class="sg">
+        <span class="sl">Канали</span>
+        <select id="channels">
+          <option value="2" selected>Стерео</option>
+          <option value="1">Моно</option>
+        </select>
+      </div>
+    </div>
+    <div id="wavOpts" class="settings-grid" style="display:none">
+      <div class="sg">
+        <span class="sl">Глибина</span>
+        <select id="bitDepth">
+          <option value="16" selected>16 bit</option>
+          <option value="24">24 bit</option>
+          <option value="32">32 bit float</option>
+        </select>
+      </div>
+      <div class="sg">
+        <span class="sl">Канали</span>
+        <select id="wavChannels">
+          <option value="2" selected>Стерео</option>
+          <option value="1">Моно</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" id="actions">
+    <button class="btn-go" id="goBtn" onclick="convertAll()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span id="btnLabel">Конвертувати в MP3</span>
+    </button>
+    <button class="btn-clear" onclick="clearAll()">Очистити</button>
+  </div>
+
+  <div class="glob-pb" id="globPb"><div class="glob-pf" id="globPf" style="width:0%"></div></div>
+  <div class="info-box" id="infoBox"></div>
+
+  <div class="footer">
+    <div class="footer-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 19V6l12-3v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12 0c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM9 10l12-3"/>
+      </svg>
+      Sumy<strong>2026</strong>
+    </div>
+    <div class="footer-divider"></div>
+    <div class="footer-text">
+      Для внутрішнього використання<br>Вільно розповсюджується для церков
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+<script>
+const files = [];
+let converting = false;
+let outFmt = 'mp3';
+
+const SUPPORTED = ['wav','flac','m4a','m4p','aac','ogg','mp3','opus','m4b'];
+const EXT_CLASS = {wav:'fi-wav',flac:'fi-flac',m4a:'fi-m4a',m4p:'fi-m4p',aac:'fi-aac',ogg:'fi-ogg',mp3:'fi-mp3'};
+
+document.getElementById('fileInput').addEventListener('change', e => addFiles(e.target.files));
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); addFiles(e.dataTransfer.files); });
+
+function setOut(fmt) {
+  outFmt = fmt;
+  document.getElementById('btnMp3').className = 'out-btn' + (fmt==='mp3'?' active':'');
+  document.getElementById('btnWav').className = 'out-btn' + (fmt==='wav'?' active':'');
+  document.getElementById('mp3Opts').style.display = fmt==='mp3' ? 'flex' : 'none';
+  document.getElementById('wavOpts').style.display = fmt==='wav' ? 'flex' : 'none';
+  document.getElementById('btnLabel').textContent = fmt==='mp3' ? 'Конвертувати в MP3' : 'Конвертувати в WAV';
+  files.forEach(f => { if (f.status==='done') { f.status='wait'; f.blob=null; } });
+  render();
+}
+
+function getExt(name) { return name.split('.').pop().toLowerCase(); }
+function fmt(b) {
+  if (b<1024) return b+' B';
+  if (b<1048576) return Math.round(b/1024)+' KB';
+  return (b/1048576).toFixed(1)+' MB';
+}
+
+function addFiles(fl) {
+  const warns = [];
+  Array.from(fl).forEach(f => {
+    const ext = getExt(f.name);
+    if (ext==='m4p') warns.push(f.name+' — M4P може містити DRM (iTunes). Якщо захищений — конвертація не вдасться.');
+    if (!SUPPORTED.includes(ext)) { warns.push(f.name+' — формат не підтримується'); return; }
+    files.push({ file:f, ext, status:'wait', blob:null, id:Math.random().toString(36).slice(2) });
+  });
+  const wb = document.getElementById('warnBox');
+  if (warns.length) { wb.style.display='block'; wb.innerHTML=warns.join('<br>'); } else { wb.style.display='none'; }
+  render();
+}
+
+function render() {
+  const list = document.getElementById('filesList');
+  list.innerHTML = '';
+  const hasFiles = files.length > 0;
+  document.getElementById('settings').style.display = hasFiles ? 'block' : 'none';
+  document.getElementById('actions').style.display = hasFiles ? 'flex' : 'none';
+  if (!hasFiles) return;
+
+  const extLabel = outFmt.toUpperCase();
+  files.forEach((f,i) => {
+    const d = document.createElement('div');
+    d.className = 'file-card';
+    const sm = {wait:['s-wait','очікування'],proc:['s-proc','обробка…'],done:['s-done','готово'],err:['s-err','помилка']};
+    const [sc,sl] = sm[f.status];
+    const ic = EXT_CLASS[f.ext]||'fi-wav';
+    const cleanName = f.file.name.replace(/\.[^.]+$/, '');
+    d.innerHTML = `
+      <div class="file-icon ${ic}">${f.ext.toUpperCase()}</div>
+      <div class="file-meta">
+        <div class="file-name">${cleanName}</div>
+        <div class="file-info">
+          <span class="file-size">${fmt(f.file.size)}</span>
+          <span class="file-arrow">${f.ext.toUpperCase()} → ${extLabel}</span>
+        </div>
+        <div class="pb" id="pb${f.id}" style="display:${f.status==='proc'?'block':'none'}"><div class="pf" id="pf${f.id}" style="width:0%"></div></div>
+      </div>
+      <span class="file-status ${sc}">${sl}</span>
+      ${f.blob ? `<button class="dl-btn" onclick="dl(${i})">↓ ${extLabel}</button>` : ''}
+      ${f.status!=='proc' ? `<button class="file-remove" title="Видалити" onclick="rm(${i})">✕</button>` : ''}
+    `;
+    list.appendChild(d);
+  });
+}
+
+function rm(i) { files.splice(i,1); render(); }
+function clearAll() {
+  files.length=0; render();
+  document.getElementById('globPb').style.display='none';
+  document.getElementById('infoBox').style.display='none';
+  document.getElementById('warnBox').style.display='none';
+}
+
+function dl(i) {
+  const f = files[i];
+  const url = URL.createObjectURL(f.blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=f.file.name.replace(/\.[^.]+$/,'.'+outFmt);
+  a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+async function convertAll() {
+  if (converting) return;
+  const pending = files.filter(f=>f.status==='wait');
+  if (!pending.length) return;
+  converting=true;
+  document.getElementById('goBtn').disabled=true;
+  document.getElementById('globPb').style.display='block';
+  document.getElementById('globPf').style.width='0%';
+
+  let done=0;
+  for (let i=0;i<files.length;i++) {
+    if (files[i].status!=='wait') continue;
+    files[i].status='proc'; render();
+    try {
+      if (outFmt==='mp3') {
+        const kbps = parseInt(document.getElementById('bitrate').value);
+        const ch = parseInt(document.getElementById('channels').value);
+        files[i].blob = await toMp3(files[i], kbps, ch, i);
+      } else {
+        const bits = parseInt(document.getElementById('bitDepth').value);
+        const ch = parseInt(document.getElementById('wavChannels').value);
+        files[i].blob = await toWav(files[i], bits, ch, i);
+      }
+      files[i].status='done';
+    } catch(e) {
+      files[i].status='err';
+      console.error(e);
+    }
+    done++;
+    document.getElementById('globPf').style.width=Math.round(done/pending.length*100)+'%';
+    render();
+  }
+  converting=false;
+  document.getElementById('goBtn').disabled=false;
+  const ok=files.filter(f=>f.status==='done').length;
+  const ib=document.getElementById('infoBox');
+  ib.style.display='block';
+  ib.textContent=`✓ готово: ${ok} з ${files.length} файлів · формат: ${outFmt.toUpperCase()}`;
+}
+
+function decodeFile(file) {
+  return new Promise((res,rej) => {
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+        let buf;
+        try { buf = await ctx.decodeAudioData(e.target.result); }
+        catch(de) { ctx.close(); rej(new Error('Decode failed — DRM або пошкоджений файл')); return; }
+        ctx.close(); res(buf);
+      } catch(err) { rej(err); }
+    };
+    reader.onerror = rej;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function toMp3(fobj, kbps, ch, idx) {
+  const buf = await decodeFile(fobj.file);
+  const sr = buf.sampleRate;
+  const numCh = Math.min(ch, buf.numberOfChannels);
+  const enc = new lamejs.Mp3Encoder(numCh, sr, kbps);
+  const mp3 = [];
+  const block = 1152;
+  const L = buf.getChannelData(0);
+  const R = numCh>1 ? (buf.numberOfChannels>1 ? buf.getChannelData(1) : L) : null;
+  const s16 = v => { const s=Math.max(-1,Math.min(1,v)); return s<0?s*32768:s*32767; };
+  const total = L.length;
+  const pb = document.getElementById('pf'+fobj.id);
+  for (let i=0;i<total;i+=block) {
+    const end=Math.min(i+block,total);
+    const lc=new Int16Array(end-i);
+    for(let j=i;j<end;j++) lc[j-i]=s16(L[j]);
+    let chunk;
+    if (numCh===1) { chunk=enc.encodeBuffer(lc); }
+    else { const rc=new Int16Array(end-i); for(let j=i;j<end;j++) rc[j-i]=s16(R[j]); chunk=enc.encodeBuffer(lc,rc); }
+    if (chunk.length>0) mp3.push(chunk);
+    if (pb) pb.style.width=Math.round(end/total*100)+'%';
+  }
+  const tail=enc.flush(); if(tail.length>0) mp3.push(tail);
+  return new Blob(mp3,{type:'audio/mpeg'});
+}
+
+async function toWav(fobj, bitDepth, ch, idx) {
+  const buf = await decodeFile(fobj.file);
+  const numCh = Math.min(ch, buf.numberOfChannels);
+  const sr = buf.sampleRate;
+  const numFrames = buf.length;
+  const pb = document.getElementById('pf'+fobj.id);
+
+  const bytesPerSample = bitDepth === 32 ? 4 : bitDepth === 24 ? 3 : 2;
+  const dataSize = numFrames * numCh * bytesPerSample;
+  const headerSize = 44;
+  const arrayBuf = new ArrayBuffer(headerSize + dataSize);
+  const view = new DataView(arrayBuf);
+
+  const writeStr = (offset, str) => { for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); };
+  writeStr(0,'RIFF');
+  view.setUint32(4, 36+dataSize, true);
+  writeStr(8,'WAVE');
+  writeStr(12,'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, bitDepth===32 ? 3 : 1, true);
+  view.setUint16(22, numCh, true);
+  view.setUint32(24, sr, true);
+  view.setUint32(28, sr*numCh*bytesPerSample, true);
+  view.setUint16(32, numCh*bytesPerSample, true);
+  view.setUint16(34, bitDepth, true);
+  writeStr(36,'data');
+  view.setUint32(40, dataSize, true);
+
+  const channels = [];
+  for (let c=0;c<numCh;c++) channels.push(buf.getChannelData(c));
+
+  let offset = headerSize;
+  const reportEvery = Math.floor(numFrames / 20);
+  for (let i=0;i<numFrames;i++) {
+    for (let c=0;c<numCh;c++) {
+      const s = Math.max(-1,Math.min(1,channels[c][i]));
+      if (bitDepth===32) {
+        view.setFloat32(offset, s, true); offset+=4;
+      } else if (bitDepth===24) {
+        const v = s<0 ? s*8388608 : s*8388607;
+        const iv = Math.round(v);
+        view.setUint8(offset, iv&0xff);
+        view.setUint8(offset+1, (iv>>8)&0xff);
+        view.setUint8(offset+2, (iv>>16)&0xff);
+        offset+=3;
+      } else {
+        const v = s<0 ? s*32768 : s*32767;
+        view.setInt16(offset, Math.round(v), true); offset+=2;
+      }
+    }
+    if (pb && i%reportEvery===0) pb.style.width=Math.round(i/numFrames*100)+'%';
+  }
+  if (pb) pb.style.width='100%';
+  return new Blob([arrayBuf], {type:'audio/wav'});
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('ac-theme', next); } catch(e) {}
+}
+
+// Restore saved theme
+(function() {
+  try {
+    const saved = localStorage.getItem('ac-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  } catch(e) {}
+})();
+
+</script>
+</body>
+</html>

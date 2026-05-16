@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Lyria 3 API Музыкальный Плеер</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: #fff; padding: 30px; text-align: center; }
+        input, button { padding: 12px; font-size: 16px; border-radius: 6px; border: none; margin: 10px; }
+        input { width: 500px; background: #222; color: #fff; text-align: center; }
+        button { background: #1a73e8; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #1557b0; }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+        #status { margin-top: 20px; font-size: 18px; color: #00e676; }
+        #debug { margin-top: 30px; font-size: 12px; color: #555; text-align: left; background: #000; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <h2>Локальный пульт Lyria 3 (Синтвейв / Итало-Диско)</h2>
+    <p style="color: #aaa;">Укажите стиль, темп (BPM) и музыкальные инструменты:</p>
+    
+    <input type="text" id="prompt" value="118 BPM, 80s Italo Disco instrumental, analog synthesizer bassline, vintage LinnDrum machine beat, retro-futuristic mood">
+    <br>
+    <button id="genBtn" onclick="generateMusic()">Запустить генерацию ИИ</button>
+    
+    <div id="status">Ожидание команды...</div>
+    <br>
+    <audio id="player" controls style="display:none; margin: 0 auto; width: 400px;"></audio>
+
+    <div id="debug">Лог отладки API:</div>
+
+    <script>
+        // ВСТАВЬТЕ СВОЙ API-КЛЮЧ СЮДА:
+        const API_KEY = "AIzaSyABRwIKwkNgNYCeaU9T-e7qTRtkGpMoLMs"; 
+
+        function log(msg, obj = "") {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML += "<br>" + msg + " " + (obj ? JSON.stringify(obj) : "");
+            console.log(msg, obj);
+        }
+
+        async function generateMusic() {
+            const promptText = document.getElementById('prompt').value;
+            const statusDiv = document.getElementById('status');
+            const player = document.getElementById('player');
+            const btn = document.getElementById('genBtn');
+            
+            btn.disabled = true;
+            statusDiv.innerText = "Формирование музыкального потока Google Lyria...";
+            statusDiv.style.color = "#ffb300";
+            player.style.display = "none";
+
+            try {
+                // Официальный эндпоинт музыкальных интеракций Lyria 3
+                const url = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${API_KEY}`;
+                
+                log("Отправка запроса на эндпоинт...");
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Api-Revision': '2026-05-20' // Актуальная ревизия музыкального API
+                    },
+                    body: JSON.stringify({
+                        model: "models/lyria-3-clip-preview",
+                        prompt: promptText,
+                        options: {
+                            audio_format: "MP3",
+                            quality: "HIGH"
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                log("Ответ сервера:", data);
+
+                if (data.error) {
+                    // Если аккаунт бесплатный, тут отобразится требование биллинга от Google
+                    statusDiv.innerText = "Ошибка доступа: " + data.error.message;
+                    statusDiv.style.color = "#ff5252";
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Извлекаем сгенерированный аудиоконтент
+                let audioBytes = null;
+                if (data.generated_audio && data.generated_audio.bytes) {
+                    audioBytes = data.generated_audio.bytes;
+                } else if (data.audioContent) {
+                    audioBytes = data.audioContent;
+                }
+
+                if (audioBytes) {
+                    statusDiv.innerText = "Успешно! Трек сгенерирован.";
+                    statusDiv.style.color = "#00e676";
+                    
+                    player.src = "data:audio/mp3;base64," + audioBytes.trim();
+                    player.style.display = "block";
+                    player.play().catch(() => {
+                        statusDiv.innerText = "Сэмпл готов! Нажмите кнопку Play ниже.";
+                    });
+                } else {
+                    statusDiv.innerText = "Звуковой поток не найден в ответе. Проверьте окно отладки внизу.";
+                    statusDiv.style.color = "#ff5252";
+                }
+
+            } catch (err) {
+                statusDiv.innerText = "Сбой сети: " + err.message;
+                statusDiv.style.color = "#ff5252";
+                log("Критическая ошибка:", err);
+            }
+            
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Subtitles Extractor</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        textarea { width: 100%; height: 300px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Извлечь субтитры из YouTube</h2>
+    <input type="text" id="videoUrl" placeholder="Вставьте ссылку на видео (например, https://www.youtube.com/watch?v=...)">
+    <button onclick="extractSubs()">Получить текст</button>
+    <textarea id="output" placeholder="Текст субтитров появится здесь..." readonly></textarea>
+
+    <script>
+        async function extractSubs() {
+            const urlInput = document.getElementById('videoUrl').value;
+            const output = document.getElementById('output');
+            output.value = "Загрузка...";
+
+            // Извлекаем ID видео
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = urlInput.match(regExp);
+            const videoId = (match && match[2].length == 11) ? match[2] : null;
+
+            if (!videoId) {
+                output.value = "Ошибка: Неверная ссылка на YouTube видео.";
+                return;
+            }
+
+            try {
+                // Используем CORS-прокси для запроса страницы YouTube
+                const proxyUrl = 'https://api.allorigins.win/get?url=';
+                const targetUrl = encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`);
+                
+                const response = await fetch(`${proxyUrl}${targetUrl}`);
+                const data = await response.json();
+                const html = data.contents;
+
+                // Ищем строку с данными о субтитрах в коде страницы
+                const regex = /"captionTracks":\s*(\[[^\]]+\])/;
+                const parsed = html.match(regex);
+
+                if (!parsed) {
+                    output.value = "Субтитры не найдены или отключены для этого видео.";
+                    return;
+                }
+
+                const captionTracks = JSON.parse(parsed[1]);
+                const subUrl = captionTracks[0].baseUrl; // Берем первый попавшийся язык
+
+                // Получаем сам XML-файл с субтитрами
+                const subResponse = await fetch(`${proxyUrl}${encodeURIComponent(subUrl)}`);
+                const subData = await subResponse.json();
+                
+                // Очищаем XML от тегов
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(subData.contents, "text/xml");
+                const textNodes = xmlDoc.getElementsByTagName("text");
+                
+                let result = Array.from(textNodes).map(node => node.textContent).join("\n");
+                output.value = result;
+
+            } catch (error) {
+                output.value = "Произошла ошибка при получении данных: " + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фоновый Аудио Плеер</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .player-card {
+            background-color: #1e293b;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h3 {
+            margin-top: 0;
+            color: #38bdf8;
+            font-size: 1.4rem;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background-color: #0f172a;
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #38bdf8;
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #0ea5e9;
+        }
+        .status {
+            margin: 20px 0;
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            min-height: 40px;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-card">
+    <h3>YouTube Фоновый Плеер</h3>
+    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Идеально для рассказов и лекций при выключенном экране</p>
+    
+    <input type="text" id="video-url" placeholder="Вставьте ссылку на YouTube">
+    <button id="load-btn">Получить аудиопоток</button>
+
+    <div class="status" id="status-text">Вставьте ссылку и нажмите кнопку</div>
+
+    <audio id="audio-player" controls preload="auto"></audio>
+</div>
+
+<script>
+    const inputUrl = document.getElementById('video-url');
+    const loadBtn = document.getElementById('load-btn');
+    const statusText = document.getElementById('status-text');
+    const audioPlayer = document.getElementById('audio-player');
+
+    // Список рабочих зеркал Invidious на случай, если одно из них временно недоступно
+    const instances = [
+        'https://invidious.perennialte.ch',
+        'https://iv.melmac.space',
+        'https://invidious.flokinet.to',
+        'https://yewtu.be'
+    ];
+    let currentInstanceIndex = 0;
+
+    function extractVideoId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    async function fetchAudio(videoId) {
+        const baseUrl = instances[currentInstanceIndex];
+        statusText.textContent = "Соединение с сервером демультиплексирования...";
+        statusText.style.color = "#94a3b8";
+
+        try {
+            // Запрашиваем данные о видео через API Invidious
+            const response = await fetch(`${baseUrl}/api/v1/videos/${videoId}`);
+            if (!response.ok) throw new Error('Ошибка ответа сервера');
+            
+            const data = await response.json();
+            
+            // Ищем только аудиопотоки (обычно у них нет videoFamily или указан тип audio/webm, audio/mp4)
+            const audioStreams = data.adaptiveFormats.filter(format => format.type.startsWith('audio/'));
+            
+            if (audioStreams.length === 0) {
+                throw new Error('Аудиопоток не найден для этого видео');
+            }
+
+            // Сортируем по битрейту, берем среднее или хорошее качество (обычно около 128kbps — идеально для экономии)
+            audioStreams.sort((a, b) => parseInt(b.bitrate) - parseInt(a.bitrate));
+            const audioUrl = audioStreams[0].url;
+
+            // Выводим название рассказа
+            statusText.textContent = "Готово к воспроизведению: " + data.title;
+            statusText.style.color = "#38bdf8";
+
+            // Загружаем поток в аудиоплеер
+            audioPlayer.src = audioUrl;
+            audioPlayer.play().catch(e => {
+                statusText.textContent = "Поток загружен. Нажмите кнопку PLAY в плеере.";
+            });
+
+        } catch (error) {
+            console.error(error);
+            // Если текущее зеркало выдало ошибку, пробуем следующее из списка
+            if (currentInstanceIndex < instances.length - 1) {
+                currentInstanceIndex++;
+                statusText.textContent = `Смена сервера связи (Попытка ${currentInstanceIndex + 1})...`;
+                fetchAudio(videoId);
+            } else {
+                statusText.textContent = "Ошибка загрузки. Возможно, сервера перегружены. Попробуйте позже.";
+                statusText.style.color = "#f43f5e";
+                currentInstanceIndex = 0; // Сброс индекса
+            }
+        }
+    }
+
+    loadBtn.addEventListener('click', () => {
+        const url = inputUrl.value.trim();
+        const videoId = extractVideoId(url);
+
+        if (!videoId) {
+            statusText.textContent = "Неверный формат ссылки YouTube!";
+            statusText.style.color = "#f43f5e";
+            return;
+        }
+
+        currentInstanceIndex = 0; // Начинаем поиск с первого сервера
+        fetchAudio(videoId);
+    });
+</script>
+
+</body>
+</html>

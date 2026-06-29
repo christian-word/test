@@ -1,27 +1,97 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Генератор Одноразовых Ссылок</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
-.box { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-input, select, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; font-size: 14px; }
-button { background: #0088cc; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+* { box-sizing: border-box; }
+body { 
+    font-family: Arial, sans-serif; 
+    padding: 15px; 
+    margin: 0;
+    background: #f0f2f5;
+    font-size: 14px;
+}
+.box { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 8px; 
+    max-width: 600px; 
+    margin: 0 auto; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+h3 {
+    margin-top: 0;
+    font-size: 18px;
+    line-height: 1.3;
+}
+input, select, button { 
+    width: 100%; 
+    padding: 12px; 
+    margin: 8px 0; 
+    font-size: 16px; /* Важно для iOS - чтобы не было авто-зума */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+button { 
+    background: #0088cc; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    font-weight: bold; 
+    margin-top: 15px;
+}
 button:hover { background: #006699; }
-#result { background: #e7f3ff; padding: 10px; word-break: break-all; margin-top: 10px; display: none; border-left: 5px solid #0088cc; }
-label { font-weight: bold; display: block; margin-top: 10px; }
-.row { display: flex; gap: 10px; }
-.row input, .row select { flex: 1; }
+button:active { background: #005588; }
+#result { 
+    background: #e7f3ff; 
+    padding: 12px; 
+    word-break: break-all; 
+    margin-top: 15px; 
+    display: none; 
+    border-left: 4px solid #0088cc;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+label { 
+    font-weight: bold; 
+    display: block; 
+    margin-top: 12px;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+.row { 
+    display: flex; 
+    gap: 10px; 
+}
+.row input { 
+    flex: 2; 
+    margin: 8px 0;
+}
+.row select { 
+    flex: 1; 
+    margin: 8px 0;
+}
+
+/* Адаптация для очень маленьких экранов */
+@media (max-width: 480px) {
+    body { padding: 10px; }
+    .box { padding: 15px; }
+    h3 { font-size: 16px; }
+    .row { flex-direction: column; gap: 0; }
+    .row input, .row select { flex: 1; }
+}
 </style>
 </head>
 <body>
 <div class="box">
 <h3>Генератор защищенных ссылок</h3>
 
-<label>URL твоеей ссылки:</label>
+<label>URL твоего скрипта GAS:</label>
 <input type="text" id="gasUrl" value="https://script.google.com/macros/s/AKfycbzPFbyF16qGlWUuu4-dxI3EEeREWqYPUIuzGTvOdDSwpgpVKGmMc5v1QkKp7CRkkQ1jBw/exec">
 
 <label>Идентификатор (track):</label>
@@ -67,10 +137,7 @@ function generateLink() {
         return;
     }
 
-    // Переводим выбранное время в секунды
     const totalSeconds = lifetime * unit;
-    
-    // Время жизни: текущее + выбранное время
     const expires = Math.floor(Date.now() / 1000) + totalSeconds;
     
     const stringToHash = SECRET_SALT + trackId + expires;
@@ -78,7 +145,6 @@ function generateLink() {
     
     const finalLink = `${gasUrl}?track=${trackId}&expires=${expires}&token=${token}${maskType}`;
     
-    // Красиво показываем время жизни
     let timeText = "";
     if (totalSeconds < 60) timeText = totalSeconds + " сек.";
     else if (totalSeconds < 3600) timeText = (totalSeconds/60) + " мин.";

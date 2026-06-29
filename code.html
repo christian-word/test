@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Генератор Одноразовых Ссылок</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.min.js"></script>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
+.box { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+input, select, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; font-size: 14px; }
+button { background: #0088cc; color: white; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+button:hover { background: #006699; }
+#result { background: #e7f3ff; padding: 10px; word-break: break-all; margin-top: 10px; display: none; border-left: 5px solid #0088cc; }
+label { font-weight: bold; display: block; margin-top: 10px; }
+.row { display: flex; gap: 10px; }
+.row input, .row select { flex: 1; }
+</style>
+</head>
+<body>
+<div class="box">
+<h3>Генератор защищенных ссылок</h3>
+
+<label>URL твоеей ссылки:</label>
+<input type="text" id="gasUrl" value="https://script.google.com/macros/s/AKfycbzPFbyF16qGlWUuu4-dxI3EEeREWqYPUIuzGTvOdDSwpgpVKGmMc5v1QkKp7CRkkQ1jBw/exec">
+
+<label>Идентификатор (track):</label>
+<input type="text" id="trackId" value="https://">
+
+<label>Маскировка ссылки в Telegram:</label>
+<select id="maskType">
+    <option value="#/(Статья).html">🌐 Сайт / Статья (.html)</option>
+    <option value="#/(Фото).jpg">🖼️ Картинка (.jpg)</option>
+    <option value="#/(Видео).mp4">🎬 Видео (.mp4)</option>
+    <option value="#/(Документ).pdf">📄 Документ (.pdf)</option>
+    <option value="#/(Аудио).m4a" selected>🎵 Аудио (.m4a)</option>
+    <option value="#/(Архив).zip">📦 Архив (.zip)</option>
+</select>
+
+<label>Время жизни ссылки:</label>
+<div class="row">
+    <input type="number" id="lifetime" value="45" min="1" max="86400">
+    <select id="timeUnit">
+        <option value="1">секунд</option>
+        <option value="60">минут</option>
+        <option value="3600">часов</option>
+    </select>
+</div>
+
+<button onclick="generateLink()">Создать ссылку</button>
+
+<div id="result"></div>
+</div>
+
+<script>
+const SECRET_SALT = "РыбалкаДелоСвятое_123";
+
+function generateLink() {
+    const gasUrl = document.getElementById('gasUrl').value.trim();
+    const trackId = document.getElementById('trackId').value.trim();
+    const maskType = document.getElementById('maskType').value;
+    const lifetime = parseInt(document.getElementById('lifetime').value) || 45;
+    const unit = parseInt(document.getElementById('timeUnit').value);
+    
+    if (!gasUrl || !trackId) {
+        alert("Заполните URL скрипта и Идентификатор!");
+        return;
+    }
+
+    // Переводим выбранное время в секунды
+    const totalSeconds = lifetime * unit;
+    
+    // Время жизни: текущее + выбранное время
+    const expires = Math.floor(Date.now() / 1000) + totalSeconds;
+    
+    const stringToHash = SECRET_SALT + trackId + expires;
+    const token = CryptoJS.MD5(stringToHash).toString();
+    
+    const finalLink = `${gasUrl}?track=${trackId}&expires=${expires}&token=${token}${maskType}`;
+    
+    // Красиво показываем время жизни
+    let timeText = "";
+    if (totalSeconds < 60) timeText = totalSeconds + " сек.";
+    else if (totalSeconds < 3600) timeText = (totalSeconds/60) + " мин.";
+    else timeText = (totalSeconds/3600) + " ч.";
+    
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `<strong>✅ Ссылка создана! Время жизни: ${timeText}</strong><br><br>${finalLink}`;
+}
+</script>
+</body>
+</html>
